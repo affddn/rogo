@@ -20,6 +20,11 @@ import (
 
 const pkg = "com.ggv.rogosea.aos"
 
+// serialGiven is set when -s or RGO_SERIAL names the phone. run then talks to
+// it over plain adb (a local redroid container, say) instead of opening the
+// VMOS tunnel configured in .env.
+var serialGiven bool
+
 type command struct {
 	usage   string
 	run     func(ctx context.Context, d *device.Device, args []string) error
@@ -58,10 +63,12 @@ var commands = map[string]command{
 func main() {
 	log.SetFlags(log.Ltime)
 	loadEnv(".env")
-	serial := flag.String("s", envOr("RGO_SERIAL", "localhost:61644"), "adb serial (host:port for the VMOS tunnel)")
+	serial := flag.String("s", envOr("RGO_SERIAL", "localhost:61644"), "adb serial: host:port of the phone (VMOS tunnel or a redroid container)")
 	dry := flag.Bool("dry-run", false, "log taps instead of sending them")
 	flag.Usage = usage
 	flag.Parse()
+	flag.Visit(func(f *flag.Flag) { serialGiven = serialGiven || f.Name == "s" })
+	serialGiven = serialGiven || os.Getenv("RGO_SERIAL") != ""
 	if flag.NArg() == 0 {
 		usage()
 		os.Exit(2)
