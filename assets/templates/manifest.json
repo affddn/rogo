@@ -496,6 +496,22 @@
     "note": "insert card dialog: title"
   },
   {
+    "name": "item_dismantle_btn",
+    "x": 206,
+    "y": 572,
+    "w": 124,
+    "h": 44,
+    "note": "item popup: Dismantle button (not tapped by upgrade flow)"
+  },
+  {
+    "name": "item_equip_btn",
+    "x": 410,
+    "y": 572,
+    "w": 124,
+    "h": 44,
+    "note": "item popup: Equip button"
+  },
+  {
     "name": "jobchange_header",
     "x": 8,
     "y": 16,

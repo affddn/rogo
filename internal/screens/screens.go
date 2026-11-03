@@ -126,6 +126,7 @@ const (
 	TDungeonCancelMatch  = "dungeon_cancel_match"
 	TDungeonAccept       = "dungeon_accept"
 	TDungeonDecline      = "dungeon_decline"
+	TItemEquip           = "item_equip_btn"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
