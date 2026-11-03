@@ -62,3 +62,17 @@ func TestTicketIconOnlyWhenFree(t *testing.T) {
 	}
 }
 
+func TestReadMainSignals(t *testing.T) {
+	s := ReadMain(load(t, "main3.png"))
+	for _, b := range []Badge{BadgeSystem, BadgeAuto, BadgeCharacter, BadgeWeapon, BadgeGameMode} {
+		if !s.Has(b) {
+			t.Errorf("main3: badge %s not read", b)
+		}
+	}
+	if s.Has(BadgeEquipment) || s.QuestDone {
+		t.Errorf("main3: false signal %+v", s)
+	}
+	if on := ReadMain(load(t, "auto-2.png")); on.Has(BadgeAuto) || !on.QuestDone {
+		t.Errorf("auto-2: want auto on and quest done, got %+v", on)
+	}
+}
