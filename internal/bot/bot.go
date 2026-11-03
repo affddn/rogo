@@ -152,6 +152,15 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	if b.hintVisible(frame) {
 		return true, b.tapHint(ctx, frame)
 	}
+	// Tutorials and new-feature popups: a pointer hand or a lone confirm.
+	// Follow whatever they point at; they never lead to purchases, and the
+	// deny list still guards every tap.
+	for _, name := range []string{screens.TDialogOK, screens.THintOK} {
+		if screens.Visible(frame, name) {
+			b.Log.Info("following popup", "button", name, "shot", b.save(frame))
+			return true, b.TapTemplate(ctx, frame, name)
+		}
+	}
 	return false, nil
 }
 
