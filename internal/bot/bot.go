@@ -168,6 +168,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TCombatLeave)
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
+	case screens.GuestBind:
+		return true, b.TapTemplate(ctx, frame, screens.TGuestBindCancel)
 	}
 	// Guide arrows point at the control the game wants pressed next
 	// (tutorial steps, quest guidance); following them completes those.

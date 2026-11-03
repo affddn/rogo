@@ -53,7 +53,23 @@ type Signals struct {
 	// Stage fingerprints the next-challenge label ("4-6") on the Stage
 	// Challenge button; it changes whenever a stage is cleared.
 	Stage string
+	// Locked marks features a new character has not unlocked yet, keyed by
+	// their nav badge.
+	Locked map[Badge]bool
+	// System and SeasonPass report the main-screen icons that open those
+	// menus; a new character gets them only after a while.
+	System, SeasonPass bool
 }
+
+// navLabel covers the bottom-nav labels of features that unlock with level.
+// A locked feature's label is grey; an unlocked one is cream white.
+var navLabel = map[Badge]image.Rectangle{
+	BadgeWeapon:   image.Rect(150, 1240, 230, 1264),
+	BadgePet:      image.Rect(396, 1240, 436, 1264),
+	BadgeGameMode: image.Rect(585, 1240, 700, 1264),
+}
+
+func isLabelWhite(c color.RGBA) bool { return c.R > 219 && c.G > 214 && c.B > 191 }
 
 // powerText covers the combat power digits ("884.6K").
 var powerText = image.Rect(180, 64, 300, 94)
@@ -132,13 +148,23 @@ func ReadMain(frame image.Image) Signals {
 		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {
 			return c.R > 225 && c.G > 225 && c.B > 210
 		}),
+		System:     Visible(frame, TMainSystem),
+		SeasonPass: Visible(frame, TMainSeasonPass),
 	}
 	for b, p := range badgeAt {
 		r := image.Rectangle{Min: p.Sub(image.Pt(8, 8)), Max: p.Add(image.Pt(8, 8))}
 		s.Badges[b] = vision.Ratio(frame, r, vision.IsBadgeRed) > 0.3
 	}
+	s.Locked = map[Badge]bool{}
+	for b, r := range navLabel {
+		// Unlocked labels measure 0.13-0.15 white, locked ones 0.
+		s.Locked[b] = vision.Ratio(frame, r, isLabelWhite) < 0.05
+	}
 	return s
 }
+
+// Unlocked reports whether the feature behind nav badge b is open.
+func (s Signals) Unlocked(b Badge) bool { return !s.Locked[b] }
 
 // Fingerprint is a coarse grayscale signature of r, for telling whether a
 // scroll moved anything.
