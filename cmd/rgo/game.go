@@ -50,3 +50,9 @@ func cmdHome(ctx context.Context, d *device.Device, _ []string) error {
 func cmdIncome(ctx context.Context, d *device.Device, _ []string) error {
 	return tasks.Income(ctx, newBot(d))
 }
+
+func cmdQuests(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.MainQuest(ctx, newBot(d))
+	fmt.Println("claimed", n)
+	return err
+}
