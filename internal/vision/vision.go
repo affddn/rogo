@@ -89,7 +89,12 @@ func (m Match) Center() image.Point { return m.At.Add(m.Size.Div(2)) }
 // Find searches frame within margin pixels of the template's reference
 // position. frame may be a band capture: only its bounds are searched.
 func (t *Template) Find(frame image.Image, margin int) Match {
-	win := t.Rect().Inset(-margin).Intersect(frame.Bounds())
+	return t.FindIn(frame, t.Rect().Inset(-margin))
+}
+
+// FindIn searches an explicit screen area, for elements whose position varies.
+func (t *Template) FindIn(frame image.Image, area image.Rectangle) Match {
+	win := area.Intersect(frame.Bounds())
 	best := Match{Score: -1, Size: t.Size()}
 	if win.Dx() < t.g.W || win.Dy() < t.g.H || t.norm == 0 {
 		return best
