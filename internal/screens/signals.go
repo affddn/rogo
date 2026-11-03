@@ -139,3 +139,9 @@ func ReadMain(frame image.Image) Signals {
 	}
 	return s
 }
+
+// Fingerprint is a coarse grayscale signature of r, for telling whether a
+// scroll moved anything.
+func Fingerprint(frame image.Image, r image.Rectangle) string {
+	return mask(frame, r, 12, func(c color.RGBA) bool { return int(c.R)+int(c.G)+int(c.B) > 420 })
+}

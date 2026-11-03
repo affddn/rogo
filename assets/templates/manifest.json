@@ -96,6 +96,14 @@
     "note": "equipment: Card page header"
   },
   {
+    "name": "cardslot_plus",
+    "x": 417,
+    "y": 435,
+    "w": 40,
+    "h": 40,
+    "note": "insert card page: empty slot '+' glyph"
+  },
+  {
     "name": "char_overview_header",
     "x": 8,
     "y": 16,
@@ -406,6 +414,38 @@
     "w": 212,
     "h": 58,
     "note": "income dialog: Yield Bonus button"
+  },
+  {
+    "name": "insertcard_btn",
+    "x": 254,
+    "y": 1086,
+    "w": 212,
+    "h": 58,
+    "note": "insert card dialog: Insert Card button"
+  },
+  {
+    "name": "insertcard_close",
+    "x": 640,
+    "y": 96,
+    "w": 52,
+    "h": 52,
+    "note": "insert card dialog: close X"
+  },
+  {
+    "name": "insertcard_tab",
+    "x": 280,
+    "y": 1118,
+    "w": 180,
+    "h": 42,
+    "note": "card page: Insert Card tab label"
+  },
+  {
+    "name": "insertcard_title",
+    "x": 270,
+    "y": 116,
+    "w": 180,
+    "h": 46,
+    "note": "insert card dialog: title"
   },
   {
     "name": "jobchange_header",

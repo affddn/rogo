@@ -37,6 +37,7 @@ const (
 	SeasonPass       ID = "season-pass"
 	DismantleConfirm ID = "dismantle-confirm"
 	PowerSave        ID = "power-save"
+	InsertCard       ID = "insert-card"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -114,6 +115,10 @@ const (
 	TDismantleOK         = "dismantle_ok"
 	TOneClickDismantle   = "equip_one_click_dismantle"
 	TPowerSaveSwipe      = "powersave_swipe"
+	TCardSlotPlus        = "cardslot_plus"
+	TInsertCardTitle     = "insertcard_title"
+	TInsertCardButton    = "insertcard_btn"
+	TInsertCardClose     = "insertcard_close"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -175,6 +180,9 @@ var rules = []rule{
 	{id: Resonate, anchors: []string{TResonateTitle, TResonateClose}},
 	{id: SummonUpgrade, anchors: []string{TSummonUpTitle, TSummonUpClose}},
 	{id: OneClickUpgrade, anchors: []string{TOneClickTitle, TOneClickOK}},
+	// Insert Card first: the Card Details title template also matches the
+	// header both dialogs share.
+	{id: InsertCard, anchors: []string{TInsertCardTitle, TInsertCardClose}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: Mail, anchors: []string{TMailTitle, TMailClose}},

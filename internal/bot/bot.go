@@ -150,6 +150,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.tapHint(ctx, frame)
 	case screens.QuestPanel:
 		return true, b.TapTemplate(ctx, frame, screens.TQuestClose)
+	case screens.InsertCard:
+		return true, b.TapTemplate(ctx, frame, screens.TInsertCardClose)
 	case screens.CardDetails:
 		return true, b.TapTemplate(ctx, frame, screens.TCardDetailsClose)
 	case screens.SummonUpgrade:
