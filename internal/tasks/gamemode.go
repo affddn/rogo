@@ -73,6 +73,13 @@ func RealmTab(ctx context.Context, b *bot.Bot, tab image.Point, challenge bool) 
 		if err := b.Tap(ctx, m.Center(), "realm challenge"); err != nil {
 			return res, err
 		}
+		// Out of tickets the game only toasts and the page stays; entries
+		// are shared with sweeps, so there is nothing more to do here.
+		if id, _, err := b.Look(ctx); err != nil {
+			return res, err
+		} else if id == screens.Realm {
+			return res, nil
+		}
 		res.Challenged = true
 		id, f, err := b.Wait(ctx, 8*time.Minute, screens.StageDefeat, screens.Realm)
 		if err != nil && !errors.Is(err, bot.ErrTimeout) {
