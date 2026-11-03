@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"image"
 	"time"
 
@@ -31,12 +30,29 @@ func Stage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 }
 
 // WaitStage waits out a running stage challenge chain, leaves the defeat
-// screen and returns to main.
+// screen and returns to main. A new character's tutorial dialogues pop up
+// between stages and pause the chain until skipped.
 func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 	start := time.Now()
-	id, frame, err := b.Wait(ctx, stageRun, screens.StageDefeat, screens.Main)
-	if err != nil && !errors.Is(err, bot.ErrTimeout) {
-		return false, err
+	var id screens.ID
+	var frame image.Image
+	for time.Since(start) < stageRun {
+		if id, frame, err = b.Look(ctx); err != nil {
+			return false, err
+		}
+		if id == screens.StageDefeat || id == screens.Main {
+			break
+		}
+		if screens.Visible(frame, screens.TTutSkip) {
+			b.Log.Info("skipping tutorial between stages")
+			if err := b.TapTemplate(ctx, frame, screens.TTutSkip); err != nil {
+				return false, err
+			}
+			continue
+		}
+		if err := bot.Sleep(ctx, 500*time.Millisecond); err != nil {
+			return false, err
+		}
 	}
 	lost = id == screens.StageDefeat
 	if lost {
