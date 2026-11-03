@@ -1,0 +1,14 @@
+# build output
+/bin/
+/rgo
+
+# local runtime data: screenshots, logs, device dumps
+/captures/
+/device-check-*/
+/startup/
+*.log
+
+# secrets
+.env
+.env.*
+!.env.example
