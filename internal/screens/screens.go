@@ -20,6 +20,8 @@ const (
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
+	Title            ID = "title"
+	IdleRewards      ID = "idle-rewards"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -53,6 +55,11 @@ const (
 	TAutoSummonText      = "autosummon_text"
 	THintTitle           = "hint_title"
 	THintOK              = "dlg_ok_hint"
+	TTitleAgreeText      = "title_agree_text"
+	TTitleAgreeChecked   = "title_agree_checked"
+	TTitleStartGame      = "title_start_game"
+	TIdleTitle           = "idle_title"
+	TIdleClaim           = "idle_claim"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -74,6 +81,8 @@ type rule struct {
 // Modals first: whatever is on top wins.
 var rules = []rule{
 	{Reward, []string{TRewardCongrats}},
+	{Title, []string{TTitleAgreeText}},
+	{IdleRewards, []string{TIdleTitle, TIdleClaim}},
 	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
 	{AutoSummonHint, []string{THintTitle, TAutoSummonText}},
 	{Income, []string{TIncomeTitle, TIncomeClose}},

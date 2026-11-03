@@ -120,6 +120,22 @@
     "note": "generic Hint dialog title"
   },
   {
+    "name": "idle_claim",
+    "x": 256,
+    "y": 1018,
+    "w": 210,
+    "h": 58,
+    "note": "login idle rewards popup: Claim button"
+  },
+  {
+    "name": "idle_title",
+    "x": 86,
+    "y": 190,
+    "w": 252,
+    "h": 72,
+    "note": "login idle rewards popup: title"
+  },
+  {
     "name": "income_claimed",
     "x": 226,
     "y": 588,
@@ -262,5 +278,29 @@
     "w": 280,
     "h": 48,
     "note": "reward popup: 'Congratulations!' header"
+  },
+  {
+    "name": "title_agree_checked",
+    "x": 70,
+    "y": 1148,
+    "w": 36,
+    "h": 32,
+    "note": "title screen: agreement checkbox ticked"
+  },
+  {
+    "name": "title_agree_text",
+    "x": 108,
+    "y": 1150,
+    "w": 266,
+    "h": 30,
+    "note": "title screen: 'I have read and agree to the' (server-independent anchor)"
+  },
+  {
+    "name": "title_start_game",
+    "x": 262,
+    "y": 1090,
+    "w": 198,
+    "h": 46,
+    "note": "title screen: Start Game"
   }
 ]
