@@ -15,6 +15,10 @@ const (
 	Income           ID = "income"
 	QuickIdleConfirm ID = "quick-idle-confirm"
 	Reward           ID = "reward"
+	Attribute        ID = "attribute"
+	CharOverview     ID = "char-overview"
+	Equipment        ID = "equipment"
+	Enhance          ID = "enhance"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -33,6 +37,18 @@ const (
 	TDialogCancel        = "dlg_cancel"
 	TRewardCongrats      = "reward_congrats"
 	THintTapEmpty        = "hint_tap_empty"
+	TNavBack             = "nav_back"
+	TNavEquipment        = "nav_equipment"
+	TNavWeapon           = "nav_weapon"
+	TNavCharacter        = "main_nav_character"
+	TAttrHeader          = "attr_header"
+	TCharOverview        = "char_overview_header"
+	TAttrRecommended     = "attr_recommended"
+	TAttrConfirm         = "attr_confirm"
+	TEquipHeader         = "equip_header"
+	TEquipUpgrade        = "equip_upgrade_btn"
+	TEnhanceHeader       = "enhance_header"
+	TEnhanceButton       = "enhance_btn"
 )
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
@@ -52,6 +68,10 @@ var rules = []rule{
 	{Reward, []string{TRewardCongrats}},
 	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
 	{Income, []string{TIncomeTitle, TIncomeClose}},
+	{Attribute, []string{TAttrHeader, TNavBack}},
+	{CharOverview, []string{TCharOverview, TNavBack}},
+	{Equipment, []string{TEquipHeader, TNavBack}},
+	{Enhance, []string{TEnhanceHeader, TNavBack}},
 	{Main, []string{TMainAdventureIncome, TMainStageChallenge}},
 }
 

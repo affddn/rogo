@@ -1,5 +1,53 @@
 [
   {
+    "name": "attr_confirm",
+    "x": 634,
+    "y": 1088,
+    "w": 58,
+    "h": 56,
+    "note": "attribute: confirm allocation check button"
+  },
+  {
+    "name": "attr_header",
+    "x": 8,
+    "y": 16,
+    "w": 172,
+    "h": 50,
+    "note": "character: Attribute page header"
+  },
+  {
+    "name": "attr_recommended",
+    "x": 300,
+    "y": 1086,
+    "w": 212,
+    "h": 58,
+    "note": "attribute: Recommended Allocation button"
+  },
+  {
+    "name": "autosummon_text",
+    "x": 210,
+    "y": 520,
+    "w": 300,
+    "h": 34,
+    "note": "auto-summon hint: 'Auto-summon Elites for gear'"
+  },
+  {
+    "name": "char_overview_header",
+    "x": 8,
+    "y": 16,
+    "w": 172,
+    "h": 50,
+    "note": "character: Overview page header"
+  },
+  {
+    "name": "deny_go_unlock",
+    "x": 500,
+    "y": 703,
+    "w": 136,
+    "h": 46,
+    "note": "DENY: 'Go Unlock' paid monthly card button"
+  },
+  {
     "name": "dlg_cancel",
     "x": 113,
     "y": 828,
@@ -16,12 +64,60 @@
     "note": "generic confirm: OK button"
   },
   {
+    "name": "dlg_ok_hint",
+    "x": 409,
+    "y": 800,
+    "w": 214,
+    "h": 60,
+    "note": "Hint dialog OK button (taller dialog)"
+  },
+  {
+    "name": "enhance_btn",
+    "x": 78,
+    "y": 1090,
+    "w": 214,
+    "h": 62,
+    "note": "enhance: single Enhance button"
+  },
+  {
+    "name": "enhance_header",
+    "x": 8,
+    "y": 16,
+    "w": 160,
+    "h": 50,
+    "note": "enhance: page header"
+  },
+  {
+    "name": "equip_header",
+    "x": 8,
+    "y": 16,
+    "w": 172,
+    "h": 50,
+    "note": "equipment: page header"
+  },
+  {
+    "name": "equip_upgrade_btn",
+    "x": 486,
+    "y": 1088,
+    "w": 196,
+    "h": 52,
+    "note": "equipment: Equipment Upgrade button (without badge)"
+  },
+  {
     "name": "hint_tap_empty",
     "x": 226,
     "y": 1042,
     "w": 270,
     "h": 28,
     "note": "generic popup hint: Tap empty area to close"
+  },
+  {
+    "name": "hint_title",
+    "x": 322,
+    "y": 406,
+    "w": 78,
+    "h": 44,
+    "note": "generic Hint dialog title"
   },
   {
     "name": "income_claimed",
@@ -118,6 +214,30 @@
     "w": 70,
     "h": 24,
     "note": "main: System label"
+  },
+  {
+    "name": "nav_back",
+    "x": 4,
+    "y": 1192,
+    "w": 92,
+    "h": 66,
+    "note": "sub-screen back arrow (bottom-left)"
+  },
+  {
+    "name": "nav_equipment",
+    "x": 252,
+    "y": 1238,
+    "w": 104,
+    "h": 30,
+    "note": "bottom nav: Equipment label"
+  },
+  {
+    "name": "nav_weapon",
+    "x": 150,
+    "y": 1238,
+    "w": 80,
+    "h": 30,
+    "note": "bottom nav: Weapon label"
   },
   {
     "name": "quickidle_ticket_cost",
