@@ -70,11 +70,17 @@ func actions() []*runner.Action {
 				st.Add("enhance_levels", n)
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
-		{Name: "weapon-gacha", Priority: 70, Snooze: 2 * time.Hour, Ready: badge(screens.BadgeWeapon),
+		{Name: "weapon", Priority: 70, Snooze: 2 * time.Hour, Ready: badge(screens.BadgeWeapon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.WeaponGacha(ctx, b)
 				st.Add("gacha_batches", n)
-				return out{Progress: n > 0, Growth: n > 0}, err
+				if err != nil {
+					return out{Progress: n > 0}, err
+				}
+				// Fresh pulls are only worth power once activated and levelled.
+				c, err := tasks.WeaponCultivate(ctx, b)
+				st.Add("cultivate_steps", c)
+				return out{Progress: n+c > 0, Growth: c > 0}, err
 			}},
 		{Name: "income", Priority: 60,
 			Ready: func(_ sig, s *st, now time.Time) bool {
