@@ -124,6 +124,7 @@ const (
 	TDungeonHeader       = "dungeon_header"
 	TDungeonAutoMatch    = "dungeon_auto_match"
 	TDungeonCancelMatch  = "dungeon_cancel_match"
+	TDungeonZeroLeft     = "dungeon_attempts_zero"
 	TDungeonAccept       = "dungeon_accept"
 	TDungeonDecline      = "dungeon_decline"
 	TItemEquip           = "item_equip_btn"

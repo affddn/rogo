@@ -256,6 +256,14 @@
     "note": "dungeon: 'Challenge Attempts' label"
   },
   {
+    "name": "dungeon_attempts_zero",
+    "x": 440,
+    "y": 1100,
+    "w": 14,
+    "h": 14,
+    "note": "dungeon: attempts digit '0' (none left)"
+  },
+  {
     "name": "dungeon_auto_match",
     "x": 400,
     "y": 1138,

@@ -4,6 +4,8 @@ import (
 	"image/png"
 	"os"
 	"testing"
+
+	"github.com/affddn/rogo/internal/screens"
 )
 
 func TestBagOver20(t *testing.T) {
@@ -34,6 +36,20 @@ func TestUpgradeTile(t *testing.T) {
 		}
 		if got && (p.X < 600 || p.Y > 760) {
 			t.Errorf("%s: arrow tile at %v, want the ring at row 0 col 5", file, p)
+		}
+	}
+}
+
+func TestDungeonZeroAttempts(t *testing.T) {
+	for file, want := range map[string]bool{"dungeon.png": false, "dungeon-now.png": false, "dungeon-after.png": true} {
+		f, err := os.Open("../../captures/" + file)
+		if err != nil {
+			t.Skipf("reference capture %s not present", file)
+		}
+		img, _ := png.Decode(f)
+		f.Close()
+		if got := screens.Visible(img, screens.TDungeonZeroLeft); got != want {
+			t.Errorf("%s: zero attempts = %v, want %v", file, got, want)
 		}
 	}
 }
