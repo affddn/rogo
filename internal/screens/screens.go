@@ -70,6 +70,7 @@ const (
 	TSummonUpTitle       = "summonup_title"
 	TSummonUpEnhance     = "summonup_enhance"
 	TSummonUpClose       = "summonup_close"
+	TSummonUpUpgrade     = "summonup_upgrade_btn"
 	TCultHeader          = "cult_header"
 	TOneClickTitle       = "oneclick_title"
 	TOneClickOK          = "oneclick_ok"
@@ -112,7 +113,7 @@ const (
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
 // tap that lands on one of these while it is visible.
-var Deny = []string{"deny_go_unlock"}
+var Deny = []string{"deny_go_unlock", "deny_accelerate"}
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
 // 720x1280 render, so true hits sit above 0.97 and misses below 0.6.

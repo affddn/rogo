@@ -144,6 +144,14 @@
     "note": "cultivation: One-Click Upgrade button"
   },
   {
+    "name": "deny_accelerate",
+    "x": 254,
+    "y": 938,
+    "w": 212,
+    "h": 58,
+    "note": "DENY: summon upgrade Accelerate (speed-up, likely diamonds)"
+  },
+  {
     "name": "deny_go_unlock",
     "x": 500,
     "y": 703,
@@ -552,12 +560,28 @@
     "note": "summon upgrade dialog: Enhance button"
   },
   {
+    "name": "summonup_time",
+    "x": 210,
+    "y": 830,
+    "w": 300,
+    "h": 34,
+    "note": "summon upgrade dialog: 'Upgrade Time' line"
+  },
+  {
     "name": "summonup_title",
     "x": 196,
     "y": 266,
     "w": 344,
     "h": 46,
     "note": "summon upgrade dialog: title"
+  },
+  {
+    "name": "summonup_upgrade_btn",
+    "x": 254,
+    "y": 938,
+    "w": 212,
+    "h": 58,
+    "note": "summon upgrade dialog: final Upgrade button (timed, free)"
   },
   {
     "name": "title_agree_checked",
