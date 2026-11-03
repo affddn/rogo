@@ -168,6 +168,14 @@
     "note": "DENY: mail Delete All (never)"
   },
   {
+    "name": "deny_pass_rebate",
+    "x": 512,
+    "y": 1076,
+    "w": 136,
+    "h": 26,
+    "note": "DENY: season pass 'Rebate 1000%' tag over the paid unlock"
+  },
+  {
     "name": "dlg_cancel",
     "x": 113,
     "y": 828,
@@ -222,6 +230,14 @@
     "w": 196,
     "h": 52,
     "note": "equipment: Equipment Upgrade button (without badge)"
+  },
+  {
+    "name": "ev_login10_title",
+    "x": 380,
+    "y": 150,
+    "w": 320,
+    "h": 70,
+    "note": "event: Log in for 10 days title"
   },
   {
     "name": "gacha_cost_ticket",
@@ -486,6 +502,22 @@
     "w": 300,
     "h": 46,
     "note": "one-click upgrade dialog: title"
+  },
+  {
+    "name": "pass_claim_all",
+    "x": 80,
+    "y": 1100,
+    "w": 216,
+    "h": 58,
+    "note": "season pass: Claim All (free track)"
+  },
+  {
+    "name": "pass_header",
+    "x": 8,
+    "y": 16,
+    "w": 170,
+    "h": 46,
+    "note": "season pass page header"
   },
   {
     "name": "pet_auto_formation",

@@ -34,6 +34,7 @@ const (
 	PetCount         ID = "pet-count"
 	PetCultivate     ID = "pet-cultivate"
 	Mail             ID = "mail"
+	SeasonPass       ID = "season-pass"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -105,6 +106,8 @@ const (
 	TMailTitle           = "mail_title"
 	TMailClaimAll        = "mail_claim_all"
 	TMailClose           = "mail_close"
+	TPassHeader          = "pass_header"
+	TPassClaimAll        = "pass_claim_all"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -130,7 +133,13 @@ const (
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
 // tap that lands on one of these while it is visible.
-var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete"}
+var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete", "deny_pass_rebate"}
+
+// DenyAreas are screen regions refused outright while a screen is showing,
+// for paid buttons whose label changes (pass prices differ per tab).
+var DenyAreas = map[ID][]image.Rectangle{
+	SeasonPass: {image.Rect(410, 1060, 660, 1170)},
+}
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
 // 720x1280 render, so true hits sit above 0.97 and misses below 0.6.
@@ -176,6 +185,7 @@ var rules = []rule{
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	{id: CardPage, anchors: []string{TCardHeader, TNavBack}},
 	{id: PetGacha, anchors: []string{TPetGachaHeader, TNavBack}},
+	{id: SeasonPass, anchors: []string{TPassHeader, TPassClaimAll}},
 	{id: PetCultivate, anchors: []string{TPetHeader, TNavBack}},
 	{id: JobChange, anchors: []string{TJobChangeHeader, TNavBack}},
 	{id: GameMode, anchors: []string{TGameModeHeader, TNavBack}},

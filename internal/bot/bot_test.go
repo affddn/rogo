@@ -51,3 +51,24 @@ func TestTapRefusesAccelerate(t *testing.T) {
 		t.Fatalf("tap on Accelerate: got %v, want ErrDenied", err)
 	}
 }
+
+func TestTapRefusesSeasonPassPriceOnEveryTab(t *testing.T) {
+	for _, name := range []string{"seasonpass.png", "seasonpass-eq.png", "seasonpass-pet.png"} {
+		f, err := os.Open("../../captures/" + name)
+		if err != nil {
+			t.Skipf("reference capture %s not present", name)
+		}
+		frame, _ := png.Decode(f)
+		f.Close()
+		d := device.New("test")
+		d.DryRun = true
+		b := New(d, slog.New(slog.NewTextHandler(io.Discard, nil)))
+		b.Shots, b.Settle, b.last = t.TempDir(), 0, frame
+		if err := b.Tap(context.Background(), image.Pt(532, 1129), "price"); !errors.Is(err, ErrDenied) {
+			t.Errorf("%s: tap on paid unlock got %v, want ErrDenied", name, err)
+		}
+		if err := b.Tap(context.Background(), image.Pt(188, 1129), "claim all"); err != nil {
+			t.Errorf("%s: Claim All refused: %v", name, err)
+		}
+	}
+}

@@ -91,6 +91,11 @@ func (b *Bot) denied(p image.Point) string {
 	if b.last == nil {
 		return ""
 	}
+	for _, r := range screens.DenyAreas[screens.Detect(b.last)] {
+		if p.In(r) {
+			return "deny-area"
+		}
+	}
 	for _, name := range screens.Deny {
 		m := assets.MustGet(name).Find(b.last, screens.Margin)
 		if m.Visible(screens.MinScore) && p.In(image.Rectangle{Min: m.At, Max: m.At.Add(m.Size)}.Inset(-8)) {
@@ -127,6 +132,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
 	case screens.Resonate:
 		return true, b.TapTemplate(ctx, frame, screens.TResonateClose)
+	case screens.SeasonPass:
+		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
 	case screens.Mail:
 		return true, b.TapTemplate(ctx, frame, screens.TMailClose)
 	case screens.PetCount:
