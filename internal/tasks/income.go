@@ -12,38 +12,40 @@ import (
 
 // Income opens Adventure Income, which claims the idle stash on open, and
 // spends the daily free Quick Idle ticket. A Quick Idle that costs diamonds is
-// never confirmed.
-func Income(ctx context.Context, b *bot.Bot) error {
+// never confirmed. ticketLeft reports whether a free ticket was still there
+// after the run (false once today's ticket is spent).
+func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 	if err := b.ToMain(ctx); err != nil {
-		return err
+		return false, err
 	}
 	_, frame, err := b.Look(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TMainAdventureIncome); err != nil {
-		return err
+		return false, err
 	}
 	_, frame, err = b.Wait(ctx, 10*time.Second, screens.Income)
 	if err != nil {
-		return err
+		return false, err
 	}
 	b.Log.Info("income claimed")
 
 	if screens.Visible(frame, screens.TIncomeTicketIcon) {
 		if err := quickIdle(ctx, b, frame); err != nil {
-			return err
+			return false, err
 		}
 		if _, frame, err = b.Wait(ctx, 10*time.Second, screens.Income); err != nil {
-			return err
+			return false, err
 		}
 	}
+	ticketLeft = screens.Visible(frame, screens.TIncomeTicketIcon)
 
 	if err := b.TapTemplate(ctx, frame, screens.TIncomeClose); err != nil {
-		return err
+		return ticketLeft, err
 	}
 	_, _, err = b.Wait(ctx, 10*time.Second, screens.Main)
-	return err
+	return ticketLeft, err
 }
 
 func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {

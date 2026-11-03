@@ -48,7 +48,9 @@ func cmdHome(ctx context.Context, d *device.Device, _ []string) error {
 }
 
 func cmdIncome(ctx context.Context, d *device.Device, _ []string) error {
-	return tasks.Income(ctx, newBot(d))
+	left, err := tasks.Income(ctx, newBot(d))
+	fmt.Println("free quick idle left", left)
+	return err
 }
 
 func cmdQuests(ctx context.Context, d *device.Device, _ []string) error {

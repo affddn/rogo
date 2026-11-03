@@ -41,7 +41,10 @@ func jobs() []*runner.Job {
 			_, err := tasks.Equipment(ctx, b)
 			return err
 		}},
-		{Name: "income", Every: 2 * time.Hour, Run: tasks.Income},
+		{Name: "income", Every: 2 * time.Hour, Run: func(ctx context.Context, b *bot.Bot) error {
+			_, err := tasks.Income(ctx, b)
+			return err
+		}},
 		{Name: "weapon-gacha", Every: 2 * time.Hour, Run: func(ctx context.Context, b *bot.Bot) error {
 			_, err := tasks.WeaponGacha(ctx, b)
 			return err
