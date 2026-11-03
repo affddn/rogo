@@ -92,10 +92,24 @@ func mask(frame image.Image, r image.Rectangle, step int, on func(color.RGBA) bo
 
 func (s Signals) Has(b Badge) bool { return s.Badges[b] }
 
+// questTag is the "(Completed)" tag on the main-quest tracker. The tracker
+// panel is translucent, so the map behind it defeats grayscale matching; its
+// bright green text does not.
+var questTag = image.Rect(40, 920, 136, 944)
+
+// QuestTagAt is where tapping claims the tracker.
+var QuestTagAt = image.Pt(130, 932)
+
+func QuestDone(frame image.Image) bool {
+	return vision.Ratio(frame, questTag, func(c color.RGBA) bool {
+		return c.G > 180 && int(c.G)-int(c.R) > 60 && int(c.G)-int(c.B) > 60
+	}) > 0.08
+}
+
 // ReadMain extracts signals from a frame already detected as Main.
 func ReadMain(frame image.Image) Signals {
 	s := Signals{
-		QuestDone: Visible(frame, TMainQuestCompleted),
+		QuestDone: QuestDone(frame),
 		Badges:    map[Badge]bool{},
 		Level:     fingerprint(frame, levelText),
 		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {

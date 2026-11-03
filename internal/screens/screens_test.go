@@ -106,3 +106,14 @@ func TestStageFingerprintTracksClears(t *testing.T) {
 		t.Error("stage fingerprint unchanged across clears (4-1 vs 4-6)")
 	}
 }
+
+func TestQuestDoneOverMovingBackground(t *testing.T) {
+	for _, f := range []string{"main.png", "main4.png", "main5.png", "now.png"} {
+		if !QuestDone(load(t, f)) {
+			t.Errorf("%s: completed quest not seen", f)
+		}
+	}
+	if QuestDone(load(t, "main3.png")) {
+		t.Error("main3: phantom completed quest")
+	}
+}

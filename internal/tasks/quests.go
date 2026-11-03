@@ -19,10 +19,10 @@ func MainQuest(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 		if err != nil {
 			return claimed, err
 		}
-		if !screens.Visible(frame, screens.TMainQuestCompleted) {
+		if !screens.QuestDone(frame) {
 			break
 		}
-		if err := b.TapTemplate(ctx, frame, screens.TMainQuestCompleted); err != nil {
+		if err := b.Tap(ctx, screens.QuestTagAt, "main quest"); err != nil {
 			return claimed, err
 		}
 		id, frame, err := b.Wait(ctx, 8*time.Second, screens.Reward, screens.Main)
