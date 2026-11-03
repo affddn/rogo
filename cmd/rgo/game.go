@@ -56,3 +56,13 @@ func cmdQuests(ctx context.Context, d *device.Device, _ []string) error {
 	fmt.Println("claimed", n)
 	return err
 }
+
+func cmdGrow(ctx context.Context, d *device.Device, _ []string) error {
+	b := newBot(d)
+	if _, err := tasks.Attributes(ctx, b); err != nil {
+		return err
+	}
+	n, err := tasks.Equipment(ctx, b)
+	fmt.Println("enhanced", n)
+	return err
+}

@@ -85,3 +85,30 @@ func cmdMatch(ctx context.Context, d *device.Device, args []string) error {
 	}
 	return nil
 }
+
+func cmdPixel(_ context.Context, _ *device.Device, args []string) error {
+	if len(args) < 3 {
+		return fmt.Errorf("pixel: need shot.png x y [w h]")
+	}
+	img, err := loadPNG(args[0])
+	if err != nil {
+		return err
+	}
+	n := []int{0, 0, 1, 1}
+	for i, a := range args[1:] {
+		if i < 4 {
+			if n[i], err = strconv.Atoi(a); err != nil {
+				return err
+			}
+		}
+	}
+	var r, g, b, cnt int
+	for y := n[1]; y < n[1]+n[3]; y++ {
+		for x := n[0]; x < n[0]+n[2]; x++ {
+			cr, cg, cb, _ := img.At(x, y).RGBA()
+			r, g, b, cnt = r+int(cr>>8), g+int(cg>>8), b+int(cb>>8), cnt+1
+		}
+	}
+	fmt.Printf("mean rgb(%d,%d,%d) over %d px\n", r/cnt, g/cnt, b/cnt, cnt)
+	return nil
+}
