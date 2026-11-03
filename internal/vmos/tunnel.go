@@ -82,6 +82,31 @@ func (t *Tunnel) Update(a *ADB) error {
 	return nil
 }
 
+// keepAlive pings the ssh server so NAT and the gateway don't drop an idle
+// session, and closes it when pings stop getting answers so the next adb
+// connection redials.
+func (t *Tunnel) keepAlive(c *ssh.Client) {
+	tick := time.NewTicker(30 * time.Second)
+	defer tick.Stop()
+	for range tick.C {
+		done := make(chan error, 1)
+		go func() {
+			_, _, err := c.SendRequest("keepalive@openssh.com", true, nil)
+			done <- err
+		}()
+		select {
+		case err := <-done:
+			if err == nil {
+				continue
+			}
+		case <-time.After(15 * time.Second):
+		}
+		t.Log.Warn("tunnel ssh keepalive failed, dropping session")
+		c.Close()
+		return
+	}
+}
+
 func (t *Tunnel) sshClient() (*ssh.Client, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -105,6 +130,7 @@ func (t *Tunnel) sshClient() (*ssh.Client, error) {
 		return nil, err
 	}
 	t.client = c
+	go t.keepAlive(c)
 	go func() {
 		_ = c.Wait()
 		t.mu.Lock()
@@ -165,9 +191,20 @@ func (t *Tunnel) pipe(local net.Conn) {
 		t.mu.Unlock()
 		return
 	}
-	defer upstream.Close()
-	done := make(chan struct{}, 2)
-	go func() { _, _ = io.Copy(upstream, local); done <- struct{}{} }()
-	go func() { _, _ = io.Copy(local, upstream); done <- struct{}{} }()
-	<-done
+	// Copy both ways until both sides finish. Returning after the first
+	// direction ends would close the other mid-stream; an idle adb
+	// connection must also stay open indefinitely.
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		_, _ = io.Copy(upstream, local)
+		upstream.Close()
+	}()
+	go func() {
+		defer wg.Done()
+		_, _ = io.Copy(local, upstream)
+		local.Close()
+	}()
+	wg.Wait()
 }
