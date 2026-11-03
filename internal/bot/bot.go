@@ -152,8 +152,14 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
 	}
-	// Feature tutorials dim the screen around a pointer; the chores cover
-	// every feature, so skip them.
+	// Guide arrows point at the control the game wants pressed next
+	// (tutorial steps, quest guidance); following them completes those.
+	if a, ok := screens.FindGuideArrow(frame); ok {
+		b.Log.Info("following guide arrow", "x", a.Target.X, "y", a.Target.Y, "shot", b.save(frame))
+		return true, b.Tap(ctx, a.Target, "guide arrow")
+	}
+	// Tutorials without an arrow on this frame: skip them; the chores cover
+	// every feature.
 	if m := assets.MustGet(screens.TTutSkip).Find(frame, screens.Margin); m.Visible(screens.MinScore) {
 		b.Log.Info("skipping tutorial", "shot", b.save(frame))
 		return true, b.Tap(ctx, m.Center(), "skip tutorial")

@@ -57,6 +57,23 @@ func actions() []*runner.Action {
 				st.Add("quest_panel_claims", n)
 				return out{Progress: n > 0}, err
 			}},
+		{Name: "guide", Priority: 87, Snooze: 20 * time.Minute,
+			Ready: func(s sig, _ *st, _ time.Time) bool { return s.HasArrow },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.FollowGuide(ctx, b)
+				st.Add("guide_steps", n)
+				if err != nil {
+					return out{}, err
+				}
+				// Done only if the guidance moved on; an arrow still on main
+				// (e.g. towards a mode with no tickets left) gets snoozed.
+				_, f, err := b.Look(ctx)
+				if err != nil {
+					return out{}, err
+				}
+				_, still := screens.FindGuideArrow(f)
+				return out{Progress: !still, Growth: !still}, nil
+			}},
 		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SummonUpgrade(ctx, b)
