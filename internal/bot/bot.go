@@ -30,7 +30,12 @@ type Bot struct {
 	// Settle is the pause after a tap before looking again; UI transitions
 	// in this game take about a second.
 	Settle time.Duration
+
+	last image.Image // most recent frame, for the deny-list guard
 }
+
+// ErrDenied is returned for a tap that would land on a deny-listed button.
+var ErrDenied = errors.New("tap refused: deny-listed button")
 
 func New(d *device.Device, log *slog.Logger) *Bot {
 	return &Bot{D: d, Log: log, Shots: "captures/unknown", Settle: 1200 * time.Millisecond}
@@ -42,6 +47,7 @@ func (b *Bot) Look(ctx context.Context) (screens.ID, image.Image, error) {
 	if err != nil {
 		return screens.Unknown, nil, err
 	}
+	b.last = frame
 	return screens.Detect(frame), frame, nil
 }
 
@@ -67,13 +73,31 @@ func (b *Bot) Wait(ctx context.Context, timeout time.Duration, ids ...screens.ID
 	}
 }
 
-// Tap taps a point and waits for the UI to settle.
+// Tap taps a point and waits for the UI to settle. Taps on a deny-listed
+// button visible in the latest frame are refused.
 func (b *Bot) Tap(ctx context.Context, p image.Point, what string) error {
+	if name := b.denied(p); name != "" {
+		b.Log.Error("refused tap on deny-listed button", "what", what, "button", name, "shot", b.save(b.last))
+		return fmt.Errorf("%w: %s", ErrDenied, name)
+	}
 	b.Log.Debug("tap", "what", what, "x", p.X, "y", p.Y)
 	if err := b.D.Tap(ctx, p.X, p.Y); err != nil {
 		return err
 	}
 	return sleep(ctx, b.Settle)
+}
+
+func (b *Bot) denied(p image.Point) string {
+	if b.last == nil {
+		return ""
+	}
+	for _, name := range screens.Deny {
+		m := assets.MustGet(name).Find(b.last, screens.Margin)
+		if m.Visible(screens.MinScore) && p.In(image.Rectangle{Min: m.At, Max: m.At.Add(m.Size)}.Inset(-8)) {
+			return name
+		}
+	}
+	return ""
 }
 
 // TapTemplate taps a template that must be visible in frame.

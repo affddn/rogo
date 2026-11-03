@@ -55,6 +55,10 @@ const (
 	THintOK              = "dlg_ok_hint"
 )
 
+// Deny lists buttons that spend real money or lead to a shop. Bot refuses any
+// tap that lands on one of these while it is visible.
+var Deny = []string{"deny_go_unlock"}
+
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
 // 720x1280 render, so true hits sit above 0.97 and misses below 0.6.
 const MinScore = 0.85
