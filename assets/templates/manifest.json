@@ -312,6 +312,30 @@
     "note": "quick idle confirm: title"
   },
   {
+    "name": "resonate_activate",
+    "x": 254,
+    "y": 1064,
+    "w": 212,
+    "h": 58,
+    "note": "enhance resonate dialog: Activate button"
+  },
+  {
+    "name": "resonate_close",
+    "x": 640,
+    "y": 150,
+    "w": 52,
+    "h": 52,
+    "note": "enhance resonate dialog: close X"
+  },
+  {
+    "name": "resonate_title",
+    "x": 196,
+    "y": 144,
+    "w": 330,
+    "h": 46,
+    "note": "enhance resonate dialog: title"
+  },
+  {
     "name": "reward_congrats",
     "x": 56,
     "y": 398,

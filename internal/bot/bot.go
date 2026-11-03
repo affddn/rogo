@@ -123,6 +123,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TIncomeClose)
 	case screens.IdleRewards:
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
+	case screens.Resonate:
+		return true, b.TapTemplate(ctx, frame, screens.TResonateClose)
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
 	}

@@ -18,6 +18,7 @@ const (
 	Attribute        ID = "attribute"
 	CharOverview     ID = "char-overview"
 	CharSkill        ID = "char-skill"
+	Resonate         ID = "resonate"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -52,6 +53,9 @@ const (
 	TAttrHeader          = "attr_header"
 	TCharOverview        = "char_overview_header"
 	TSkillHeader         = "skill_header"
+	TResonateTitle       = "resonate_title"
+	TResonateActivate    = "resonate_activate"
+	TResonateClose       = "resonate_close"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -102,6 +106,7 @@ var rules = []rule{
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
 	{id: GachaCount, anchors: []string{TGachaCountHint, TGachaDrawButton}},
 	{id: QuickIdleConfirm, anchors: []string{TQuickIdleTitle, TDialogOK}},
+	{id: Resonate, anchors: []string{TResonateTitle, TResonateClose}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
