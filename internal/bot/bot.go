@@ -65,7 +65,7 @@ func (b *Bot) Wait(ctx context.Context, timeout time.Duration, ids ...screens.ID
 			}
 		}
 		if time.Now().After(deadline) {
-			return id, frame, fmt.Errorf("%w %v (on %s)", ErrTimeout, ids, id)
+			return id, frame, fmt.Errorf("%w %v (on %s, shot %s)", ErrTimeout, ids, id, b.save(frame))
 		}
 		if err := sleep(ctx, 500*time.Millisecond); err != nil {
 			return id, frame, err
