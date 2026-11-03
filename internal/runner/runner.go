@@ -103,6 +103,7 @@ func (r *Runner) Run(ctx context.Context) error {
 			continue
 		}
 		sig := screens.ReadMain(frame)
+		st.Seen = sig.Level
 
 		a := r.pick(sig, now)
 		if a == nil {

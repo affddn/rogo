@@ -57,9 +57,18 @@ func actions() []*runner.Action {
 				st.Add("summon_upgrade_stages", n)
 				return out{Progress: n > 0}, err
 			}},
-		{Name: "attributes", Priority: 80, Snooze: 45 * time.Minute, Ready: badge(screens.BadgeCharacter),
+		// Points only arrive on level-up, and the Character badge also lights
+		// for cosmetics, so wait for the level text to change.
+		{Name: "attributes", Priority: 80, Snooze: 10 * time.Minute,
+			Ready: func(s sig, st *st, _ time.Time) bool {
+				return s.Has(screens.BadgeCharacter) && screens.LevelChanged(s.Level, st.Level)
+			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				seen := st.Seen
 				spent, err := tasks.Attributes(ctx, b)
+				if err == nil {
+					st.Level = seen
+				}
 				if spent {
 					st.Add("attribute_allocations", 1)
 				}

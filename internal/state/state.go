@@ -24,6 +24,11 @@ type State struct {
 	Snooze   map[string]time.Time `json:"snooze"` // action ignored until then
 	Counters map[string]int       `json:"counters"`
 
+	// Level is the level fingerprint attributes were last handled at, Seen
+	// the one on screen now; a difference means points arrived.
+	Level string `json:"level"`
+	Seen  string `json:"seen_level"`
+
 	// Growth counts upgrades since the last stage defeat; a stage retry
 	// before any growth would lose the same way.
 	Growth     int       `json:"growth_since_defeat"`
