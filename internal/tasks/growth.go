@@ -120,9 +120,23 @@ func badged(frame image.Image, p image.Point) bool {
 // that shows an upgrade badge, so levels stay even for the set resonance
 // bonus. It stops when nothing is badged or the cost turns unaffordable.
 func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
-	frame, err := open(ctx, b, screens.TNavEquipment, screens.Equipment)
+	// Equipment opens on whichever tab is badged; Card first if it is.
+	frame, err := open(ctx, b, screens.TNavEquipment, screens.Equipment, screens.CardPage)
 	if err != nil {
 		return 0, err
+	}
+	if screens.Detect(frame) == screens.CardPage {
+		n, err := cards(ctx, b)
+		levels += n
+		if err != nil {
+			return levels, err
+		}
+		if err := b.Tap(ctx, equipmentTab, "equipment tab"); err != nil {
+			return levels, err
+		}
+		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Equipment); err != nil {
+			return levels, err
+		}
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TEquipUpgrade); err != nil {
 		return 0, err
