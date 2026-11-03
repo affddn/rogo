@@ -60,8 +60,17 @@ func actions() []*runner.Action {
 		{Name: "guide", Priority: 87, Snooze: 20 * time.Minute,
 			Ready: func(s sig, _ *st, _ time.Time) bool { return s.HasArrow },
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				n, err := tasks.FollowGuide(ctx, b)
+				n, landed, err := tasks.FollowGuide(ctx, b)
 				st.Add("guide_steps", n)
+				// The guide often leads to a mode whose chore we already
+				// have (the current quest wants it); run it now instead of
+				// waiting for its timer.
+				if err == nil && landed == screens.Baphomet {
+					d, berr := tasks.Baphomet(ctx, b)
+					st.Add("boss_dodges", d)
+					st.LastRun["baphomet"] = time.Now()
+					err = berr
+				}
 				// Main-screen arrows mostly point at the current quest's
 				// objective, which may not be doable yet (no tickets left);
 				// the blink makes "arrow gone" unreliable, so always wait a
