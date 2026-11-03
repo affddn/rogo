@@ -104,6 +104,13 @@ func actions() []*runner.Action {
 				st.Add("pet_steps", n)
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
+		{Name: "season-pass", Priority: 45,
+			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("season-pass", now) >= time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.SeasonPass(ctx, b)
+				st.Add("pass_claims", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "mail", Priority: 40,
 			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("mail", now) >= 6*time.Hour },
 			Run: func(ctx context.Context, b *bot.Bot, _ *st) (out, error) {
