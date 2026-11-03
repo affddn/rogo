@@ -22,6 +22,7 @@ const (
 	AutoSummonHint   ID = "auto-summon-hint"
 	Title            ID = "title"
 	IdleRewards      ID = "idle-rewards"
+	StageDefeat      ID = "stage-defeat"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -60,6 +61,8 @@ const (
 	TTitleStartGame      = "title_start_game"
 	TIdleTitle           = "idle_title"
 	TIdleClaim           = "idle_claim"
+	TStageDefeat         = "stage_defeat"
+	TStageLeave          = "stage_leave"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -83,6 +86,7 @@ var rules = []rule{
 	{Reward, []string{TRewardCongrats}},
 	{Title, []string{TTitleAgreeText}},
 	{IdleRewards, []string{TIdleTitle, TIdleClaim}},
+	{StageDefeat, []string{TStageDefeat, TStageLeave}},
 	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
 	{AutoSummonHint, []string{THintTitle, TAutoSummonText}},
 	{Income, []string{TIncomeTitle, TIncomeClose}},

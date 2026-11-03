@@ -280,6 +280,22 @@
     "note": "reward popup: 'Congratulations!' header"
   },
   {
+    "name": "stage_defeat",
+    "x": 216,
+    "y": 250,
+    "w": 286,
+    "h": 92,
+    "note": "stage result: Defeat title"
+  },
+  {
+    "name": "stage_leave",
+    "x": 254,
+    "y": 1044,
+    "w": 212,
+    "h": 56,
+    "note": "stage result: Leave button"
+  },
+  {
     "name": "title_agree_checked",
     "x": 70,
     "y": 1148,

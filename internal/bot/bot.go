@@ -121,6 +121,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TIncomeClose)
 	case screens.IdleRewards:
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
+	case screens.StageDefeat:
+		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
 	}
 	if screens.Visible(frame, screens.TNavBack) {
 		return true, b.TapTemplate(ctx, frame, screens.TNavBack)

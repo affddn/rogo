@@ -38,6 +38,7 @@ func TestDetect(t *testing.T) {
 		"boot/04.png":        Title,
 		"boot/12.png":        Title,
 		"boot/26.png":        IdleRewards,
+		"stage-r11.png":      StageDefeat,
 	}
 	for file, want := range cases {
 		if got := Detect(load(t, file)); got != want {
