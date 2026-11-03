@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"time"
 
@@ -47,6 +48,9 @@ type Runner struct {
 	// Reconnect, when set, re-establishes the transport (e.g. fetches a fresh
 	// VMOS tunnel key) before adb reconnects to an offline device.
 	Reconnect func(ctx context.Context) error
+	// PauseFile, while it exists, holds the loop so someone can use the
+	// phone by hand without the bot fighting them.
+	PauseFile string
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
@@ -58,6 +62,12 @@ func (r *Runner) Run(ctx context.Context) error {
 	log, st := r.B.Log, r.State
 	streak := 0
 	for {
+		if r.paused() {
+			if err := bot.Sleep(ctx, 5*time.Second); err != nil {
+				return err
+			}
+			continue
+		}
 		now := time.Now()
 		if st.Rollover(now) {
 			log.Info("new game day", "day", st.Day)
@@ -149,6 +159,14 @@ func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
 		}
 	}
 	return nil
+}
+
+func (r *Runner) paused() bool {
+	if r.PauseFile == "" {
+		return false
+	}
+	_, err := os.Stat(r.PauseFile)
+	return err == nil
 }
 
 func (r *Runner) save() {
