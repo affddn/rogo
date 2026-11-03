@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"errors"
+	"image"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -13,6 +14,8 @@ import (
 // automatically (40 s each), so a good run can clear several in a row.
 const stageRun = 8 * time.Minute
 
+var stageChallenge = image.Pt(662, 1030)
+
 // Stage starts Stage Challenge and waits for the chain of battles to end,
 // which it always does with a defeat once the next stage is too strong.
 // Retrying after growth pushes the main stage forward.
@@ -20,11 +23,8 @@ func Stage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return false, err
 	}
-	_, frame, err := b.Look(ctx)
-	if err != nil {
-		return false, err
-	}
-	if err := b.TapTemplate(ctx, frame, screens.TMainStageChallenge); err != nil {
+	// By position: battle effects and the stage counter often cover the label.
+	if err := b.Tap(ctx, stageChallenge, "stage challenge"); err != nil {
 		return false, err
 	}
 	start := time.Now()

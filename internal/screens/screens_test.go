@@ -25,23 +25,26 @@ func load(t *testing.T, name string) image.Image {
 
 func TestDetect(t *testing.T) {
 	cases := map[string]ID{
-		"main.png":           Main,
-		"income-claimed.png": Income,
-		"income-after.png":   Income,
-		"quick-idle-1.png":   QuickIdleConfirm,
-		"quick-idle-2.png":   Reward,
-		"auto-1.png":         AutoSummonHint,
-		"character.png":      Attribute,
-		"char-unknown.png":   CharOverview,
-		"equipment.png":      Equipment,
-		"eq-upgrade.png":     Enhance,
-		"boot/04.png":        Title,
-		"boot/12.png":        Title,
-		"boot/26.png":        IdleRewards,
-		"stage-r11.png":      StageDefeat,
-		"weapon.png":         WeaponGacha,
-		"gacha-after.png":    WeaponGacha,
-		"gacha-result.png":   GachaCount,
+		"main.png":                        Main,
+		"income-claimed.png":              Income,
+		"income-after.png":                Income,
+		"quick-idle-1.png":                QuickIdleConfirm,
+		"quick-idle-2.png":                Reward,
+		"auto-1.png":                      AutoSummonHint,
+		"character.png":                   Attribute,
+		"char-unknown.png":                CharOverview,
+		"equipment.png":                   Equipment,
+		"eq-upgrade.png":                  Enhance,
+		"boot/04.png":                     Title,
+		"boot/12.png":                     Title,
+		"boot/26.png":                     IdleRewards,
+		"stage-r11.png":                   StageDefeat,
+		"main3.png":                       Main,
+		"unknown/20261103-182537.076.png": Main, // elite banner over Stage Challenge
+		"unknown/20261103-182646.827.png": Main, // auto-equip popup
+		"weapon.png":                      WeaponGacha,
+		"gacha-after.png":                 WeaponGacha,
+		"gacha-result.png":                GachaCount,
 	}
 	for file, want := range cases {
 		if got := Detect(load(t, file)); got != want {
@@ -58,3 +61,4 @@ func TestTicketIconOnlyWhenFree(t *testing.T) {
 		t.Error("ticket icon seen after the free Quick Idle was used")
 	}
 }
+

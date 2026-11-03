@@ -33,6 +33,7 @@ const (
 	TMainStageChallenge  = "main_stage_challenge"
 	TMainQuest           = "main_quest"
 	TMainQuestCompleted  = "main_quest_completed"
+	TMainSystem          = "main_system"
 	TIncomeTitle         = "income_title"
 	TIncomeClose         = "income_close"
 	TIncomeQuickIdle     = "income_quick_idle"
@@ -86,24 +87,30 @@ const Margin = 24
 type rule struct {
 	id      ID
 	anchors []string // all must be visible
+	// anyOf, when set, also needs at least need of these visible.
+	anyOf []string
+	need  int
 }
 
 // Modals first: whatever is on top wins.
 var rules = []rule{
-	{Reward, []string{TRewardCongrats}},
-	{Title, []string{TTitleAgreeText}},
-	{IdleRewards, []string{TIdleTitle, TIdleClaim}},
-	{StageDefeat, []string{TStageDefeat, TStageLeave}},
-	{GachaCount, []string{TGachaCountHint, TGachaDrawButton}},
-	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
-	{AutoSummonHint, []string{THintTitle, TAutoSummonText}},
-	{Income, []string{TIncomeTitle, TIncomeClose}},
-	{Attribute, []string{TAttrHeader, TNavBack}},
-	{CharOverview, []string{TCharOverview, TNavBack}},
-	{Equipment, []string{TEquipHeader, TNavBack}},
-	{Enhance, []string{TEnhanceHeader, TNavBack}},
-	{WeaponGacha, []string{TGachaHeader, TNavBack}},
-	{Main, []string{TMainAdventureIncome, TMainStageChallenge}},
+	{id: Reward, anchors: []string{TRewardCongrats}},
+	{id: Title, anchors: []string{TTitleAgreeText}},
+	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
+	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
+	{id: GachaCount, anchors: []string{TGachaCountHint, TGachaDrawButton}},
+	{id: QuickIdleConfirm, anchors: []string{TQuickIdleTitle, TDialogOK}},
+	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
+	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
+	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
+	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},
+	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
+	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
+	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
+	// The bottom nav dims under every modal, so it gates Main; the other
+	// anchors get covered by effects and auto-equip popups now and then.
+	{id: Main, anchors: []string{TNavCharacter},
+		anyOf: []string{TMainAdventureIncome, TMainStageChallenge, TMainQuest, TMainSystem}, need: 2},
 }
 
 // Visible reports whether the named template is on screen and not dimmed.
@@ -119,6 +126,15 @@ func Detect(frame image.Image) ID {
 				hit = false
 				break
 			}
+		}
+		if hit && r.need > 0 {
+			n := 0
+			for _, a := range r.anyOf {
+				if Visible(frame, a) {
+					n++
+				}
+			}
+			hit = n >= r.need
 		}
 		if hit {
 			return r.id
