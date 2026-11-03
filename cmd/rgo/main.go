@@ -41,6 +41,7 @@ var commands = map[string]command{
 	"boot":   {"", cmdBoot, false},
 	"run":    {"", cmdRun, false},
 	"stage":  {"", cmdStage, false},
+	"gacha":  {"", cmdGacha, false},
 	"back":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Back(ctx) }, false},
 	"launch": {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Launch(ctx, pkg) }, false},
 	"stop":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Stop(ctx, pkg) }, false},

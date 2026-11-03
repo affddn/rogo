@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -41,6 +42,10 @@ func jobs() []*runner.Job {
 			return err
 		}},
 		{Name: "income", Every: 2 * time.Hour, Run: tasks.Income},
+		{Name: "weapon-gacha", Every: 2 * time.Hour, Run: func(ctx context.Context, b *bot.Bot) error {
+			_, err := tasks.WeaponGacha(ctx, b)
+			return err
+		}},
 		{Name: "stage", Every: 45 * time.Minute, Run: func(ctx context.Context, b *bot.Bot) error {
 			_, err := tasks.Stage(ctx, b)
 			return err
@@ -54,5 +59,11 @@ func cmdRun(ctx context.Context, d *device.Device, _ []string) error {
 
 func cmdStage(ctx context.Context, d *device.Device, _ []string) error {
 	_, err := tasks.Stage(ctx, newBot(d))
+	return err
+}
+
+func cmdGacha(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.WeaponGacha(ctx, newBot(d))
+	fmt.Println("batches", n)
 	return err
 }

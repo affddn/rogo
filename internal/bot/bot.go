@@ -251,6 +251,9 @@ func (b *Bot) save(frame image.Image) string {
 	return path
 }
 
+// Sleep waits for d or until ctx is done.
+func Sleep(ctx context.Context, d time.Duration) error { return sleep(ctx, d) }
+
 func sleep(ctx context.Context, d time.Duration) error {
 	t := time.NewTimer(d)
 	defer t.Stop()
