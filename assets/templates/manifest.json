@@ -1,1 +1,138 @@
-[]
+[
+  {
+    "name": "dlg_cancel",
+    "x": 113,
+    "y": 828,
+    "w": 214,
+    "h": 60,
+    "note": "generic confirm: Cancel button"
+  },
+  {
+    "name": "dlg_ok",
+    "x": 392,
+    "y": 828,
+    "w": 214,
+    "h": 60,
+    "note": "generic confirm: OK button"
+  },
+  {
+    "name": "hint_tap_empty",
+    "x": 226,
+    "y": 1042,
+    "w": 270,
+    "h": 28,
+    "note": "generic popup hint: Tap empty area to close"
+  },
+  {
+    "name": "income_claimed",
+    "x": 226,
+    "y": 588,
+    "w": 266,
+    "h": 34,
+    "note": "income dialog: Reward already claimed bar"
+  },
+  {
+    "name": "income_close",
+    "x": 640,
+    "y": 194,
+    "w": 46,
+    "h": 46,
+    "note": "income dialog: close X"
+  },
+  {
+    "name": "income_quick_idle",
+    "x": 418,
+    "y": 1018,
+    "w": 212,
+    "h": 58,
+    "note": "income dialog: Quick Idle button"
+  },
+  {
+    "name": "income_ticket_icon",
+    "x": 486,
+    "y": 978,
+    "w": 40,
+    "h": 38,
+    "note": "income dialog: Quick Idle ticket icon (free use available)"
+  },
+  {
+    "name": "income_title",
+    "x": 84,
+    "y": 190,
+    "w": 262,
+    "h": 70,
+    "note": "income dialog: title (left half)"
+  },
+  {
+    "name": "income_yield_bonus",
+    "x": 100,
+    "y": 1018,
+    "w": 212,
+    "h": 58,
+    "note": "income dialog: Yield Bonus button"
+  },
+  {
+    "name": "main_adventure_income",
+    "x": 12,
+    "y": 1064,
+    "w": 98,
+    "h": 48,
+    "note": "main: Adventure Income label"
+  },
+  {
+    "name": "main_nav_character",
+    "x": 26,
+    "y": 1236,
+    "w": 102,
+    "h": 32,
+    "note": "bottom nav: Character label"
+  },
+  {
+    "name": "main_quest",
+    "x": 640,
+    "y": 286,
+    "w": 62,
+    "h": 26,
+    "note": "main: Quest label (right rail)"
+  },
+  {
+    "name": "main_stage_challenge",
+    "x": 614,
+    "y": 1064,
+    "w": 96,
+    "h": 48,
+    "note": "main: Stage Challenge label"
+  },
+  {
+    "name": "main_system",
+    "x": 636,
+    "y": 190,
+    "w": 70,
+    "h": 24,
+    "note": "main: System label"
+  },
+  {
+    "name": "quickidle_ticket_cost",
+    "x": 236,
+    "y": 564,
+    "w": 280,
+    "h": 32,
+    "note": "quick idle confirm: 'spend Quick Idle Ticket x 1' (ticket, not diamonds)"
+  },
+  {
+    "name": "quickidle_title",
+    "x": 280,
+    "y": 380,
+    "w": 160,
+    "h": 42,
+    "note": "quick idle confirm: title"
+  },
+  {
+    "name": "reward_congrats",
+    "x": 56,
+    "y": 398,
+    "w": 280,
+    "h": 48,
+    "note": "reward popup: 'Congratulations!' header"
+  }
+]
