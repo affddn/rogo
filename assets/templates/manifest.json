@@ -32,6 +32,38 @@
     "note": "auto-summon hint: 'Auto-summon Elites for gear'"
   },
   {
+    "name": "card_activate",
+    "x": 250,
+    "y": 1086,
+    "w": 216,
+    "h": 58,
+    "note": "card details dialog: Activate button"
+  },
+  {
+    "name": "card_details_close",
+    "x": 638,
+    "y": 76,
+    "w": 50,
+    "h": 52,
+    "note": "card details dialog: close X"
+  },
+  {
+    "name": "card_details_title",
+    "x": 212,
+    "y": 82,
+    "w": 300,
+    "h": 46,
+    "note": "card details dialog: title"
+  },
+  {
+    "name": "card_header",
+    "x": 8,
+    "y": 16,
+    "w": 140,
+    "h": 50,
+    "note": "equipment: Card page header"
+  },
+  {
     "name": "char_overview_header",
     "x": 8,
     "y": 16,
@@ -246,6 +278,14 @@
     "w": 212,
     "h": 58,
     "note": "income dialog: Yield Bonus button"
+  },
+  {
+    "name": "jobchange_header",
+    "x": 8,
+    "y": 16,
+    "w": 180,
+    "h": 50,
+    "note": "job change page header"
   },
   {
     "name": "main_adventure_income",
