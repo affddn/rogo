@@ -127,6 +127,10 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
 	case screens.Resonate:
 		return true, b.TapTemplate(ctx, frame, screens.TResonateClose)
+	case screens.Mail:
+		return true, b.TapTemplate(ctx, frame, screens.TMailClose)
+	case screens.PetCount:
+		return true, b.tapHint(ctx, frame)
 	case screens.QuestPanel:
 		return true, b.TapTemplate(ctx, frame, screens.TQuestClose)
 	case screens.CardDetails:
@@ -140,6 +144,12 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TCombatLeave)
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
+	}
+	// Feature tutorials dim the screen around a pointer; the chores cover
+	// every feature, so skip them.
+	if m := assets.MustGet(screens.TTutSkip).Find(frame, screens.Margin); m.Visible(screens.MinScore) {
+		b.Log.Info("skipping tutorial", "shot", b.save(frame))
+		return true, b.Tap(ctx, m.Center(), "skip tutorial")
 	}
 	// The back arrow sits over page art (lava on Baphomet), so match its shape
 	// only; on a modal, tapping it lands outside the modal and closes it.

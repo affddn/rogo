@@ -20,6 +20,7 @@ const (
 	BadgeSummon    Badge = "summon-upgrade"
 	BadgeQuest     Badge = "quest"
 	BadgeJobChange Badge = "job-change"
+	BadgePet       Badge = "pet"
 )
 
 // badgeAt are dot centres measured on 720x1280 main-screen captures.
@@ -33,6 +34,7 @@ var badgeAt = map[Badge]image.Point{
 	BadgeSummon:    {475, 1022},
 	BadgeQuest:     {690, 247},
 	BadgeJobChange: {690, 350},
+	BadgePet:       {450, 1186},
 }
 
 // Signals is everything one main-screen look says about what needs doing.

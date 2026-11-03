@@ -160,6 +160,14 @@
     "note": "DENY: 'Go Unlock' paid monthly card button"
   },
   {
+    "name": "deny_mail_delete",
+    "x": 116,
+    "y": 1060,
+    "w": 216,
+    "h": 58,
+    "note": "DENY: mail Delete All (never)"
+  },
+  {
     "name": "dlg_cancel",
     "x": 113,
     "y": 828,
@@ -352,6 +360,30 @@
     "note": "job change page header"
   },
   {
+    "name": "mail_claim_all",
+    "x": 390,
+    "y": 1060,
+    "w": 216,
+    "h": 58,
+    "note": "mail dialog: Claim All"
+  },
+  {
+    "name": "mail_close",
+    "x": 640,
+    "y": 146,
+    "w": 50,
+    "h": 50,
+    "note": "mail dialog: close X"
+  },
+  {
+    "name": "mail_title",
+    "x": 300,
+    "y": 140,
+    "w": 120,
+    "h": 46,
+    "note": "mail dialog: title"
+  },
+  {
     "name": "main_adventure_income",
     "x": 12,
     "y": 1064,
@@ -424,6 +456,14 @@
     "note": "bottom nav: Game Mode label"
   },
   {
+    "name": "nav_pet",
+    "x": 384,
+    "y": 1238,
+    "w": 56,
+    "h": 30,
+    "note": "bottom nav: Pet label"
+  },
+  {
     "name": "nav_weapon",
     "x": 150,
     "y": 1238,
@@ -446,6 +486,54 @@
     "w": 300,
     "h": 46,
     "note": "one-click upgrade dialog: title"
+  },
+  {
+    "name": "pet_auto_formation",
+    "x": 76,
+    "y": 1092,
+    "w": 212,
+    "h": 58,
+    "note": "pet: Auto Formation button"
+  },
+  {
+    "name": "pet_header",
+    "x": 8,
+    "y": 16,
+    "w": 120,
+    "h": 46,
+    "note": "pet cultivation page header"
+  },
+  {
+    "name": "petgacha_cost_ticket",
+    "x": 304,
+    "y": 762,
+    "w": 30,
+    "h": 30,
+    "note": "pet gacha: ticket cost icon"
+  },
+  {
+    "name": "petgacha_diamond_icon",
+    "x": 462,
+    "y": 1112,
+    "w": 34,
+    "h": 30,
+    "note": "pet gacha: multi-draw diamond icon (paid)"
+  },
+  {
+    "name": "petgacha_header",
+    "x": 8,
+    "y": 16,
+    "w": 150,
+    "h": 46,
+    "note": "pet gacha page header"
+  },
+  {
+    "name": "petgacha_ticket_icon",
+    "x": 462,
+    "y": 1112,
+    "w": 34,
+    "h": 30,
+    "note": "pet gacha: multi-draw ticket icon (free); diamonds look different"
   },
   {
     "name": "questp_claim",
@@ -630,5 +718,21 @@
     "w": 198,
     "h": 46,
     "note": "title screen: Start Game"
+  },
+  {
+    "name": "tut_bubble",
+    "x": 186,
+    "y": 560,
+    "w": 210,
+    "h": 44,
+    "note": "tutorial: guide speech bubble left edge"
+  },
+  {
+    "name": "tut_skip",
+    "x": 596,
+    "y": 70,
+    "w": 100,
+    "h": 40,
+    "note": "tutorial: Skip >> button (top right)"
   }
 ]

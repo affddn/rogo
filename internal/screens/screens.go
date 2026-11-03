@@ -30,6 +30,10 @@ const (
 	Baphomet         ID = "baphomet"
 	CombatEnded      ID = "combat-ended"
 	QuestPanel       ID = "quest-panel"
+	PetGacha         ID = "pet-gacha"
+	PetCount         ID = "pet-count"
+	PetCultivate     ID = "pet-cultivate"
+	Mail             ID = "mail"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -92,6 +96,15 @@ const (
 	TQuestTitle          = "questp_title"
 	TQuestClose          = "questp_close"
 	TQuestClaim          = "questp_claim"
+	TNavPet              = "nav_pet"
+	TPetGachaHeader      = "petgacha_header"
+	TPetCostTicket       = "petgacha_cost_ticket"
+	TPetTicketIcon       = "petgacha_ticket_icon"
+	TPetHeader           = "pet_header"
+	TTutSkip             = "tut_skip"
+	TMailTitle           = "mail_title"
+	TMailClaimAll        = "mail_claim_all"
+	TMailClose           = "mail_close"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -117,7 +130,7 @@ const (
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
 // tap that lands on one of these while it is visible.
-var Deny = []string{"deny_go_unlock", "deny_accelerate"}
+var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete"}
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
 // 720x1280 render, so true hits sit above 0.97 and misses below 0.6.
@@ -148,6 +161,10 @@ var rules = []rule{
 	{id: OneClickUpgrade, anchors: []string{TOneClickTitle, TOneClickOK}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
+	{id: Mail, anchors: []string{TMailTitle, TMailClose}},
+	// The pet count dialog was first seen under a tutorial dim; title + Draw
+	// identify it (the weapon one matches GachaCount above it first).
+	{id: PetCount, anchors: []string{THintTitle, TGachaDrawButton}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
@@ -158,6 +175,8 @@ var rules = []rule{
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	{id: CardPage, anchors: []string{TCardHeader, TNavBack}},
+	{id: PetGacha, anchors: []string{TPetGachaHeader, TNavBack}},
+	{id: PetCultivate, anchors: []string{TPetHeader, TNavBack}},
 	{id: JobChange, anchors: []string{TJobChangeHeader, TNavBack}},
 	{id: GameMode, anchors: []string{TGameModeHeader, TNavBack}},
 	{id: Realm, anchors: []string{TRealmHeader, TNavBack}},
