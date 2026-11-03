@@ -304,3 +304,57 @@ func Components(img image.Image, area image.Rectangle, minArea, maxArea int, pre
 	}
 	return out
 }
+
+// FindAll returns every placement of t inside area scoring at least minScore,
+// keeping only the best within minGap pixels of each other.
+func (t *Template) FindAll(frame image.Image, area image.Rectangle, minScore float64, minGap int) []Match {
+	win := area.Intersect(frame.Bounds())
+	if win.Dx() < t.g.W || win.Dy() < t.g.H || t.norm == 0 {
+		return nil
+	}
+	img := GrayOf(frame, win)
+	sum, sq := integral(img)
+	n := float64(t.g.W * t.g.H)
+	var hits []Match
+	for oy := 0; oy+t.g.H <= img.H; oy++ {
+		for ox := 0; ox+t.g.W <= img.W; ox++ {
+			s := rectSum(sum, img.W+1, ox, oy, t.g.W, t.g.H)
+			s2 := rectSum(sq, img.W+1, ox, oy, t.g.W, t.g.H)
+			variance := s2 - s*s/n
+			if variance <= 1e-6 {
+				continue
+			}
+			var dot float64
+			for y := 0; y < t.g.H; y++ {
+				row := (oy+y)*img.W + ox
+				trow := y * t.g.W
+				for x := 0; x < t.g.W; x++ {
+					dot += img.Pix[row+x] * t.zero[trow+x]
+				}
+			}
+			score := dot / (math.Sqrt(variance) * t.norm)
+			if score < minScore {
+				continue
+			}
+			m := Match{Score: score, At: image.Pt(win.Min.X+ox, win.Min.Y+oy), Size: t.Size()}
+			if t.mean > 0 {
+				m.Bright = s / n / t.mean
+			}
+			merged := false
+			for i := range hits {
+				d := hits[i].At.Sub(m.At)
+				if d.X*d.X+d.Y*d.Y < minGap*minGap {
+					if m.Score > hits[i].Score {
+						hits[i] = m
+					}
+					merged = true
+					break
+				}
+			}
+			if !merged {
+				hits = append(hits, m)
+			}
+		}
+	}
+	return hits
+}
