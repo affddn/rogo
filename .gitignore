@@ -2,8 +2,9 @@
 /bin/
 /rgo
 
-# local runtime data: screenshots, logs, device dumps
+# local runtime data: screenshots, logs, device dumps, bot state
 /captures/
+/data/
 /device-check-*/
 /startup/
 *.log
