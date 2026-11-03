@@ -21,17 +21,20 @@ import (
 const pkg = "com.ggv.rogosea.aos"
 
 type command struct {
-	usage string
-	run   func(ctx context.Context, d *device.Device, args []string) error
+	usage   string
+	run     func(ctx context.Context, d *device.Device, args []string) error
+	offline bool // works on saved screenshots; skip adb connect
 }
 
 var commands = map[string]command{
-	"info":   {"", cmdInfo},
-	"shot":   {"[file.png]", cmdShot},
-	"tap":    {"x y", cmdTap},
-	"back":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Back(ctx) }},
-	"launch": {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Launch(ctx, pkg) }},
-	"stop":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Stop(ctx, pkg) }},
+	"info":   {"", cmdInfo, false},
+	"shot":   {"[file.png]", cmdShot, false},
+	"tap":    {"x y", cmdTap, false},
+	"crop":   {"src.png name x y w h [note]", cmdCrop, true},
+	"match":  {"[-f shot.png] [template...]", cmdMatch, false},
+	"back":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Back(ctx) }, false},
+	"launch": {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Launch(ctx, pkg) }, false},
+	"stop":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Stop(ctx, pkg) }, false},
 }
 
 func main() {
@@ -56,8 +59,10 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	if err := d.Connect(ctx); err != nil {
-		log.Fatal(err)
+	if !c.offline {
+		if err := d.Connect(ctx); err != nil {
+			log.Fatal(err)
+		}
 	}
 	if err := c.run(ctx, d, flag.Args()[1:]); err != nil {
 		log.Fatal(err)
