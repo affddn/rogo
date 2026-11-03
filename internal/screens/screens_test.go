@@ -76,3 +76,12 @@ func TestReadMainSignals(t *testing.T) {
 		t.Errorf("auto-2: want auto on and quest done, got %+v", on)
 	}
 }
+
+func TestSummonBadge(t *testing.T) {
+	if !ReadMain(load(t, "main4.png")).Has(BadgeSummon) {
+		t.Error("main4: summon upgrade badge not read")
+	}
+	if ReadMain(load(t, "main3.png")).Has(BadgeSummon) {
+		t.Error("main3: phantom summon upgrade badge")
+	}
+}

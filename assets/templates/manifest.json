@@ -368,6 +368,30 @@
     "note": "stage result: Leave button"
   },
   {
+    "name": "summonup_close",
+    "x": 640,
+    "y": 274,
+    "w": 50,
+    "h": 50,
+    "note": "summon upgrade dialog: close X"
+  },
+  {
+    "name": "summonup_enhance",
+    "x": 254,
+    "y": 938,
+    "w": 212,
+    "h": 58,
+    "note": "summon upgrade dialog: Enhance button"
+  },
+  {
+    "name": "summonup_title",
+    "x": 196,
+    "y": 266,
+    "w": 344,
+    "h": 46,
+    "note": "summon upgrade dialog: title"
+  },
+  {
     "name": "title_agree_checked",
     "x": 70,
     "y": 1148,
