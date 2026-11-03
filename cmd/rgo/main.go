@@ -44,6 +44,7 @@ var commands = map[string]command{
 	"gacha":  {"", cmdGacha, false},
 	"realm":  {"", cmdRealm, false},
 	"boss":   {"", cmdBaphomet, false},
+	"qpanel": {"", cmdQuestPanel, false},
 	"back":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Back(ctx) }, false},
 	"launch": {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Launch(ctx, pkg) }, false},
 	"stop":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Stop(ctx, pkg) }, false},

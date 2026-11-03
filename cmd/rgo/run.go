@@ -51,6 +51,12 @@ func actions() []*runner.Action {
 				st.Add("quests_claimed", n)
 				return out{Progress: n > 0}, err
 			}},
+		{Name: "quest-panel", Priority: 88, Snooze: 20 * time.Minute, Ready: badge(screens.BadgeQuest),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.QuestPanel(ctx, b)
+				st.Add("quest_panel_claims", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SummonUpgrade(ctx, b)
@@ -188,5 +194,11 @@ func cmdRealm(ctx context.Context, d *device.Device, _ []string) error {
 func cmdBaphomet(ctx context.Context, d *device.Device, _ []string) error {
 	n, err := tasks.Baphomet(ctx, newBot(d))
 	fmt.Println("dodges", n)
+	return err
+}
+
+func cmdQuestPanel(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.QuestPanel(ctx, newBot(d))
+	fmt.Println("claimed", n)
 	return err
 }
