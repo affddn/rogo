@@ -327,7 +327,7 @@ func cmdRun(ctx context.Context, d *device.Device, args []string) error {
 	b := newBot(d)
 	r := runner.New(b, s, actions()...)
 	r.PauseFile = filepath.Join(filepath.Dir(*path), "pause")
-	if t, ok := newVMOSTunnel(b.Log); ok {
+	if t, ok := newVMOSTunnel(b.Log); ok && (!serialGiven || d.Serial == "localhost:15555") {
 		if err := t.Start(ctx); err != nil {
 			return err
 		}
