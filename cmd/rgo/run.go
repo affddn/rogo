@@ -98,6 +98,17 @@ func actions() []*runner.Action {
 				st.Add("cultivate_steps", c)
 				return out{Progress: n+c > 0, Growth: c > 0}, err
 			}},
+		{Name: "pets", Priority: 68, Snooze: time.Hour, Ready: badge(screens.BadgePet),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Pets(ctx, b)
+				st.Add("pet_steps", n)
+				return out{Progress: n > 0, Growth: n > 0}, err
+			}},
+		{Name: "mail", Priority: 40,
+			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("mail", now) >= 6*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, _ *st) (out, error) {
+				return out{Progress: true}, tasks.Mail(ctx, b)
+			}},
 		{Name: "realm", Priority: 65, Snooze: time.Hour,
 			Ready: func(s sig, st *st, _ time.Time) bool { return !st.Daily["realm_done"] || s.Has(screens.BadgeGameMode) },
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -223,5 +234,11 @@ func cmdBaphomet(ctx context.Context, d *device.Device, _ []string) error {
 func cmdQuestPanel(ctx context.Context, d *device.Device, _ []string) error {
 	n, err := tasks.QuestPanel(ctx, newBot(d))
 	fmt.Println("claimed", n)
+	return err
+}
+
+func cmdPets(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Pets(ctx, newBot(d))
+	fmt.Println("steps", n)
 	return err
 }
