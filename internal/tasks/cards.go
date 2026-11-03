@@ -23,7 +23,8 @@ var (
 	cardTileFromCorner = image.Pt(-73, 112)
 )
 
-// cards activates every badged card on the Card page. Each activation adds
+// cards activates every badged card on the Card page's album, then fills
+// empty card slots on the Insert Card tab. Each activation adds
 // to the album bonus (PATK/MATK/HP). Inserting cards into gear slots needs
 // effect text reading and is tracked separately.
 func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
@@ -72,5 +73,6 @@ func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
 	if activated > 0 {
 		b.Log.Info("cards activated", "count", activated)
 	}
-	return activated, nil
+	n, err := insertCards(ctx, b)
+	return activated + n, err
 }
