@@ -169,5 +169,11 @@ func Ratio(img image.Image, r image.Rectangle, pred func(c color.RGBA) bool) flo
 	return float64(hit) / float64(r.Dx()*r.Dy())
 }
 
-// IsBadgeRed matches the saturated red of notification dots.
-func IsBadgeRed(c color.RGBA) bool { return c.R > 200 && c.G < 80 && c.B < 80 }
+// IsBadgeRed matches the red of notification dots, about rgb(205,80,50) in
+// this game; item art in the same spots stays below R 160.
+func IsBadgeRed(c color.RGBA) bool {
+	return c.R > 180 && c.G < 115 && c.B < 95 && int(c.R)-int(c.G) > 90
+}
+
+// IsGreenText matches the green used for affordable costs and stat gains.
+func IsGreenText(c color.RGBA) bool { return int(c.G)-int(c.R) > 30 && c.G > 140 }
