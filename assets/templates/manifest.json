@@ -448,6 +448,30 @@
     "note": "one-click upgrade dialog: title"
   },
   {
+    "name": "questp_claim",
+    "x": 514,
+    "y": 508,
+    "w": 134,
+    "h": 44,
+    "note": "quest panel: Claim button"
+  },
+  {
+    "name": "questp_close",
+    "x": 634,
+    "y": 140,
+    "w": 54,
+    "h": 52,
+    "note": "quest panel: close X"
+  },
+  {
+    "name": "questp_title",
+    "x": 300,
+    "y": 136,
+    "w": 120,
+    "h": 46,
+    "note": "quest panel: title"
+  },
+  {
     "name": "quickidle_ticket_cost",
     "x": 236,
     "y": 564,

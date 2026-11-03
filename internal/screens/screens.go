@@ -29,6 +29,7 @@ const (
 	Realm            ID = "resource-realm"
 	Baphomet         ID = "baphomet"
 	CombatEnded      ID = "combat-ended"
+	QuestPanel       ID = "quest-panel"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -88,6 +89,9 @@ const (
 	TBaphDodge           = "baph_dodge"
 	TCombatEnded         = "combat_ended"
 	TCombatLeave         = "combat_leave"
+	TQuestTitle          = "questp_title"
+	TQuestClose          = "questp_close"
+	TQuestClaim          = "questp_claim"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -143,6 +147,7 @@ var rules = []rule{
 	{id: SummonUpgrade, anchors: []string{TSummonUpTitle, TSummonUpClose}},
 	{id: OneClickUpgrade, anchors: []string{TOneClickTitle, TOneClickOK}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
+	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
