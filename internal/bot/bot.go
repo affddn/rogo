@@ -134,8 +134,10 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
 	}
-	if screens.Visible(frame, screens.TNavBack) {
-		return true, b.TapTemplate(ctx, frame, screens.TNavBack)
+	// The back arrow sits over page art (lava on Baphomet), so match its shape
+	// only; on a modal, tapping it lands outside the modal and closes it.
+	if m := assets.MustGet(screens.TNavBack).Find(frame, screens.Margin); m.Score >= screens.MinScore {
+		return true, b.Tap(ctx, m.Center(), "back")
 	}
 	if screens.Visible(frame, screens.TDialogCancel) {
 		return true, b.TapTemplate(ctx, frame, screens.TDialogCancel)
