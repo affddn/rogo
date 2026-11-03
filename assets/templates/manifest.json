@@ -32,6 +32,38 @@
     "note": "auto-summon hint: 'Auto-summon Elites for gear'"
   },
   {
+    "name": "baph_challenge",
+    "x": 254,
+    "y": 1116,
+    "w": 212,
+    "h": 58,
+    "note": "baphomet challenge: Challenge button"
+  },
+  {
+    "name": "baph_dodge",
+    "x": 312,
+    "y": 1018,
+    "w": 96,
+    "h": 38,
+    "note": "boss fight: Dodge button label"
+  },
+  {
+    "name": "baph_dodge_hint",
+    "x": 154,
+    "y": 872,
+    "w": 412,
+    "h": 28,
+    "note": "boss fight: 'Dodge Boss skills in time...' hint"
+  },
+  {
+    "name": "baph_title",
+    "x": 230,
+    "y": 104,
+    "w": 270,
+    "h": 44,
+    "note": "baphomet challenge: title"
+  },
+  {
     "name": "card_activate",
     "x": 250,
     "y": 1086,
@@ -70,6 +102,22 @@
     "w": 172,
     "h": 50,
     "note": "character: Overview page header"
+  },
+  {
+    "name": "combat_ended",
+    "x": 206,
+    "y": 360,
+    "w": 310,
+    "h": 80,
+    "note": "boss fight result: Combat Ended title"
+  },
+  {
+    "name": "combat_leave",
+    "x": 402,
+    "y": 1042,
+    "w": 212,
+    "h": 60,
+    "note": "boss fight result: Leave button"
   },
   {
     "name": "cult_activate_all",
@@ -198,6 +246,14 @@
     "w": 176,
     "h": 46,
     "note": "weapon gacha: page header"
+  },
+  {
+    "name": "gamemode_header",
+    "x": 8,
+    "y": 16,
+    "w": 170,
+    "h": 46,
+    "note": "game mode page header"
   },
   {
     "name": "hint_tap_empty",
@@ -352,6 +408,14 @@
     "note": "bottom nav: Equipment label"
   },
   {
+    "name": "nav_gamemode",
+    "x": 582,
+    "y": 1238,
+    "w": 124,
+    "h": 30,
+    "note": "bottom nav: Game Mode label"
+  },
+  {
     "name": "nav_weapon",
     "x": 150,
     "y": 1238,
@@ -390,6 +454,30 @@
     "w": 160,
     "h": 42,
     "note": "quick idle confirm: title"
+  },
+  {
+    "name": "realm_challenge_btn",
+    "x": 538,
+    "y": 864,
+    "w": 136,
+    "h": 44,
+    "note": "resource realm: Challenge button"
+  },
+  {
+    "name": "realm_header",
+    "x": 8,
+    "y": 12,
+    "w": 196,
+    "h": 48,
+    "note": "resource secret realm page header"
+  },
+  {
+    "name": "realm_sweep_btn",
+    "x": 538,
+    "y": 734,
+    "w": 136,
+    "h": 44,
+    "note": "resource realm: Sweep button"
   },
   {
     "name": "resonate_activate",

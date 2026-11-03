@@ -25,6 +25,10 @@ const (
 	CardPage         ID = "card"
 	CardDetails      ID = "card-details"
 	JobChange        ID = "job-change"
+	GameMode         ID = "game-mode"
+	Realm            ID = "resource-realm"
+	Baphomet         ID = "baphomet"
+	CombatEnded      ID = "combat-ended"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -55,6 +59,7 @@ const (
 	TNavBack             = "nav_back"
 	TNavEquipment        = "nav_equipment"
 	TNavWeapon           = "nav_weapon"
+	TNavGameMode         = "nav_gamemode"
 	TNavCharacter        = "main_nav_character"
 	TAttrHeader          = "attr_header"
 	TCharOverview        = "char_overview_header"
@@ -73,6 +78,15 @@ const (
 	TCardActivate        = "card_activate"
 	TCardDetailsClose    = "card_details_close"
 	TJobChangeHeader     = "jobchange_header"
+	TGameModeHeader      = "gamemode_header"
+	TRealmHeader         = "realm_header"
+	TRealmSweep          = "realm_sweep_btn"
+	TRealmChallenge      = "realm_challenge_btn"
+	TBaphTitle           = "baph_title"
+	TBaphChallenge       = "baph_challenge"
+	TBaphDodge           = "baph_dodge"
+	TCombatEnded         = "combat_ended"
+	TCombatLeave         = "combat_leave"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -121,6 +135,7 @@ var rules = []rule{
 	{id: Title, anchors: []string{TTitleAgreeText}},
 	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
+	{id: CombatEnded, anchors: []string{TCombatEnded, TCombatLeave}},
 	{id: GachaCount, anchors: []string{TGachaCountHint, TGachaDrawButton}},
 	{id: QuickIdleConfirm, anchors: []string{TQuickIdleTitle, TDialogOK}},
 	{id: Resonate, anchors: []string{TResonateTitle, TResonateClose}},
@@ -138,6 +153,9 @@ var rules = []rule{
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	{id: CardPage, anchors: []string{TCardHeader, TNavBack}},
 	{id: JobChange, anchors: []string{TJobChangeHeader, TNavBack}},
+	{id: GameMode, anchors: []string{TGameModeHeader, TNavBack}},
+	{id: Realm, anchors: []string{TRealmHeader, TNavBack}},
+	{id: Baphomet, anchors: []string{TBaphTitle, TBaphChallenge}},
 	// The bottom nav dims under every modal, so it gates Main; the other
 	// anchors get covered by effects and auto-equip popups now and then.
 	{id: Main, anchors: []string{TNavCharacter},

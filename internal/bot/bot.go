@@ -131,6 +131,11 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TCardDetailsClose)
 	case screens.SummonUpgrade:
 		return true, b.TapTemplate(ctx, frame, screens.TSummonUpClose)
+	case screens.Baphomet:
+		// Its back arrow is drawn differently from other pages'.
+		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.CombatEnded:
+		return true, b.TapTemplate(ctx, frame, screens.TCombatLeave)
 	case screens.StageDefeat:
 		return true, b.TapTemplate(ctx, frame, screens.TStageLeave)
 	}
