@@ -36,6 +36,12 @@ func badge(b screens.Badge) func(sig, *st, time.Time) bool {
 	return func(s sig, _ *st, _ time.Time) bool { return s.Has(b) }
 }
 
+// unlocked holds back ready until a new character has unlocked feature b;
+// before that its page cannot be opened and every try would count as a fail.
+func unlocked(b screens.Badge, ready func(sig, *st, time.Time) bool) func(sig, *st, time.Time) bool {
+	return func(s sig, st *st, now time.Time) bool { return s.Unlocked(b) && ready(s, st, now) }
+}
+
 // actions is the state machine's playbook. Badges and the quest tracker are
 // the game telling us something is ready; timers cover what it does not flag.
 func actions() []*runner.Action {
@@ -145,19 +151,24 @@ func actions() []*runner.Action {
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
 		{Name: "season-pass", Priority: 45,
-			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("season-pass", now) >= time.Hour },
+			Ready: func(s sig, st *st, now time.Time) bool {
+				return s.SeasonPass && st.Since("season-pass", now) >= time.Hour
+			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SeasonPass(ctx, b)
 				st.Add("pass_claims", n)
 				return out{Progress: n > 0}, err
 			}},
 		{Name: "mail", Priority: 40,
-			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("mail", now) >= 6*time.Hour },
+			// Mail is in the system menu.
+			Ready: func(s sig, st *st, now time.Time) bool { return s.System && st.Since("mail", now) >= 6*time.Hour },
 			Run: func(ctx context.Context, b *bot.Bot, _ *st) (out, error) {
 				return out{Progress: true}, tasks.Mail(ctx, b)
 			}},
 		{Name: "realm", Priority: 65, Snooze: time.Hour,
-			Ready: func(s sig, st *st, _ time.Time) bool { return !st.Daily["realm_done"] || s.Has(screens.BadgeGameMode) },
+			Ready: unlocked(screens.BadgeGameMode, func(s sig, st *st, _ time.Time) bool {
+				return !st.Daily["realm_done"] || s.Has(screens.BadgeGameMode)
+			}),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				done := map[string]bool{}
 				for _, t := range tasks.RealmTabs {
@@ -174,14 +185,16 @@ func actions() []*runner.Action {
 				return out{Progress: sweeps+len(challenged) > 0, Growth: sweeps > 0}, err
 			}},
 		{Name: "baphomet", Priority: 55,
-			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("baphomet", now) >= 3*time.Hour },
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, now time.Time) bool {
+				return st.Since("baphomet", now) >= 3*time.Hour
+			}),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.Baphomet(ctx, b)
 				st.Add("boss_dodges", n)
 				return out{Progress: true}, err
 			}},
 		{Name: "dungeon", Priority: 62, Snooze: time.Hour,
-			Ready: func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] },
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := dungeonRuns(ctx, b, st)
 				return out{Progress: n > 0, Growth: n > 0}, err
