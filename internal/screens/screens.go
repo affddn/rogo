@@ -20,6 +20,8 @@ const (
 	CharSkill        ID = "char-skill"
 	Resonate         ID = "resonate"
 	SummonUpgrade    ID = "summon-upgrade"
+	WeaponCultivate  ID = "weapon-cultivate"
+	OneClickUpgrade  ID = "one-click-upgrade"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -60,6 +62,9 @@ const (
 	TSummonUpTitle       = "summonup_title"
 	TSummonUpEnhance     = "summonup_enhance"
 	TSummonUpClose       = "summonup_close"
+	TCultHeader          = "cult_header"
+	TOneClickTitle       = "oneclick_title"
+	TOneClickOK          = "oneclick_ok"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -112,6 +117,7 @@ var rules = []rule{
 	{id: QuickIdleConfirm, anchors: []string{TQuickIdleTitle, TDialogOK}},
 	{id: Resonate, anchors: []string{TResonateTitle, TResonateClose}},
 	{id: SummonUpgrade, anchors: []string{TSummonUpTitle, TSummonUpClose}},
+	{id: OneClickUpgrade, anchors: []string{TOneClickTitle, TOneClickOK}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
@@ -120,6 +126,7 @@ var rules = []rule{
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
+	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	// The bottom nav dims under every modal, so it gates Main; the other
 	// anchors get covered by effects and auto-equip popups now and then.
 	{id: Main, anchors: []string{TNavCharacter},

@@ -40,6 +40,30 @@
     "note": "character: Overview page header"
   },
   {
+    "name": "cult_activate_all",
+    "x": 428,
+    "y": 1094,
+    "w": 210,
+    "h": 58,
+    "note": "cultivation: Activate All button"
+  },
+  {
+    "name": "cult_header",
+    "x": 8,
+    "y": 16,
+    "w": 170,
+    "h": 46,
+    "note": "weapon: Cultivation page header"
+  },
+  {
+    "name": "cult_one_click",
+    "x": 428,
+    "y": 1094,
+    "w": 210,
+    "h": 58,
+    "note": "cultivation: One-Click Upgrade button"
+  },
+  {
     "name": "deny_go_unlock",
     "x": 500,
     "y": 703,
@@ -294,6 +318,22 @@
     "w": 80,
     "h": 30,
     "note": "bottom nav: Weapon label"
+  },
+  {
+    "name": "oneclick_ok",
+    "x": 420,
+    "y": 1058,
+    "w": 212,
+    "h": 58,
+    "note": "one-click upgrade dialog: OK"
+  },
+  {
+    "name": "oneclick_title",
+    "x": 210,
+    "y": 150,
+    "w": 300,
+    "h": 46,
+    "note": "one-click upgrade dialog: title"
   },
   {
     "name": "quickidle_ticket_cost",
