@@ -79,3 +79,26 @@ func TestVisibleRejectsDimmedMatch(t *testing.T) {
 		t.Fatalf("dimmed match reported visible (bright %.2f)", m.Bright)
 	}
 }
+
+func TestBlobsFindsSeparateBadges(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 200, 200))
+	dot := func(cx, cy int) {
+		for y := cy - 7; y <= cy+7; y++ {
+			for x := cx - 7; x <= cx+7; x++ {
+				img.Set(x, y, color.RGBA{210, 80, 50, 255})
+			}
+		}
+	}
+	dot(30, 40)
+	dot(150, 40)
+	dot(90, 160)
+	got := Blobs(img, img.Bounds(), 4, 3, IsBadgeRed)
+	if len(got) != 3 {
+		t.Fatalf("found %d blobs %v, want 3", len(got), got)
+	}
+	for i, want := range []image.Point{{30, 40}, {150, 40}, {90, 160}} {
+		if d := got[i].Sub(want); d.X*d.X+d.Y*d.Y > 36 {
+			t.Errorf("blob %d at %v, want near %v", i, got[i], want)
+		}
+	}
+}

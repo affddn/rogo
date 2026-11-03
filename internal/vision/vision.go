@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"sort"
 )
 
 // Gray is a float luma plane; float avoids rounding in the correlation sums.
@@ -177,3 +178,54 @@ func IsBadgeRed(c color.RGBA) bool {
 
 // IsGreenText matches the green used for affordable costs and stat gains.
 func IsGreenText(c color.RGBA) bool { return int(c.G)-int(c.R) > 30 && c.G > 140 }
+
+// Blobs finds clusters of pixels matching pred inside area, sampled on a
+// step-pixel grid, and returns their centres. Used to locate every red badge
+// in a grid of tiles without knowing the layout.
+func Blobs(img image.Image, area image.Rectangle, step, minHits int, pred func(c color.RGBA) bool) []image.Point {
+	area = area.Intersect(img.Bounds())
+	type cell struct{ x, y int }
+	hits := map[cell]bool{}
+	for y := area.Min.Y; y < area.Max.Y; y += step {
+		for x := area.Min.X; x < area.Max.X; x += step {
+			if pred(color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)) {
+				hits[cell{x / step, y / step}] = true
+			}
+		}
+	}
+	seen := map[cell]bool{}
+	var out []image.Point
+	for c := range hits {
+		if seen[c] {
+			continue
+		}
+		// flood fill over 8-connected cells
+		stack := []cell{c}
+		seen[c] = true
+		var sx, sy, n int
+		for len(stack) > 0 {
+			p := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			sx, sy, n = sx+p.x, sy+p.y, n+1
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					q := cell{p.x + dx, p.y + dy}
+					if hits[q] && !seen[q] {
+						seen[q] = true
+						stack = append(stack, q)
+					}
+				}
+			}
+		}
+		if n >= minHits {
+			out = append(out, image.Pt(sx*step/n+step/2, sy*step/n+step/2))
+		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Y != out[j].Y {
+			return out[i].Y < out[j].Y
+		}
+		return out[i].X < out[j].X
+	})
+	return out
+}
