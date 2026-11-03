@@ -19,7 +19,8 @@ var (
 
 // SummonUpgrade spends summon crystals on the elite summon level, which
 // raises the rarity of every armor drop from then on. Each level takes three
-// growth stages; it enhances while the cost stays affordable.
+// growth stages, then a free 30-minute timed upgrade; it enhances while the
+// cost stays affordable and starts the timer when offered.
 func SummonUpgrade(ctx context.Context, b *bot.Bot) (stages int, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return 0, err
@@ -32,6 +33,16 @@ func SummonUpgrade(ctx context.Context, b *bot.Bot) (stages int, err error) {
 		return 0, err
 	}
 	for stages < 15 {
+		// After the third growth stage the level-up itself is a free timed
+		// upgrade (30 min); start it. Accelerate is deny-listed.
+		if screens.Visible(frame, screens.TSummonUpUpgrade) {
+			if err := b.TapTemplate(ctx, frame, screens.TSummonUpUpgrade); err != nil {
+				return stages, err
+			}
+			stages++
+			b.Log.Info("summon level-up timer started")
+			break
+		}
 		if vision.Ratio(frame, summonUpgradeCost, vision.IsGreenText) < 0.05 {
 			break
 		}
