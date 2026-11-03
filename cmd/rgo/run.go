@@ -65,11 +65,9 @@ func actions() []*runner.Action {
 				// The guide often leads to a mode whose chore we already
 				// have (the current quest wants it); run it now instead of
 				// waiting for its timer.
-				if err == nil && landed == screens.Baphomet {
-					d, berr := tasks.Baphomet(ctx, b)
-					st.Add("boss_dodges", d)
-					st.LastRun["baphomet"] = time.Now()
-					err = berr
+				if err == nil && landed != screens.Main && landed != screens.Unknown {
+					o, rerr := runFrom(ctx, b, st, landed)
+					return out{Progress: n > 0 || o.Progress, Growth: o.Growth}, rerr
 				}
 				// Main-screen arrows mostly point at the current quest's
 				// objective, which may not be doable yet (no tickets left);
@@ -84,6 +82,19 @@ func actions() []*runner.Action {
 				n, err := tasks.JobChange(ctx, b)
 				st.Add("job_tasks_claimed", n)
 				return out{Progress: n > 0}, err
+			}},
+		// Unfinished main quest: let the tracker take us to its objective
+		// and do it. Snoozed after each try; some objectives need time.
+		{Name: "quest-go", Priority: 84,
+			Ready: func(s sig, _ *st, _ time.Time) bool { return !s.QuestDone },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
+				landed, err := tasks.QuestGo(ctx, b)
+				if err != nil {
+					return out{}, err
+				}
+				st.Add("quest_go", 1)
+				return runFrom(ctx, b, st, landed)
 			}},
 		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -179,13 +190,15 @@ func actions() []*runner.Action {
 				}
 				return out{Progress: true}, err
 			}},
-		// Stage retries back off while runs clear nothing: 5, 10, 20 ... 120
-		// minutes, and each needs some growth since the last defeat.
+		// Stage: retry as soon as combat power has moved since the last
+		// defeat (our upgrades, or auto-equipped drops), with a back-off of
+		// 5, 10, 20, 40 min while runs clear nothing; at most 45 min apart.
 		{Name: "stage", Priority: 50,
-			Ready: func(_ sig, s *st, now time.Time) bool {
-				wait := min(5*time.Minute<<min(s.StageMisses, 5), 2*time.Hour)
-				since := s.Since("stage", now)
-				return since >= 2*time.Hour || (since >= wait && s.Growth > 0)
+			Ready: func(s sig, st *st, now time.Time) bool {
+				wait := min(5*time.Minute<<min(st.StageMisses, 3), 45*time.Minute)
+				since := st.Since("stage", now)
+				stronger := st.Growth > 0 || screens.LevelChanged(s.Power, st.PowerAtDefeat)
+				return since >= 45*time.Minute || (since >= wait && stronger)
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				before := st.Stage
@@ -197,6 +210,7 @@ func actions() []*runner.Action {
 				lost, err := tasks.Stage(ctx, b)
 				if lost {
 					st.Growth, st.LastDefeat = 0, time.Now()
+					st.PowerAtDefeat = st.PowerNow
 				}
 				st.Add("stage_runs", 1)
 				if err != nil {
@@ -218,6 +232,60 @@ func actions() []*runner.Action {
 				return out{Progress: cleared}, nil
 			}},
 	}
+}
+
+// runFrom runs the chore that belongs to the screen a quest or guide arrow
+// led to. Unknown means a battle probably started (stage quests).
+func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, error) {
+	switch landed {
+	case screens.Baphomet:
+		n, err := tasks.Baphomet(ctx, b)
+		st.Add("boss_dodges", n)
+		st.LastRun["baphomet"] = time.Now()
+		return out{Progress: err == nil}, err
+	case screens.Realm:
+		done := map[string]bool{}
+		for _, t := range tasks.RealmTabs {
+			done[t.Name] = st.Daily["realm_challenge_"+t.Name]
+		}
+		n, c, err := tasks.Realm(ctx, b, done)
+		for _, name := range c {
+			st.Daily["realm_challenge_"+name] = true
+		}
+		st.Add("realm_sweeps", n)
+		return out{Progress: n+len(c) > 0, Growth: n > 0}, err
+	case screens.WeaponGacha, screens.WeaponCultivate:
+		n, err := tasks.WeaponGacha(ctx, b)
+		if err != nil {
+			return out{}, err
+		}
+		c, err := tasks.WeaponCultivate(ctx, b)
+		return out{Progress: n+c > 0, Growth: c > 0}, err
+	case screens.Equipment, screens.Enhance, screens.CardPage:
+		n, err := tasks.Equipment(ctx, b)
+		st.Add("enhance_levels", n)
+		return out{Progress: n > 0, Growth: n > 0}, err
+	case screens.PetGacha, screens.PetCultivate:
+		n, err := tasks.Pets(ctx, b)
+		return out{Progress: n > 0, Growth: n > 0}, err
+	case screens.Attribute, screens.CharOverview, screens.CharSkill:
+		ok, err := tasks.Attributes(ctx, b)
+		return out{Progress: ok, Growth: ok}, err
+	case screens.SummonUpgrade:
+		n, err := tasks.SummonUpgrade(ctx, b)
+		return out{Progress: n > 0}, err
+	case screens.QuestPanel:
+		n, err := tasks.QuestPanel(ctx, b)
+		return out{Progress: n > 0}, err
+	case screens.Unknown:
+		// Stage quests start the stage battle straight from the tracker.
+		lost, err := tasks.WaitStage(ctx, b)
+		if lost {
+			st.Growth, st.LastDefeat = 0, time.Now()
+		}
+		return out{Progress: !lost}, err
+	}
+	return out{}, b.ToMain(ctx)
 }
 
 func cmdRun(ctx context.Context, d *device.Device, args []string) error {
@@ -275,5 +343,23 @@ func cmdQuestPanel(ctx context.Context, d *device.Device, _ []string) error {
 func cmdPets(ctx context.Context, d *device.Device, _ []string) error {
 	n, err := tasks.Pets(ctx, newBot(d))
 	fmt.Println("steps", n)
+	return err
+}
+
+func cmdObjective(ctx context.Context, d *device.Device, _ []string) error {
+	b := newBot(d)
+	s, err := state.Load("data/state.json")
+	if err != nil {
+		return err
+	}
+	landed, err := tasks.QuestGo(ctx, b)
+	if err != nil {
+		return err
+	}
+	o, err := runFrom(ctx, b, s, landed)
+	fmt.Println("landed", landed, "progress", o.Progress)
+	if serr := s.Save(); serr != nil && err == nil {
+		err = serr
+	}
 	return err
 }
