@@ -320,6 +320,14 @@
     "note": "reward popup: 'Congratulations!' header"
   },
   {
+    "name": "skill_header",
+    "x": 8,
+    "y": 16,
+    "w": 140,
+    "h": 50,
+    "note": "character: Skill page header"
+  },
+  {
     "name": "stage_defeat",
     "x": 216,
     "y": 250,

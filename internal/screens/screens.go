@@ -17,6 +17,7 @@ const (
 	Reward           ID = "reward"
 	Attribute        ID = "attribute"
 	CharOverview     ID = "char-overview"
+	CharSkill        ID = "char-skill"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -50,6 +51,7 @@ const (
 	TNavCharacter        = "main_nav_character"
 	TAttrHeader          = "attr_header"
 	TCharOverview        = "char_overview_header"
+	TSkillHeader         = "skill_header"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -104,6 +106,7 @@ var rules = []rule{
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
 	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},
+	{id: CharSkill, anchors: []string{TSkillHeader, TNavBack}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},

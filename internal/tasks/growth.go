@@ -32,11 +32,12 @@ func open(ctx context.Context, b *bot.Bot, nav string, want ...screens.ID) (imag
 // Attributes spends free attribute points with the game's Recommended
 // Allocation, which follows the class's intended build.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
-	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview)
+	// Character opens on whichever tab is badged.
+	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill)
 	if err != nil {
 		return false, err
 	}
-	if screens.Detect(frame) == screens.CharOverview {
+	if screens.Detect(frame) != screens.Attribute {
 		if err := b.Tap(ctx, attributeTab, "attribute tab"); err != nil {
 			return false, err
 		}
