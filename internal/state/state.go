@@ -29,6 +29,11 @@ type State struct {
 	Level string `json:"level"`
 	Seen  string `json:"seen_level"`
 
+	// Stage is the next-challenge label fingerprint at the last stage run;
+	// StageMisses counts runs in a row that cleared nothing.
+	Stage       string `json:"stage"`
+	StageMisses int    `json:"stage_misses"`
+
 	// Growth counts upgrades since the last stage defeat; a stage retry
 	// before any growth would lose the same way.
 	Growth     int       `json:"growth_since_defeat"`

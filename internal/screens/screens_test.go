@@ -96,3 +96,13 @@ func TestLevelFingerprintTracksLevelUps(t *testing.T) {
 		t.Errorf("level fingerprint unstable at the same level:\n%s\n%s", b, c)
 	}
 }
+
+func TestStageFingerprintTracksClears(t *testing.T) {
+	a, b, c := ReadMain(load(t, "main.png")).Stage, ReadMain(load(t, "main3.png")).Stage, ReadMain(load(t, "main5.png")).Stage
+	if LevelChanged(a, b) {
+		t.Error("stage fingerprint changed without a clear (4-1 vs 4-1)")
+	}
+	if !LevelChanged(b, c) {
+		t.Error("stage fingerprint unchanged across clears (4-1 vs 4-6)")
+	}
+}

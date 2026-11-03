@@ -42,7 +42,13 @@ type Signals struct {
 	// Level fingerprints the "BASE nn | JOB n" text; it changes on any
 	// level-up, which is when attribute and skill points arrive.
 	Level string
+	// Stage fingerprints the next-challenge label ("4-6") on the Stage
+	// Challenge button; it changes whenever a stage is cleared.
+	Stage string
 }
+
+// stageText covers the next-challenge stage label.
+var stageText = image.Rect(640, 980, 686, 1000)
 
 // levelText covers the base (blue) and job (bright) level numbers.
 var levelText = image.Rect(160, 20, 300, 34)
@@ -65,12 +71,16 @@ func LevelChanged(a, b string) bool {
 // fingerprint masks the coloured digit pixels in r, ignoring the map that
 // shows through behind the HUD: stable at a level, different after a level-up.
 func fingerprint(frame image.Image, r image.Rectangle) string {
-	out := make([]byte, 0, (r.Dx()/2)*(r.Dy()/2))
-	for y := r.Min.Y; y < r.Max.Y; y += 2 {
-		for x := r.Min.X; x < r.Max.X; x += 2 {
-			c := color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA)
-			digit := (c.B > 200 && c.R < 130) || (c.R > 220 && c.G > 200 && c.B > 200)
-			if digit {
+	return mask(frame, r, 2, func(c color.RGBA) bool {
+		return (c.B > 200 && c.R < 130) || (c.R > 220 && c.G > 200 && c.B > 200)
+	})
+}
+
+func mask(frame image.Image, r image.Rectangle, step int, on func(color.RGBA) bool) string {
+	out := make([]byte, 0, (r.Dx()/step+1)*(r.Dy()/step+1))
+	for y := r.Min.Y; y < r.Max.Y; y += step {
+		for x := r.Min.X; x < r.Max.X; x += step {
+			if on(color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA)) {
 				out = append(out, '1')
 			} else {
 				out = append(out, '0')
@@ -84,7 +94,14 @@ func (s Signals) Has(b Badge) bool { return s.Badges[b] }
 
 // ReadMain extracts signals from a frame already detected as Main.
 func ReadMain(frame image.Image) Signals {
-	s := Signals{QuestDone: Visible(frame, TMainQuestCompleted), Badges: map[Badge]bool{}, Level: fingerprint(frame, levelText)}
+	s := Signals{
+		QuestDone: Visible(frame, TMainQuestCompleted),
+		Badges:    map[Badge]bool{},
+		Level:     fingerprint(frame, levelText),
+		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {
+			return c.R > 225 && c.G > 225 && c.B > 210
+		}),
+	}
 	for b, p := range badgeAt {
 		r := image.Rectangle{Min: p.Sub(image.Pt(8, 8)), Max: p.Add(image.Pt(8, 8))}
 		s.Badges[b] = vision.Ratio(frame, r, vision.IsBadgeRed) > 0.3

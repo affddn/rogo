@@ -133,20 +133,43 @@ func actions() []*runner.Action {
 				}
 				return out{Progress: true}, err
 			}},
+		// Stage retries back off while runs clear nothing: 5, 10, 20 ... 120
+		// minutes, and each needs some growth since the last defeat.
 		{Name: "stage", Priority: 50,
 			Ready: func(_ sig, s *st, now time.Time) bool {
+				wait := min(5*time.Minute<<min(s.StageMisses, 5), 2*time.Hour)
 				since := s.Since("stage", now)
-				return (s.Growth > 0 && since >= 5*time.Minute) || since >= time.Hour
+				return since >= 2*time.Hour || (since >= wait && s.Growth > 0)
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				start := time.Now()
+				before := st.Stage
+				if before == "" { // first run: read the label now
+					if _, f, err := b.Look(ctx); err == nil {
+						before = screens.ReadMain(f).Stage
+					}
+				}
 				lost, err := tasks.Stage(ctx, b)
 				if lost {
 					st.Growth, st.LastDefeat = 0, time.Now()
 				}
 				st.Add("stage_runs", 1)
-				// A chain longer than one 40 s battle cleared at least one stage.
-				return out{Progress: time.Since(start) > 70*time.Second}, err
+				if err != nil {
+					return out{}, err
+				}
+				_, frame, lerr := b.Look(ctx)
+				if lerr != nil {
+					return out{}, lerr
+				}
+				after := screens.ReadMain(frame).Stage
+				st.Stage = after
+				cleared := before != "" && screens.LevelChanged(before, after)
+				if cleared {
+					st.StageMisses = 0
+					st.Add("stage_clear_runs", 1)
+				} else {
+					st.StageMisses++
+				}
+				return out{Progress: cleared}, nil
 			}},
 	}
 }
