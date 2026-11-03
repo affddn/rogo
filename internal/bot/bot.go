@@ -156,7 +156,12 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TCardDetailsClose)
 	case screens.SummonUpgrade:
 		return true, b.TapTemplate(ctx, frame, screens.TSummonUpClose)
-	case screens.Baphomet:
+	case screens.DungeonMatch:
+		// A queued auto-match popped while the bot was elsewhere; joining
+		// costs one of the free daily attempts, which the dungeon chore
+		// would spend anyway.
+		return true, b.TapTemplate(ctx, frame, screens.TDungeonAccept)
+	case screens.Dungeon, screens.Baphomet:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
 	case screens.CombatEnded:

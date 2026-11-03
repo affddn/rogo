@@ -38,6 +38,8 @@ const (
 	DismantleConfirm ID = "dismantle-confirm"
 	PowerSave        ID = "power-save"
 	InsertCard       ID = "insert-card"
+	Dungeon          ID = "dungeon"
+	DungeonMatch     ID = "dungeon-match"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -119,6 +121,11 @@ const (
 	TInsertCardTitle     = "insertcard_title"
 	TInsertCardButton    = "insertcard_btn"
 	TInsertCardClose     = "insertcard_close"
+	TDungeonHeader       = "dungeon_header"
+	TDungeonAutoMatch    = "dungeon_auto_match"
+	TDungeonCancelMatch  = "dungeon_cancel_match"
+	TDungeonAccept       = "dungeon_accept"
+	TDungeonDecline      = "dungeon_decline"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -183,6 +190,7 @@ var rules = []rule{
 	// Insert Card first: the Card Details title template also matches the
 	// header both dialogs share.
 	{id: InsertCard, anchors: []string{TInsertCardTitle, TInsertCardClose}},
+	{id: DungeonMatch, anchors: []string{TDungeonAccept, TDungeonDecline}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: Mail, anchors: []string{TMailTitle, TMailClose}},
@@ -207,6 +215,8 @@ var rules = []rule{
 	{id: GameMode, anchors: []string{TGameModeHeader, TNavBack}},
 	{id: Realm, anchors: []string{TRealmHeader, TNavBack}},
 	{id: Baphomet, anchors: []string{TBaphTitle, TBaphChallenge}},
+	{id: Dungeon, anchors: []string{TDungeonHeader},
+		anyOf: []string{TDungeonAutoMatch, TDungeonCancelMatch}, need: 1},
 	// The bottom nav dims under every modal, so it gates Main; the other
 	// anchors get covered by effects and auto-equip popups now and then.
 	{id: Main, anchors: []string{TNavCharacter},

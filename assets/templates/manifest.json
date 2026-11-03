@@ -240,6 +240,54 @@
     "note": "Hint dialog OK button (taller dialog)"
   },
   {
+    "name": "dungeon_accept",
+    "x": 404,
+    "y": 842,
+    "w": 212,
+    "h": 60,
+    "note": "dungeon match dialog: Accept"
+  },
+  {
+    "name": "dungeon_attempts",
+    "x": 300,
+    "y": 1018,
+    "w": 230,
+    "h": 30,
+    "note": "dungeon: 'Challenge Attempts' label"
+  },
+  {
+    "name": "dungeon_auto_match",
+    "x": 400,
+    "y": 1138,
+    "w": 200,
+    "h": 50,
+    "note": "dungeon: Auto Match button"
+  },
+  {
+    "name": "dungeon_cancel_match",
+    "x": 400,
+    "y": 1138,
+    "w": 200,
+    "h": 50,
+    "note": "dungeon: Cancel Match button (matching in progress)"
+  },
+  {
+    "name": "dungeon_decline",
+    "x": 104,
+    "y": 842,
+    "w": 212,
+    "h": 60,
+    "note": "dungeon match dialog: Decline"
+  },
+  {
+    "name": "dungeon_header",
+    "x": 8,
+    "y": 16,
+    "w": 160,
+    "h": 46,
+    "note": "dungeon page header"
+  },
+  {
     "name": "enhance_btn",
     "x": 78,
     "y": 1090,
