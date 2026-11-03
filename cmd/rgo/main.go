@@ -46,6 +46,7 @@ var commands = map[string]command{
 	"boss":   {"", cmdBaphomet, false},
 	"qpanel": {"", cmdQuestPanel, false},
 	"pets":   {"", cmdPets, false},
+	"tunnel": {"", cmdTunnel, true},
 	"report": {"[-state data/state.json]", cmdReport, true},
 	"back":   {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Back(ctx) }, false},
 	"launch": {"", func(ctx context.Context, d *device.Device, _ []string) error { return d.Launch(ctx, pkg) }, false},

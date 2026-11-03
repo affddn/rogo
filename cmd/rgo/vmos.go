@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/affddn/rogo/internal/device"
 	"github.com/affddn/rogo/internal/vmos"
 )
 
@@ -46,20 +47,37 @@ type vmosTunnel struct {
 	tunnel  *vmos.Tunnel
 	expires time.Time
 	log     *slog.Logger
+	static  *vmos.ADB // set when configured from a copied key instead of the API
 }
 
 const tunnelLocal = "127.0.0.1:15555"
 
 func newVMOSTunnel(log *slog.Logger) (*vmosTunnel, bool) {
+	t := &vmos.Tunnel{Local: tunnelLocal, Log: log}
 	ak, sk, pad := os.Getenv("RGO_VMOS_AK"), os.Getenv("RGO_VMOS_SK"), os.Getenv("RGO_VMOS_PAD")
-	if ak == "" || sk == "" || pad == "" {
-		return nil, false
+	if ak != "" && sk != "" && pad != "" {
+		return &vmosTunnel{client: vmos.NewClient(ak, sk), pad: pad, tunnel: t, log: log}, true
 	}
-	return &vmosTunnel{client: vmos.NewClient(ak, sk), pad: pad, tunnel: &vmos.Tunnel{Local: tunnelLocal, Log: log}, log: log}, true
+	// Static mode: the ssh command and key from the phone's Local debugging
+	// tab. No renewal, but the ssh session is redialled whenever it drops.
+	cmd, key := os.Getenv("RGO_TUNNEL_COMMAND"), os.Getenv("RGO_TUNNEL_KEY")
+	if cmd != "" && key != "" {
+		v := &vmosTunnel{tunnel: t, log: log, static: &vmos.ADB{Command: cmd, Key: key, ExpireTime: os.Getenv("RGO_TUNNEL_EXPIRES")}}
+		return v, true
+	}
+	return nil, false
 }
 
 // Refresh asks VMOS for a 7-day tunnel and points the local port at it.
 func (v *vmosTunnel) Refresh(ctx context.Context) error {
+	if v.static != nil {
+		if err := v.tunnel.Update(v.static); err != nil {
+			return err
+		}
+		v.expires, _ = v.static.Expires()
+		v.log.Info("static adb tunnel configured", "expires", v.static.ExpireTime)
+		return nil
+	}
 	a, err := v.client.ADBInfo(ctx, v.pad, 7*24*time.Hour)
 	if err != nil {
 		return fmt.Errorf("vmos adb info: %w", err)
@@ -90,7 +108,7 @@ func (v *vmosTunnel) Start(ctx context.Context) error {
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				if time.Until(v.expires) < 24*time.Hour {
+				if v.static == nil && time.Until(v.expires) < 24*time.Hour {
 					if err := v.Refresh(ctx); err != nil {
 						v.log.Error("tunnel renew failed", "err", err)
 					}
@@ -98,5 +116,20 @@ func (v *vmosTunnel) Start(ctx context.Context) error {
 			}
 		}
 	}()
+	return nil
+}
+
+// cmdTunnel serves the adb tunnel on localhost:15555 until interrupted.
+func cmdTunnel(ctx context.Context, _ *device.Device, _ []string) error {
+	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	t, ok := newVMOSTunnel(log)
+	if !ok {
+		return fmt.Errorf("no VMOS API keys or RGO_TUNNEL_COMMAND/RGO_TUNNEL_KEY configured")
+	}
+	if err := t.Start(ctx); err != nil {
+		return err
+	}
+	log.Info("serving adb tunnel", "addr", tunnelLocal)
+	<-ctx.Done()
 	return nil
 }
