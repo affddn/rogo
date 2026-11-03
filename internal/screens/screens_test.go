@@ -30,6 +30,11 @@ func TestDetect(t *testing.T) {
 		"income-after.png":   Income,
 		"quick-idle-1.png":   QuickIdleConfirm,
 		"quick-idle-2.png":   Reward,
+		"auto-1.png":         AutoSummonHint,
+		"character.png":      Attribute,
+		"char-unknown.png":   CharOverview,
+		"equipment.png":      Equipment,
+		"eq-upgrade.png":     Enhance,
 	}
 	for file, want := range cases {
 		if got := Detect(load(t, file)); got != want {

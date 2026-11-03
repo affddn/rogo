@@ -19,6 +19,7 @@ const (
 	CharOverview     ID = "char-overview"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
+	AutoSummonHint   ID = "auto-summon-hint"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -49,6 +50,9 @@ const (
 	TEquipUpgrade        = "equip_upgrade_btn"
 	TEnhanceHeader       = "enhance_header"
 	TEnhanceButton       = "enhance_btn"
+	TAutoSummonText      = "autosummon_text"
+	THintTitle           = "hint_title"
+	THintOK              = "dlg_ok_hint"
 )
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
@@ -67,6 +71,7 @@ type rule struct {
 var rules = []rule{
 	{Reward, []string{TRewardCongrats}},
 	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
+	{AutoSummonHint, []string{THintTitle, TAutoSummonText}},
 	{Income, []string{TIncomeTitle, TIncomeClose}},
 	{Attribute, []string{TAttrHeader, TNavBack}},
 	{CharOverview, []string{TCharOverview, TNavBack}},
