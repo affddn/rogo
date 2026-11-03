@@ -49,6 +49,7 @@ var commands = map[string]command{
 
 func main() {
 	log.SetFlags(log.Ltime)
+	loadEnv(".env")
 	serial := flag.String("s", envOr("RGO_SERIAL", "localhost:61644"), "adb serial (host:port for the VMOS tunnel)")
 	dry := flag.Bool("dry-run", false, "log taps instead of sending them")
 	flag.Usage = usage

@@ -109,7 +109,16 @@ func cmdRun(ctx context.Context, d *device.Device, args []string) error {
 	if err != nil {
 		return err
 	}
-	return runner.New(newBot(d), s, actions()...).Run(ctx)
+	b := newBot(d)
+	r := runner.New(b, s, actions()...)
+	if t, ok := newVMOSTunnel(b.Log); ok {
+		if err := t.Start(ctx); err != nil {
+			return err
+		}
+		d.Serial = "localhost:15555"
+		r.Reconnect = t.Refresh
+	}
+	return r.Run(ctx)
 }
 
 func cmdStage(ctx context.Context, d *device.Device, _ []string) error {
