@@ -139,8 +139,10 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 // hintArea covers every spot the "Tap empty area to close." hint has shown at.
 var hintArea = image.Rect(180, 980, 540, 1240)
 
+// The hint is white text over whatever the popup covers, so its brightness
+// varies; shape alone is reliable for it.
 func (b *Bot) hintVisible(frame image.Image) bool {
-	return assets.MustGet(screens.THintTapEmpty).FindIn(frame, hintArea).Visible(screens.MinScore)
+	return assets.MustGet(screens.THintTapEmpty).FindIn(frame, hintArea).Score >= screens.MinScore
 }
 
 // tapHint taps on the "Tap empty area to close." hint itself, which is never
@@ -148,7 +150,7 @@ func (b *Bot) hintVisible(frame image.Image) bool {
 func (b *Bot) tapHint(ctx context.Context, frame image.Image) error {
 	m := assets.MustGet(screens.THintTapEmpty).FindIn(frame, hintArea)
 	p := image.Pt(360, 1172)
-	if m.Visible(screens.MinScore) {
+	if m.Score >= screens.MinScore {
 		p = m.Center()
 	}
 	return b.Tap(ctx, p, "close popup")
