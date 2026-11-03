@@ -50,6 +50,12 @@ func actions() []*runner.Action {
 				st.Add("quests_claimed", n)
 				return out{Progress: n > 0}, err
 			}},
+		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.SummonUpgrade(ctx, b)
+				st.Add("summon_upgrade_stages", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "attributes", Priority: 80, Snooze: 45 * time.Minute, Ready: badge(screens.BadgeCharacter),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				spent, err := tasks.Attributes(ctx, b)
