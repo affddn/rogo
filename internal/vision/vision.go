@@ -229,3 +229,78 @@ func Blobs(img image.Image, area image.Rectangle, step, minHits int, pred func(c
 	})
 	return out
 }
+
+// Component is a 4-connected group of pixels matching a predicate.
+type Component struct {
+	Pixels []image.Point
+	Bounds image.Rectangle
+}
+
+// Centroid is the mean pixel position.
+func (c Component) Centroid() (float64, float64) {
+	var sx, sy float64
+	for _, p := range c.Pixels {
+		sx, sy = sx+float64(p.X), sy+float64(p.Y)
+	}
+	n := float64(len(c.Pixels))
+	return sx / n, sy / n
+}
+
+// Components labels every connected group of pred pixels inside area whose
+// size is within [minArea, maxArea].
+func Components(img image.Image, area image.Rectangle, minArea, maxArea int, pred func(c color.RGBA) bool) []Component {
+	area = area.Intersect(img.Bounds())
+	rgba, ok := img.(*image.RGBA)
+	if !ok {
+		rgba = image.NewRGBA(img.Bounds())
+		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	}
+	w, h := area.Dx(), area.Dy()
+	hit := make([]bool, w*h)
+	for y := 0; y < h; y++ {
+		off := rgba.PixOffset(area.Min.X, area.Min.Y+y)
+		for x := 0; x < w; x++ {
+			p := rgba.Pix[off+x*4 : off+x*4+4]
+			hit[y*w+x] = pred(color.RGBA{p[0], p[1], p[2], p[3]})
+		}
+	}
+	var out []Component
+	seen := make([]bool, w*h)
+	for i := range hit {
+		if !hit[i] || seen[i] {
+			continue
+		}
+		var c Component
+		stack := []int{i}
+		seen[i] = true
+		for len(stack) > 0 {
+			j := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			pt := image.Pt(area.Min.X+j%w, area.Min.Y+j/w)
+			c.Pixels = append(c.Pixels, pt)
+			if len(c.Pixels) == 1 {
+				c.Bounds = image.Rectangle{Min: pt, Max: pt.Add(image.Pt(1, 1))}
+			} else {
+				c.Bounds = c.Bounds.Union(image.Rectangle{Min: pt, Max: pt.Add(image.Pt(1, 1))})
+			}
+			x, y := j%w, j/w
+			for _, n := range [4][2]int{{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}} {
+				if n[0] < 0 || n[1] < 0 || n[0] >= w || n[1] >= h {
+					continue
+				}
+				k := n[1]*w + n[0]
+				if hit[k] && !seen[k] {
+					seen[k] = true
+					stack = append(stack, k)
+				}
+			}
+			if len(c.Pixels) > maxArea*4 {
+				break // a large region; no need to finish labelling it
+			}
+		}
+		if len(c.Pixels) >= minArea && len(c.Pixels) <= maxArea {
+			out = append(out, c)
+		}
+	}
+	return out
+}
