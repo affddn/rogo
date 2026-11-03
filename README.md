@@ -25,18 +25,24 @@ digits) and runs the highest-priority action that is ready:
 | prio | action | ready when |
 |---|---|---|
 | 100 | auto-summon | Auto toggle is off |
-| 90 | quests | main quest tracker shows (Completed) |
+| 90 | quests | main quest tracker shows (Completed) (green-text detection) |
 | 88 | quest-panel | Quest badge (daily/weekly claims, activity chests) |
+| 87 | guide | a blinking yellow guide arrow on main: tap through the arrow chain |
 | 85 | summon-upgrade | Lv.N badge next to Summon Elite (stages, then free 30 min timer) |
 | 80 | attributes | Character badge **and** a level-up since last run |
-| 75 | equipment | Equipment badge (cards, enhance resonance, round-robin enhance) |
+| 75 | equipment | Equipment badge (cards, dismantle when bag > 20, enhance resonance, round-robin enhance) |
 | 70 | weapon | Weapon badge (gacha in max batches, then cultivation) |
+| 68 | pets | Pet badge (free-ticket pet gacha, activate/upgrade, auto formation) |
 | 65 | realm | daily, or Game Mode badge (challenge once per tab, then sweep) |
 | 60 | income | daily free Quick Idle unused, or every 2 h |
 | 55 | baphomet | every 3 h; taps Dodge on boss-skill prompts |
-| 50 | stage | after any growth since the last defeat, else hourly |
+| 50 | stage | after growth since the last defeat; backs off 5 min..2 h while nothing clears |
+| 45 | season-pass | hourly: Claim All on the free track of each pass |
+| 40 | mail | every 6 h: Claim All |
 
-An action that changes nothing is snoozed so a badge the bot cannot clear
+Unknown screens are handled generically: guide arrows are followed, tutorials
+skipped, lone OK prompts confirmed, "tap empty area" popups closed, and the
+back key is the last resort. An action that changes nothing is snoozed so a badge the bot cannot clear
 (paid offers, cosmetics) stops pulling it in. Progress, failures, snoozes and
 daily flags persist in `data/state.json`; daily flags reset at 00:00 GMT+8.
 Three failed actions in a row, or a deny-listed tap, restart the game.
@@ -48,6 +54,8 @@ make build
 
 # Option A: VMOS API keys in .env (see .env.example); rgo manages the tunnel
 #           itself and renews it before its 7-day expiry.
+# Option A2: the ssh command + Connection key from "Local debugging" in .env
+#           (RGO_TUNNEL_*); rgo serves it natively and redials drops.
 bin/rgo run
 
 # Option B: tunnel opened by hand from the phone's "Local debugging" tab
