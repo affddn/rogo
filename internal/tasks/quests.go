@@ -25,14 +25,13 @@ func MainQuest(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 		if err := b.Tap(ctx, screens.QuestTagAt, "main quest"); err != nil {
 			return claimed, err
 		}
-		id, frame, err := b.Wait(ctx, 8*time.Second, screens.Reward, screens.Main)
-		if err != nil {
+		// A claim shows a reward popup and sometimes a Limited Quest offer;
+		// close whatever shows until main is back.
+		if err := bot.Sleep(ctx, time.Second); err != nil {
 			return claimed, err
 		}
-		if id == screens.Reward {
-			if _, err := b.Dismiss(ctx, id, frame); err != nil {
-				return claimed, err
-			}
+		if err := closePopups(ctx, b, screens.Main); err != nil {
+			return claimed, err
 		}
 		claimed++
 	}
