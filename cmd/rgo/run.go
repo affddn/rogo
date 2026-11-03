@@ -74,6 +74,12 @@ func actions() []*runner.Action {
 				_, still := screens.FindGuideArrow(f)
 				return out{Progress: !still, Growth: !still}, nil
 			}},
+		{Name: "job-change", Priority: 86, Snooze: time.Hour, Ready: badge(screens.BadgeJobChange),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.JobChange(ctx, b)
+				st.Add("job_tasks_claimed", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SummonUpgrade(ctx, b)
