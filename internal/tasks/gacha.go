@@ -20,6 +20,7 @@ var (
 	// Draw Level achievement chest and its badge.
 	gachaAchievement      = image.Pt(592, 180)
 	gachaAchievementBadge = image.Rect(612, 124, 632, 144)
+	weaponGachaTab        = image.Pt(660, 1235)
 )
 
 func isTeal(c color.RGBA) bool { return c.G > 140 && c.R < 90 }
@@ -28,9 +29,18 @@ func isTeal(c color.RGBA) bool { return c.G > 140 && c.R < 90 }
 // offers and claims the Draw Level achievement chests (100 tickets each).
 // It only confirms a draw whose cost icon is the ticket, never diamonds.
 func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
-	frame, err := open(ctx, b, screens.TNavWeapon, screens.WeaponGacha)
+	// Weapon opens on whichever tab is badged.
+	frame, err := open(ctx, b, screens.TNavWeapon, screens.WeaponGacha, screens.WeaponCultivate)
 	if err != nil {
 		return 0, err
+	}
+	if screens.Detect(frame) != screens.WeaponGacha {
+		if err := b.Tap(ctx, weaponGachaTab, "weapon gacha tab"); err != nil {
+			return 0, err
+		}
+		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.WeaponGacha); err != nil {
+			return 0, err
+		}
 	}
 	if vision.Ratio(frame, gachaSkip, isTeal) < 0.2 {
 		if err := b.Tap(ctx, gachaSkipTap, "skip animation"); err != nil {
