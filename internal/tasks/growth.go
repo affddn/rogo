@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"image"
+	"math"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -74,6 +75,53 @@ var enhanceSlots = []struct{ icon, badge image.Point }{
 	{image.Pt(653, 497), image.Pt(704, 449)}, // accessory right
 }
 
+// bagTile21 is the top strip of the 21st tile in the Equipment page's gear
+// grid (row 4, column 3). Empty slots show the panel's beige.
+var bagTile21 = image.Rect(270, 990, 340, 1002)
+
+// BagOver20 reports whether the gear bag holds more than 20 items.
+func BagOver20(frame image.Image) bool {
+	r, g, b := meanRGB(frame, bagTile21)
+	d := math.Abs(r-230) + math.Abs(g-226) + math.Abs(b-216)
+	return d > 40
+}
+
+func meanRGB(frame image.Image, rect image.Rectangle) (r, g, b float64) {
+	n := 0.0
+	for y := rect.Min.Y; y < rect.Max.Y; y++ {
+		for x := rect.Min.X; x < rect.Max.X; x++ {
+			cr, cg, cb, _ := frame.At(x, y).RGBA()
+			r, g, b, n = r+float64(cr>>8), g+float64(cg>>8), b+float64(cb>>8), n+1
+		}
+	}
+	return r / n, g / n, b / n
+}
+
+// dismantle runs One-Click Dismantle when the bag passes 20 items. The
+// game's Dismantle Settings ("decompose equipment with lower Combat Power")
+// decide what goes, so better gear is never in the list; the output is
+// summon-upgrade crystals.
+func dismantle(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
+	if !BagOver20(frame) {
+		return false, nil
+	}
+	if err := b.TapTemplate(ctx, frame, screens.TOneClickDismantle); err != nil {
+		return false, err
+	}
+	id, f, err := b.Look(ctx)
+	if err != nil {
+		return false, err
+	}
+	if id != screens.DismantleConfirm {
+		return false, nil // nothing weaker than what is equipped
+	}
+	if err := b.TapTemplate(ctx, f, screens.TDismantleOK); err != nil {
+		return false, err
+	}
+	b.Log.Info("spare equipment dismantled")
+	return true, closePopups(ctx, b, screens.Equipment)
+}
+
 // enhanceCost is the "have" count above the Enhance button; green when the
 // next level is affordable.
 var enhanceCost = image.Rect(160, 1054, 205, 1078)
@@ -135,6 +183,14 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Equipment); err != nil {
+			return levels, err
+		}
+	}
+	if ok, err := dismantle(ctx, b, frame); err != nil {
+		return levels, err
+	} else if ok {
+		levels++ // crystals feed summon upgrades
+		if _, frame, err = b.Look(ctx); err != nil {
 			return levels, err
 		}
 	}
