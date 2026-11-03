@@ -1,0 +1,23 @@
+# sayadroid on an arm64 Linux host (ARM VPS, RK3588 board). The host kernel
+# needs binder; on Ubuntu that is linux-modules-extra plus
+#   sudo modprobe binder_linux devices="binder,hwbinder,vndbinder"
+# Then `docker compose up -d` and point rgo at localhost:5555. On a Mac, use
+# lima.yaml instead.
+name: sayadroid
+
+services:
+  sayadroid:
+    build: .
+    image: sayadroid:13
+    container_name: sayadroid
+    restart: unless-stopped
+    privileged: true # binder
+    ports:
+      # Loopback only: a privileged container's adb must not face the network.
+      # Run rgo on the same host (`make linux`).
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - sayadroid-data:/data
+
+volumes:
+  sayadroid-data:
