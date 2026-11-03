@@ -1,22 +1,11 @@
 # rogo
 
-Headless automation for Ragnarok: GO (SEA, `com.ggv.rogosea.aos`) running on a
-VMOS cloud phone. `rgo` drives the real game client over adb: it takes
+Headless automation for Ragnarok: GO (SEA, `com.ggv.rogosea.aos`) on an
+Android phone reachable over adb. `rgo` drives the real game client: it takes
 screenshots, recognises screens by template matching, and taps. It never talks to
 the game servers directly and never touches the client process.
 
 ## How it fits together
-
-```
-Mac / VPS                          VMOS cloud (MY region)
-┌────────────────┐  ssh tunnel  ┌──────────────────────────┐
-│ rgo run        │─────────────▶│ adbd ─ Android 13         │
-│  runner (FSM)  │  adb protocol│        └ Ragnarok: GO     │
-│  tasks         │              └──────────────────────────┘
-│  screens/vision│
-│  device (adb)  │
-└────────────────┘
-```
 
 `rgo run` is a state machine. Each cycle it reaches the main screen, reads one
 frame for signals (red "!" badges, the main-quest "(Completed)" tag, the level
@@ -47,6 +36,17 @@ back key is the last resort. An action that changes nothing is snoozed so a badg
 daily flags persist in `data/state.json`; daily flags reset at 00:00 GMT+8.
 Three failed actions in a row, or a deny-listed tap, restart the game.
 
+## Supported phones
+
+rgo needs Android 13, arm64, and a 720x1280 screen at 320 dpi: every template
+and tap is measured on that render.
+
+| phone | how rgo reaches it | status |
+|---|---|---|
+| VMOS Cloud (MY region) | adb through VMOS's ssh tunnel, which rgo opens and renews from `.env` | runs 24/7 |
+| sayadroid in a Lima VM on an M1 Pro Mac | plain adb, `localhost:25555` | tested with a new guest character: boot and `rgo run`; software rendering |
+| sayadroid on an arm64 Linux host | plain adb, `localhost:5555` | not tested yet |
+
 ## Quick start
 
 ```bash
@@ -61,10 +61,37 @@ bin/rgo run
 # Option B: tunnel opened by hand from the phone's "Local debugging" tab
 ssh -oStrictHostKeyChecking=accept-new s@<host> -p <port> -L <local>:localhost:1 -Nf
 bin/rgo -s localhost:<local> run
+
+# Option C: sayadroid, our own phone in a container (see below). It is plain
+# adb: name it with -s and rgo connects; the VMOS tunnel in .env is ignored.
+bin/rgo -s localhost:25555 run      # Mac (Lima VM)
+bin/rgo -s localhost:5555 run       # arm64 Linux host
 ```
 
 Keep it running: `make install-mac` (launchd + caffeinate) or
 `deploy/rgo.service` on a VPS (`make linux` for arm64).
+
+## sayadroid: our own phone
+
+VMOS runs a private redroid image (Android 13 in a container on ARM servers).
+`deploy/sayadroid/Dockerfile` builds our equivalent from official redroid: 64-bit
+only, Google Play (MindTheGapps), and the VMOS phone's 720x1280 @ 320dpi screen,
+which rgo's templates assume. Any arm64 Linux host with binder runs it
+(`compose.yaml`); on an Apple Silicon Mac, `lima.yaml` provides that host as a VM.
+Graphics are software-rendered, so give it 4+ cores.
+
+Once per fresh container (data lives in the `sayadroid-data` volume):
+
+1. Skip Google's setup wizard, which crashes on redroid:
+   `adb -s <serial> shell 'settings put global device_provisioned 1; settings put secure user_setup_complete 1; pm disable-user com.google.android.setupwizard'`
+2. Register it with Google, which blocks sign-in on uncertified builds: read the
+   ID with `adb -s <serial> root` then
+   `adb -s <serial> shell sqlite3 /data/data/com.google.android.gsf/databases/gservices.db "select value from main where name='android_id'"`
+   and submit it at https://www.google.com/android/uncertified.
+3. `scrcpy -s <serial>`: sign in to the Play Store and install Ragnarok: GO
+   from there. The game's Play license check fails on a sideloaded copy.
+4. Open the game once by hand: tick the user agreement and log in. Guest
+   logins work; rgo cancels the bind-your-account nag they show at start.
 
 ## Commands
 
