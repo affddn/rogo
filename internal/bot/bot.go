@@ -96,6 +96,9 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	case screens.Income:
 		return true, b.TapTemplate(ctx, frame, screens.TIncomeClose)
 	}
+	if screens.Visible(frame, screens.TNavBack) {
+		return true, b.TapTemplate(ctx, frame, screens.TNavBack)
+	}
 	if screens.Visible(frame, screens.TDialogCancel) {
 		return true, b.TapTemplate(ctx, frame, screens.TDialogCancel)
 	}
@@ -138,6 +141,14 @@ func (b *Bot) ToMain(ctx context.Context) error {
 			return err
 		}
 		if acted {
+			continue
+		}
+		// Skill flashes can hide the main-screen anchors for a frame; look
+		// again before pressing back, which on main would offer to quit.
+		if attempt%2 == 0 {
+			if err := sleep(ctx, b.Settle); err != nil {
+				return err
+			}
 			continue
 		}
 		path := b.save(frame)
