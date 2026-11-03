@@ -43,6 +43,7 @@ type Template struct {
 	g    *Gray
 	zero []float64 // template minus its mean
 	norm float64   // sqrt(sum(zero^2))
+	mean float64
 }
 
 func NewTemplate(name string, at image.Point, img image.Image) *Template {
@@ -53,6 +54,7 @@ func NewTemplate(name string, at image.Point, img image.Image) *Template {
 		mean += v
 	}
 	mean /= float64(len(g.Pix))
+	t.mean = mean
 	for i, v := range g.Pix {
 		t.zero[i] = v - mean
 		t.norm += t.zero[i] * t.zero[i]
@@ -72,6 +74,14 @@ type Match struct {
 	Score float64     // zero-mean normalised cross-correlation, -1..1
 	At    image.Point // top-left on screen
 	Size  image.Point
+	// Bright is the match area's mean luma over the template's. NCC ignores
+	// brightness, so this is how a dimmed element behind a modal is told apart.
+	Bright float64
+}
+
+// Visible reports a confident match that is not dimmed by an overlay.
+func (m Match) Visible(minScore float64) bool {
+	return m.Score >= minScore && m.Bright > 0.8 && m.Bright < 1.25
 }
 
 func (m Match) Center() image.Point { return m.At.Add(m.Size.Div(2)) }
@@ -106,6 +116,9 @@ func (t *Template) Find(frame image.Image, margin int) Match {
 			if score := dot / (math.Sqrt(variance) * t.norm); score > best.Score {
 				best.Score = score
 				best.At = image.Pt(win.Min.X+ox, win.Min.Y+oy)
+				if t.mean > 0 {
+					best.Bright = s / n / t.mean
+				}
 			}
 		}
 	}

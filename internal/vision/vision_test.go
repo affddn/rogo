@@ -27,6 +27,9 @@ func TestFindLocatesShiftedTemplate(t *testing.T) {
 	if m.Score < 0.999 {
 		t.Fatalf("score %.4f, want ~1", m.Score)
 	}
+	if !m.Visible(0.9) {
+		t.Fatalf("exact match not visible: %+v", m)
+	}
 	if c := m.Center(); c != image.Pt(85, 100) {
 		t.Fatalf("center %v, want (85,100)", c)
 	}
@@ -57,5 +60,22 @@ func TestRatioCountsBadgeRed(t *testing.T) {
 	}
 	if r := Ratio(img, img.Bounds(), IsBadgeRed); r != 0.5 {
 		t.Fatalf("ratio %.2f, want 0.5", r)
+	}
+}
+
+func TestVisibleRejectsDimmedMatch(t *testing.T) {
+	frame := noise(100, 100, 5)
+	tmpl := NewTemplate("box", image.Pt(20, 20), frame.SubImage(image.Rect(20, 20, 50, 40)))
+	for i := range frame.Pix {
+		if i%4 != 3 {
+			frame.Pix[i] /= 2
+		}
+	}
+	m := tmpl.Find(frame, 5)
+	if m.Score < 0.99 {
+		t.Fatalf("dimmed copy should still correlate, got %.3f", m.Score)
+	}
+	if m.Visible(0.9) {
+		t.Fatalf("dimmed match reported visible (bright %.2f)", m.Bright)
 	}
 }

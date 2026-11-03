@@ -80,7 +80,8 @@ func cmdMatch(ctx context.Context, d *device.Device, args []string) error {
 			return fmt.Errorf("match: unknown template %q", n)
 		}
 		m := t.Find(frame, *margin)
-		fmt.Printf("%-28s score=%.3f center=%v shift=%v\n", n, m.Score, m.Center(), m.At.Sub(t.At))
+		fmt.Printf("%-28s score=%.3f bright=%.2f visible=%-5v center=%v shift=%v\n",
+			n, m.Score, m.Bright, m.Visible(0.85), m.Center(), m.At.Sub(t.At))
 	}
 	return nil
 }
