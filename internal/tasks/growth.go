@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"math"
 	"time"
@@ -19,15 +20,25 @@ func open(ctx context.Context, b *bot.Bot, nav string, want ...screens.ID) (imag
 	if err := b.ToMain(ctx); err != nil {
 		return nil, err
 	}
-	_, frame, err := b.Look(ctx)
-	if err != nil {
+	// The bottom nav never moves, but badges, guide arrows and highlights
+	// sit on its labels, so tap by position.
+	p, ok := navAt[nav]
+	if !ok {
+		return nil, fmt.Errorf("open: no position for nav %s", nav)
+	}
+	if err := b.Tap(ctx, p, nav); err != nil {
 		return nil, err
 	}
-	if err := b.TapTemplate(ctx, frame, nav); err != nil {
-		return nil, err
-	}
-	_, frame, err = b.Wait(ctx, 10*time.Second, want...)
+	_, frame, err := b.Wait(ctx, 10*time.Second, want...)
 	return frame, err
+}
+
+var navAt = map[string]image.Point{
+	screens.TNavCharacter: {77, 1215},
+	screens.TNavWeapon:    {190, 1215},
+	screens.TNavEquipment: {304, 1215},
+	screens.TNavPet:       {412, 1215},
+	screens.TNavGameMode:  {643, 1215},
 }
 
 // Attributes spends free attribute points with the game's Recommended
