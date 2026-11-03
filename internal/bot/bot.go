@@ -119,6 +119,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TDialogCancel)
 	case screens.Income:
 		return true, b.TapTemplate(ctx, frame, screens.TIncomeClose)
+	case screens.IdleRewards:
+		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
 	}
 	if screens.Visible(frame, screens.TNavBack) {
 		return true, b.TapTemplate(ctx, frame, screens.TNavBack)
@@ -185,6 +187,43 @@ func (b *Bot) ToMain(ctx context.Context) error {
 		}
 	}
 	return fmt.Errorf("could not reach main screen")
+}
+
+// titleStart is the Start Game text on the title screen; it glows, so it is
+// tapped by position once the screen is recognised.
+var titleStart = image.Pt(360, 1112)
+
+// WaitBoot takes a freshly launched game from the title screen to the main
+// screen: Start Game, then the offline Idle Rewards popup. Loading screens are
+// waited out.
+func (b *Bot) WaitBoot(ctx context.Context, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		id, frame, err := b.Look(ctx)
+		if err != nil {
+			return err
+		}
+		switch id {
+		case screens.Main:
+			b.Log.Info("game ready")
+			return nil
+		case screens.Title:
+			if !screens.Visible(frame, screens.TTitleAgreeChecked) {
+				return fmt.Errorf("title screen: user agreement not ticked; tick it once by hand")
+			}
+			if err := b.Tap(ctx, titleStart, "start game"); err != nil {
+				return err
+			}
+		default:
+			if _, err := b.Dismiss(ctx, id, frame); err != nil {
+				return err
+			}
+		}
+		if err := sleep(ctx, 3*time.Second); err != nil {
+			return err
+		}
+	}
+	return fmt.Errorf("game not on main screen after %v", timeout)
 }
 
 func (b *Bot) save(frame image.Image) string {
