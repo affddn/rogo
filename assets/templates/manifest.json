@@ -608,6 +608,14 @@
     "note": "pet gacha: multi-draw ticket icon (free); diamonds look different"
   },
   {
+    "name": "powersave_swipe",
+    "x": 205,
+    "y": 1128,
+    "w": 290,
+    "h": 30,
+    "note": "power saving lock: 'Swipe right to unlock.'"
+  },
+  {
     "name": "questp_claim",
     "x": 514,
     "y": 508,

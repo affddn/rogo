@@ -134,6 +134,14 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TResonateClose)
 	case screens.SeasonPass:
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.PowerSave:
+		// The game dims into an auto-adventure lock screen after a few idle
+		// minutes; unlock by sliding the slime to the right.
+		b.Log.Info("unlocking power saving mode")
+		if err := b.D.Swipe(ctx, 130, 1145, 660, 1145, 600*time.Millisecond); err != nil {
+			return true, err
+		}
+		return true, sleep(ctx, b.Settle)
 	case screens.DismantleConfirm:
 		return true, b.Tap(ctx, image.Pt(196, 946), "cancel dismantle")
 	case screens.Mail:

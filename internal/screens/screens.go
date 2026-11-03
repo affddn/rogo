@@ -36,6 +36,7 @@ const (
 	Mail             ID = "mail"
 	SeasonPass       ID = "season-pass"
 	DismantleConfirm ID = "dismantle-confirm"
+	PowerSave        ID = "power-save"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -112,6 +113,7 @@ const (
 	TDismantleTitle      = "dismantle_title"
 	TDismantleOK         = "dismantle_ok"
 	TOneClickDismantle   = "equip_one_click_dismantle"
+	TPowerSaveSwipe      = "powersave_swipe"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -163,6 +165,7 @@ type rule struct {
 // Modals first: whatever is on top wins.
 var rules = []rule{
 	{id: Reward, anchors: []string{TRewardCongrats}},
+	{id: PowerSave, anchors: []string{TPowerSaveSwipe}},
 	{id: Title, anchors: []string{TTitleAgreeText}},
 	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
