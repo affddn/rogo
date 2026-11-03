@@ -106,6 +106,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		st.Seen = sig.Level
 
 		a := r.pick(sig, now)
+		if r.paused() {
+			continue // paused while looking; honour it before acting
+		}
 		if a == nil {
 			if err := bot.Sleep(ctx, r.Idle); err != nil {
 				return err
