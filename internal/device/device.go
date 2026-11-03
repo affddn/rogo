@@ -172,8 +172,10 @@ func (d *Device) AppFocused(ctx context.Context, pkg string) bool {
 	return strings.Contains(out, pkg)
 }
 
+// Launch starts pkg's launcher activity. --pct-syskeys 0 lets monkey run on
+// devices without hardware keys (redroid), where it otherwise aborts.
 func (d *Device) Launch(ctx context.Context, pkg string) error {
-	_, err := d.Shell(ctx, "monkey -p "+pkg+" -c android.intent.category.LAUNCHER 1")
+	_, err := d.Shell(ctx, "monkey --pct-syskeys 0 -p "+pkg+" -c android.intent.category.LAUNCHER 1")
 	return err
 }
 
