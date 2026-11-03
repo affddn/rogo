@@ -27,6 +27,12 @@ func Stage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 	if err := b.Tap(ctx, stageChallenge, "stage challenge"); err != nil {
 		return false, err
 	}
+	return WaitStage(ctx, b)
+}
+
+// WaitStage waits out a running stage challenge chain, leaves the defeat
+// screen and returns to main.
+func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 	start := time.Now()
 	id, frame, err := b.Wait(ctx, stageRun, screens.StageDefeat, screens.Main)
 	if err != nil && !errors.Is(err, bot.ErrTimeout) {
