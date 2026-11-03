@@ -83,6 +83,30 @@ func actions() []*runner.Action {
 				st.Add("cultivate_steps", c)
 				return out{Progress: n+c > 0, Growth: c > 0}, err
 			}},
+		{Name: "realm", Priority: 65, Snooze: time.Hour,
+			Ready: func(s sig, st *st, _ time.Time) bool { return !st.Daily["realm_done"] || s.Has(screens.BadgeGameMode) },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				done := map[string]bool{}
+				for _, t := range tasks.RealmTabs {
+					done[t.Name] = st.Daily["realm_challenge_"+t.Name]
+				}
+				sweeps, challenged, err := tasks.Realm(ctx, b, done)
+				for _, n := range challenged {
+					st.Daily["realm_challenge_"+n] = true
+				}
+				st.Add("realm_sweeps", sweeps)
+				if err == nil && sweeps == 0 {
+					st.Daily["realm_done"] = true
+				}
+				return out{Progress: sweeps+len(challenged) > 0, Growth: sweeps > 0}, err
+			}},
+		{Name: "baphomet", Priority: 55,
+			Ready: func(_ sig, st *st, now time.Time) bool { return st.Since("baphomet", now) >= 3*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Baphomet(ctx, b)
+				st.Add("boss_dodges", n)
+				return out{Progress: true}, err
+			}},
 		{Name: "income", Priority: 60,
 			Ready: func(_ sig, s *st, now time.Time) bool {
 				return !s.Daily["quick_idle"] || s.Since("income", now) >= 2*time.Hour
@@ -143,5 +167,17 @@ func cmdStage(ctx context.Context, d *device.Device, _ []string) error {
 func cmdGacha(ctx context.Context, d *device.Device, _ []string) error {
 	n, err := tasks.WeaponGacha(ctx, newBot(d))
 	fmt.Println("batches", n)
+	return err
+}
+
+func cmdRealm(ctx context.Context, d *device.Device, _ []string) error {
+	n, c, err := tasks.Realm(ctx, newBot(d), map[string]bool{})
+	fmt.Println("sweeps", n, "challenged", c)
+	return err
+}
+
+func cmdBaphomet(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Baphomet(ctx, newBot(d))
+	fmt.Println("dodges", n)
 	return err
 }
