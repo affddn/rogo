@@ -29,7 +29,7 @@ type Runner struct {
 }
 
 func New(b *bot.Bot, jobs ...*Job) *Runner {
-	return &Runner{B: b, Jobs: jobs, JobTimeout: 6 * time.Minute, RestartAfter: 3}
+	return &Runner{B: b, Jobs: jobs, JobTimeout: 10 * time.Minute, RestartAfter: 3}
 }
 
 func (r *Runner) Run(ctx context.Context) error {
