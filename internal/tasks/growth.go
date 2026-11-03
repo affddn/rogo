@@ -78,6 +78,40 @@ var enhanceSlots = []struct{ icon, badge image.Point }{
 // next level is affordable.
 var enhanceCost = image.Rect(160, 1054, 205, 1078)
 
+// Enhance Resonate: every 5 levels, once all six items reach the next tier,
+// its badge lights up and Activate grants a set-wide stat bonus.
+var (
+	resonateButton = image.Pt(640, 935)
+	resonateBadge  = image.Pt(666, 904)
+)
+
+// resonate activates the next resonance tier if its badge shows.
+func resonate(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
+	if !badged(frame, resonateBadge) {
+		return false, nil
+	}
+	if err := b.Tap(ctx, resonateButton, "enhance resonate"); err != nil {
+		return false, err
+	}
+	_, frame, err := b.Wait(ctx, 8*time.Second, screens.Resonate)
+	if err != nil {
+		return false, err
+	}
+	if err := b.TapTemplate(ctx, frame, screens.TResonateActivate); err != nil {
+		return false, err
+	}
+	b.Log.Info("enhance resonance activated")
+	if err := bot.Sleep(ctx, 2*time.Second); err != nil {
+		return true, err
+	}
+	_, frame, err = b.Look(ctx)
+	if err != nil {
+		return true, err
+	}
+	_, err = b.Dismiss(ctx, screens.Detect(frame), frame)
+	return true, err
+}
+
 func badged(frame image.Image, p image.Point) bool {
 	return vision.Ratio(frame, image.Rectangle{Min: p.Sub(image.Pt(7, 7)), Max: p.Add(image.Pt(7, 7))}, vision.IsBadgeRed) > 0.25
 }
@@ -105,6 +139,12 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 		if id != screens.Enhance {
 			b.Log.Warn("left enhance page", "screen", id)
 			break
+		}
+		if ok, err := resonate(ctx, b, frame); err != nil {
+			return levels, err
+		} else if ok {
+			levels++ // counts as growth for the planner
+			continue
 		}
 		progressed := false
 		for _, s := range enhanceSlots {
