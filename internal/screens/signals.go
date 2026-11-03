@@ -44,6 +44,9 @@ type Signals struct {
 	// Level fingerprints the "BASE nn | JOB n" text; it changes on any
 	// level-up, which is when attribute and skill points arrive.
 	Level string
+	// Arrow is a guide arrow on the main screen, if any.
+	Arrow    GuideArrow
+	HasArrow bool
 	// Stage fingerprints the next-challenge label ("4-6") on the Stage
 	// Challenge button; it changes whenever a stage is cleared.
 	Stage string
@@ -110,7 +113,10 @@ func QuestDone(frame image.Image) bool {
 
 // ReadMain extracts signals from a frame already detected as Main.
 func ReadMain(frame image.Image) Signals {
+	arrow, hasArrow := FindGuideArrow(frame)
 	s := Signals{
+		Arrow:     arrow,
+		HasArrow:  hasArrow,
 		QuestDone: QuestDone(frame),
 		Badges:    map[Badge]bool{},
 		Level:     fingerprint(frame, levelText),

@@ -117,3 +117,23 @@ func TestQuestDoneOverMovingBackground(t *testing.T) {
 		t.Error("main3: phantom completed quest")
 	}
 }
+
+func TestFindGuideArrow(t *testing.T) {
+	cases := map[string]image.Point{ // file -> control the tutorial wanted
+		"tut-1.png":    {412, 1200}, // Pet nav
+		"tut-2.png":    {548, 1052}, // Draw Multiple Times
+		"petcult.png":  {556, 1225}, // Cultivation tab
+		"petcult2.png": {534, 1120}, // Activate All
+		"petcult3.png": {182, 1120}, // Auto Formation
+	}
+	for f, want := range cases {
+		a, ok := FindGuideArrow(load(t, f))
+		if !ok {
+			t.Errorf("%s: arrow not found", f)
+			continue
+		}
+		if d := a.Target.Sub(want); d.X*d.X+d.Y*d.Y > 40*40 {
+			t.Errorf("%s: target %v, want near %v", f, a.Target, want)
+		}
+	}
+}
