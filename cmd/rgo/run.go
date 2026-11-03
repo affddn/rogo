@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"path/filepath"
@@ -180,7 +181,7 @@ func actions() []*runner.Action {
 				return out{Progress: true}, err
 			}},
 		{Name: "dungeon", Priority: 62, Snooze: time.Hour,
-			Ready: func(_ sig, st *st, _ time.Time) bool { return st.Counters["dungeon_"+st.Day] < dungeonLimit },
+			Ready: func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] },
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := dungeonRuns(ctx, b, st)
 				return out{Progress: n > 0, Growth: n > 0}, err
@@ -240,17 +241,17 @@ func actions() []*runner.Action {
 	}
 }
 
-// dungeonLimit is the free daily dungeon attempts.
-const dungeonLimit = 3
-
+// dungeonRuns spends dungeon attempts until the game greys out Auto Match;
+// that, not a local count, ends dungeons for the game day.
 func dungeonRuns(ctx context.Context, b *bot.Bot, st *st) (int, error) {
-	key := "dungeon_" + st.Day
-	left := dungeonLimit - st.Counters[key]
-	if left <= 0 {
+	if st.Daily["dungeon_done"] {
 		return 0, b.ToMain(ctx)
 	}
-	n, err := tasks.Dungeon(ctx, b, left)
-	st.Add(key, n)
+	n, err := tasks.Dungeon(ctx, b, 5)
+	if errors.Is(err, tasks.ErrNoAttempts) {
+		st.Daily["dungeon_done"] = true
+		err = b.ToMain(ctx)
+	}
 	st.Add("dungeon_runs", n)
 	st.LastRun["dungeon"] = time.Now()
 	return n, err
