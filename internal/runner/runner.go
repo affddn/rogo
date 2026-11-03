@@ -44,6 +44,9 @@ type Runner struct {
 	RestartAfter int
 	// Idle is the pause between looks when nothing is ready.
 	Idle time.Duration
+	// Reconnect, when set, re-establishes the transport (e.g. fetches a fresh
+	// VMOS tunnel key) before adb reconnects to an offline device.
+	Reconnect func(ctx context.Context) error
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
@@ -163,6 +166,11 @@ func (r *Runner) ensureGame(ctx context.Context) error {
 	d := r.B.D
 	if !d.Online(ctx) {
 		r.B.Log.Warn("device offline, reconnecting")
+		if r.Reconnect != nil {
+			if err := r.Reconnect(ctx); err != nil {
+				return err
+			}
+		}
 		if err := d.Connect(ctx); err != nil {
 			return err
 		}
