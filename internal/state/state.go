@@ -33,6 +33,10 @@ type State struct {
 	// StageMisses counts runs in a row that cleared nothing.
 	Stage       string `json:"stage"`
 	StageMisses int    `json:"stage_misses"`
+	// PowerAtDefeat is the power fingerprint when the last stage run lost.
+	PowerAtDefeat string `json:"power_at_defeat"`
+	// PowerNow is the latest power fingerprint read on main.
+	PowerNow string `json:"power_now"`
 
 	// Growth counts upgrades since the last stage defeat; a stage retry
 	// before any growth would lose the same way.

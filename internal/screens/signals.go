@@ -47,10 +47,16 @@ type Signals struct {
 	// Arrow is a guide arrow on the main screen, if any.
 	Arrow    GuideArrow
 	HasArrow bool
+	// Power fingerprints the combat power number under the avatar; it
+	// changes whenever power changes, including auto-equipped drops.
+	Power string
 	// Stage fingerprints the next-challenge label ("4-6") on the Stage
 	// Challenge button; it changes whenever a stage is cleared.
 	Stage string
 }
+
+// powerText covers the combat power digits ("884.6K").
+var powerText = image.Rect(180, 64, 300, 94)
 
 // stageText covers the next-challenge stage label.
 var stageText = image.Rect(640, 980, 686, 1000)
@@ -120,6 +126,9 @@ func ReadMain(frame image.Image) Signals {
 		QuestDone: QuestDone(frame),
 		Badges:    map[Badge]bool{},
 		Level:     fingerprint(frame, levelText),
+		Power: mask(frame, powerText, 1, func(c color.RGBA) bool {
+			return c.R > 225 && c.G > 215 && c.B > 170
+		}),
 		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {
 			return c.R > 225 && c.G > 225 && c.B > 210
 		}),

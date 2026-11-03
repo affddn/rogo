@@ -137,3 +137,12 @@ func TestFindGuideArrow(t *testing.T) {
 		}
 	}
 }
+
+func TestPowerFingerprint(t *testing.T) {
+	// main2/main3: 465.0K both; main5: 643.2K.
+	a, b, c := ReadMain(load(t, "main2.png")).Power, ReadMain(load(t, "main3.png")).Power, ReadMain(load(t, "main5.png")).Power
+	if !LevelChanged(b, c) {
+		t.Error("power fingerprint unchanged across a power rise")
+	}
+	_ = a
+}

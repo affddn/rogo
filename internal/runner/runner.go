@@ -104,6 +104,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 		sig := screens.ReadMain(frame)
 		st.Seen = sig.Level
+		st.PowerNow = sig.Power
 
 		a := r.pick(sig, now)
 		if r.paused() {
