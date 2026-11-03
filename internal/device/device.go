@@ -69,6 +69,16 @@ func (d *Device) Connect(ctx context.Context) error {
 	return nil
 }
 
+// Disconnect drops a network serial from the adb server (no-op for USB).
+func (d *Device) Disconnect(ctx context.Context) {
+	if !strings.Contains(d.Serial, ":") {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout)
+	defer cancel()
+	_ = exec.CommandContext(ctx, d.ADB, "disconnect", d.Serial).Run()
+}
+
 // Online reports whether adb sees the device in the "device" state.
 func (d *Device) Online(ctx context.Context) bool {
 	out, err := d.run(ctx, "get-state")

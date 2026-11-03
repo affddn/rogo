@@ -193,6 +193,9 @@ func (r *Runner) ensureGame(ctx context.Context) error {
 				return err
 			}
 		}
+		// A stale "offline" entry survives a new tunnel session; drop it so
+		// adb performs a fresh handshake.
+		d.Disconnect(ctx)
 		if err := d.Connect(ctx); err != nil {
 			return err
 		}
