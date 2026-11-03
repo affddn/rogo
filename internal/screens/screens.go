@@ -48,6 +48,7 @@ const (
 	StageDefeat      ID = "stage-defeat"
 	WeaponGacha      ID = "weapon-gacha"
 	GachaCount       ID = "gacha-count"
+	GuestBind        ID = "guest-bind"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -57,6 +58,8 @@ const (
 	TMainQuest           = "main_quest"
 	TMainQuestCompleted  = "main_quest_completed"
 	TMainSystem          = "main_system"
+	TMainSummonElite     = "main_summon_elite"
+	TMainSeasonPass      = "main_season_pass"
 	TIncomeTitle         = "income_title"
 	TIncomeClose         = "income_close"
 	TIncomeQuickIdle     = "income_quick_idle"
@@ -149,6 +152,8 @@ const (
 	TGachaCountHint      = "gacha_count_hint"
 	TGachaDrawButton     = "gacha_draw_btn"
 	TGachaCostTicket     = "gacha_cost_ticket"
+	TGuestBindText       = "guestbind_text"
+	TGuestBindCancel     = "guestbind_cancel"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -180,6 +185,8 @@ type rule struct {
 var rules = []rule{
 	{id: Reward, anchors: []string{TRewardCongrats}},
 	{id: PowerSave, anchors: []string{TPowerSaveSwipe}},
+	// Guest logins get a bind-your-account nag over the title screen.
+	{id: GuestBind, anchors: []string{TGuestBindText, TGuestBindCancel}},
 	{id: Title, anchors: []string{TTitleAgreeText}},
 	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
@@ -220,9 +227,10 @@ var rules = []rule{
 	{id: Dungeon, anchors: []string{TDungeonHeader},
 		anyOf: []string{TDungeonAutoMatch, TDungeonCancelMatch}, need: 1},
 	// The bottom nav dims under every modal, so it gates Main; the other
-	// anchors get covered by effects and auto-equip popups now and then.
+	// anchors get covered by effects and auto-equip popups now and then. A
+	// new character has no quest or system icons yet.
 	{id: Main, anchors: []string{TNavCharacter},
-		anyOf: []string{TMainAdventureIncome, TMainStageChallenge, TMainQuest, TMainSystem}, need: 2},
+		anyOf: []string{TMainAdventureIncome, TMainStageChallenge, TMainQuest, TMainSystem, TMainSummonElite}, need: 2},
 }
 
 // Visible reports whether the named template is on screen and not dimmed.

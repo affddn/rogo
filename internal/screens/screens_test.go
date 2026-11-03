@@ -45,6 +45,9 @@ func TestDetect(t *testing.T) {
 		"weapon.png":                      WeaponGacha,
 		"gacha-after.png":                 WeaponGacha,
 		"gacha-result.png":                GachaCount,
+		"sayadroid/guest-bind.png":        GuestBind,
+		"sayadroid/main-new2.png":         Main, // new character: no quest/system icons
+		"sayadroid/main-new3.png":         Main,
 	}
 	for file, want := range cases {
 		if got := Detect(load(t, file)); got != want {
@@ -74,6 +77,26 @@ func TestReadMainSignals(t *testing.T) {
 	}
 	if on := ReadMain(load(t, "auto-2.png")); on.Has(BadgeAuto) || !on.QuestDone {
 		t.Errorf("auto-2: want auto on and quest done, got %+v", on)
+	}
+}
+
+func TestNavLocks(t *testing.T) {
+	// A fresh character on sayadroid: Weapon, Pet and Game Mode locked.
+	fresh := ReadMain(load(t, "sayadroid/main-new.png"))
+	for _, b := range []Badge{BadgeWeapon, BadgePet, BadgeGameMode} {
+		if fresh.Unlocked(b) {
+			t.Errorf("main-new: %s read as unlocked", b)
+		}
+	}
+	// The VMOS account: everything but Pet open.
+	vmos := ReadMain(load(t, "main3.png"))
+	if !vmos.Unlocked(BadgeWeapon) || !vmos.Unlocked(BadgeGameMode) || vmos.Unlocked(BadgePet) {
+		t.Errorf("main3: locks read as %v", vmos.Locked)
+	}
+	// Nor has it the system menu or the season pass yet.
+	if fresh.System || fresh.SeasonPass || !vmos.System || !vmos.SeasonPass {
+		t.Errorf("menu icons: fresh system=%v pass=%v, vmos system=%v pass=%v",
+			fresh.System, fresh.SeasonPass, vmos.System, vmos.SeasonPass)
 	}
 }
 

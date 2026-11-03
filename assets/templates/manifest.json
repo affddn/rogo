@@ -392,6 +392,22 @@
     "note": "game mode page header"
   },
   {
+    "name": "guestbind_cancel",
+    "x": 290,
+    "y": 800,
+    "w": 140,
+    "h": 48,
+    "note": "guest login Tips dialog: CANCEL button"
+  },
+  {
+    "name": "guestbind_text",
+    "x": 95,
+    "y": 462,
+    "w": 505,
+    "h": 34,
+    "note": "guest login Tips dialog: 'You are currently using a guest account' line"
+  },
+  {
     "name": "hint_tap_empty",
     "x": 226,
     "y": 1042,
@@ -584,12 +600,28 @@
     "note": "main: quest tracker '(Completed)' tag"
   },
   {
+    "name": "main_season_pass",
+    "x": 30,
+    "y": 372,
+    "w": 48,
+    "h": 44,
+    "note": "main: Season Pass icon on the left rail (absent for new characters)"
+  },
+  {
     "name": "main_stage_challenge",
     "x": 614,
     "y": 1064,
     "w": 96,
     "h": 48,
     "note": "main: Stage Challenge label"
+  },
+  {
+    "name": "main_summon_elite",
+    "x": 296,
+    "y": 1080,
+    "w": 128,
+    "h": 22,
+    "note": "main: Summon Elite label under the summon button"
   },
   {
     "name": "main_system",
