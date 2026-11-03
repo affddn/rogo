@@ -109,7 +109,7 @@ func (b *Bot) denied(p image.Point) string {
 func (b *Bot) TapTemplate(ctx context.Context, frame image.Image, name string) error {
 	m := assets.MustGet(name).Find(frame, screens.Margin)
 	if !m.Visible(screens.MinScore) {
-		return fmt.Errorf("tap %s: not visible (score %.2f)", name, m.Score)
+		return fmt.Errorf("tap %s: not visible (score %.2f, bright %.2f, shot %s)", name, m.Score, m.Bright, b.save(frame))
 	}
 	return b.Tap(ctx, m.Center(), name)
 }
