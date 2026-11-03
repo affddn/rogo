@@ -104,6 +104,46 @@
     "note": "equipment: Equipment Upgrade button (without badge)"
   },
   {
+    "name": "gacha_cost_ticket",
+    "x": 296,
+    "y": 762,
+    "w": 30,
+    "h": 30,
+    "note": "weapon gacha: ticket cost icon (not diamond)"
+  },
+  {
+    "name": "gacha_count_hint",
+    "x": 210,
+    "y": 506,
+    "w": 300,
+    "h": 34,
+    "note": "weapon gacha: 'Select draw count (min. 10)'"
+  },
+  {
+    "name": "gacha_draw_btn",
+    "x": 254,
+    "y": 806,
+    "w": 212,
+    "h": 60,
+    "note": "weapon gacha: Draw confirm button"
+  },
+  {
+    "name": "gacha_draw_multi",
+    "x": 436,
+    "y": 1012,
+    "w": 196,
+    "h": 60,
+    "note": "weapon gacha: Draw Multiple Times button (below badge)"
+  },
+  {
+    "name": "gacha_header",
+    "x": 8,
+    "y": 16,
+    "w": 176,
+    "h": 46,
+    "note": "weapon gacha: page header"
+  },
+  {
     "name": "hint_tap_empty",
     "x": 226,
     "y": 1042,

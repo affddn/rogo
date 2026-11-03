@@ -23,6 +23,8 @@ const (
 	Title            ID = "title"
 	IdleRewards      ID = "idle-rewards"
 	StageDefeat      ID = "stage-defeat"
+	WeaponGacha      ID = "weapon-gacha"
+	GachaCount       ID = "gacha-count"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -63,6 +65,11 @@ const (
 	TIdleClaim           = "idle_claim"
 	TStageDefeat         = "stage_defeat"
 	TStageLeave          = "stage_leave"
+	TGachaHeader         = "gacha_header"
+	TGachaDrawMulti      = "gacha_draw_multi"
+	TGachaCountHint      = "gacha_count_hint"
+	TGachaDrawButton     = "gacha_draw_btn"
+	TGachaCostTicket     = "gacha_cost_ticket"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -87,6 +94,7 @@ var rules = []rule{
 	{Title, []string{TTitleAgreeText}},
 	{IdleRewards, []string{TIdleTitle, TIdleClaim}},
 	{StageDefeat, []string{TStageDefeat, TStageLeave}},
+	{GachaCount, []string{TGachaCountHint, TGachaDrawButton}},
 	{QuickIdleConfirm, []string{TQuickIdleTitle, TDialogOK}},
 	{AutoSummonHint, []string{THintTitle, TAutoSummonText}},
 	{Income, []string{TIncomeTitle, TIncomeClose}},
@@ -94,6 +102,7 @@ var rules = []rule{
 	{CharOverview, []string{TCharOverview, TNavBack}},
 	{Equipment, []string{TEquipHeader, TNavBack}},
 	{Enhance, []string{TEnhanceHeader, TNavBack}},
+	{WeaponGacha, []string{TGachaHeader, TNavBack}},
 	{Main, []string{TMainAdventureIncome, TMainStageChallenge}},
 }
 

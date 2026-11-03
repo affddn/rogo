@@ -115,6 +115,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	switch id {
 	case screens.Reward:
 		return true, b.tapHint(ctx, frame)
+	case screens.GachaCount:
+		return true, b.tapHint(ctx, frame)
 	case screens.QuickIdleConfirm, screens.AutoSummonHint:
 		return true, b.TapTemplate(ctx, frame, screens.TDialogCancel)
 	case screens.Income:
