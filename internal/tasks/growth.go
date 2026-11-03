@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 	"math"
 	"slices"
 	"time"
@@ -114,6 +115,67 @@ func meanRGB(frame image.Image, rect image.Rectangle) (r, g, b float64) {
 	return r / n, g / n, b / n
 }
 
+// Bag grid geometry on the Equipment page: 6 columns, 109x110 px pitch.
+const (
+	bagX0, bagY0         = 42, 658
+	bagPitchX, bagPitchY = 109, 110
+)
+
+// upgradeArrow is the yellow-green up-arrow the game draws on a bag item that
+// beats what is equipped in its slot.
+func upgradeArrow(c color.RGBA) bool {
+	return c.G > 140 && int(c.G)-int(c.B) > 70 && int(c.R)-int(c.G) < 15 && int(c.G) > int(c.R)-15 && c.B < 90
+}
+
+// upgradeTile returns the centre of the first bag tile showing the arrow.
+func upgradeTile(frame image.Image) (image.Point, bool) {
+	for row := 0; row < 4; row++ {
+		for col := 0; col < 6; col++ {
+			x0, y0 := bagX0+col*bagPitchX, bagY0+row*bagPitchY
+			if vision.Ratio(frame, image.Rect(x0+70, y0, x0+96, y0+30), upgradeArrow) > 0.08 {
+				return image.Pt(x0+46, y0+47), true
+			}
+		}
+	}
+	return image.Point{}, false
+}
+
+// equipUpgrades equips every bag item the game marks as an upgrade. The
+// game auto-equips most drops but not, for example, a first accessory.
+func equipUpgrades(ctx context.Context, b *bot.Bot, frame image.Image) (int, error) {
+	n := 0
+	for n < 8 {
+		p, ok := upgradeTile(frame)
+		if !ok {
+			break
+		}
+		if err := b.Tap(ctx, p, "upgrade item"); err != nil {
+			return n, err
+		}
+		_, f, err := b.Look(ctx)
+		if err != nil {
+			return n, err
+		}
+		if !screens.Visible(f, screens.TItemEquip) {
+			b.Log.Warn("upgrade item popup has no Equip button")
+			_, err := b.Dismiss(ctx, screens.Detect(f), f)
+			return n, err
+		}
+		if err := b.TapTemplate(ctx, f, screens.TItemEquip); err != nil {
+			return n, err
+		}
+		n++
+		b.Log.Info("equipped upgrade")
+		if err := closePopups(ctx, b, screens.Equipment); err != nil {
+			return n, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return n, err
+		}
+	}
+	return n, nil
+}
+
 // dismantle runs One-Click Dismantle when the bag passes 20 items. The
 // game's Dismantle Settings ("decompose equipment with lower Combat Power")
 // decide what goes, so better gear is never in the list; the output is
@@ -200,6 +262,14 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Equipment); err != nil {
+			return levels, err
+		}
+	}
+	if n, err := equipUpgrades(ctx, b, frame); err != nil {
+		return levels, err
+	} else if n > 0 {
+		levels += n
+		if _, frame, err = b.Look(ctx); err != nil {
 			return levels, err
 		}
 	}
