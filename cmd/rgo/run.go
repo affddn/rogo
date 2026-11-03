@@ -179,6 +179,12 @@ func actions() []*runner.Action {
 				st.Add("boss_dodges", n)
 				return out{Progress: true}, err
 			}},
+		{Name: "dungeon", Priority: 62, Snooze: time.Hour,
+			Ready: func(_ sig, st *st, _ time.Time) bool { return st.Counters["dungeon_"+st.Day] < dungeonLimit },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := dungeonRuns(ctx, b, st)
+				return out{Progress: n > 0, Growth: n > 0}, err
+			}},
 		{Name: "income", Priority: 60,
 			Ready: func(_ sig, s *st, now time.Time) bool {
 				return !s.Daily["quick_idle"] || s.Since("income", now) >= 2*time.Hour
@@ -234,6 +240,22 @@ func actions() []*runner.Action {
 	}
 }
 
+// dungeonLimit is the free daily dungeon attempts.
+const dungeonLimit = 3
+
+func dungeonRuns(ctx context.Context, b *bot.Bot, st *st) (int, error) {
+	key := "dungeon_" + st.Day
+	left := dungeonLimit - st.Counters[key]
+	if left <= 0 {
+		return 0, b.ToMain(ctx)
+	}
+	n, err := tasks.Dungeon(ctx, b, left)
+	st.Add(key, n)
+	st.Add("dungeon_runs", n)
+	st.LastRun["dungeon"] = time.Now()
+	return n, err
+}
+
 // runFrom runs the chore that belongs to the screen a quest or guide arrow
 // led to. Unknown means a battle probably started (stage quests).
 func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, error) {
@@ -243,6 +265,9 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		st.Add("boss_dodges", n)
 		st.LastRun["baphomet"] = time.Now()
 		return out{Progress: err == nil}, err
+	case screens.Dungeon:
+		n, err := dungeonRuns(ctx, b, st)
+		return out{Progress: n > 0, Growth: n > 0}, err
 	case screens.Realm:
 		done := map[string]bool{}
 		for _, t := range tasks.RealmTabs {
@@ -361,5 +386,11 @@ func cmdObjective(ctx context.Context, d *device.Device, _ []string) error {
 	if serr := s.Save(); serr != nil && err == nil {
 		err = serr
 	}
+	return err
+}
+
+func cmdDungeon(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Dungeon(ctx, newBot(d), 1)
+	fmt.Println("runs", n)
 	return err
 }
