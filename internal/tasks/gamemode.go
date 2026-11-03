@@ -34,6 +34,12 @@ var (
 )
 
 func openGameMode(ctx context.Context, b *bot.Bot, tile image.Point, want screens.ID) (image.Image, error) {
+	// Already there (the quest tracker or a guide arrow brought us).
+	if id, frame, err := b.Look(ctx); err != nil {
+		return nil, err
+	} else if id == want {
+		return frame, nil
+	}
 	if _, err := open(ctx, b, screens.TNavGameMode, screens.GameMode); err != nil {
 		return nil, err
 	}

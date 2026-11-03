@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -17,6 +18,11 @@ var attributeTab = image.Pt(350, 1235)
 
 // open goes from the main screen to a bottom-nav page.
 func open(ctx context.Context, b *bot.Bot, nav string, want ...screens.ID) (image.Image, error) {
+	if id, frame, err := b.Look(ctx); err != nil {
+		return nil, err
+	} else if slices.Contains(want, id) {
+		return frame, nil
+	}
 	if err := b.ToMain(ctx); err != nil {
 		return nil, err
 	}
