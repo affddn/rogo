@@ -35,6 +35,7 @@ const (
 	PetCultivate     ID = "pet-cultivate"
 	Mail             ID = "mail"
 	SeasonPass       ID = "season-pass"
+	DismantleConfirm ID = "dismantle-confirm"
 	Equipment        ID = "equipment"
 	Enhance          ID = "enhance"
 	AutoSummonHint   ID = "auto-summon-hint"
@@ -108,6 +109,9 @@ const (
 	TMailClose           = "mail_close"
 	TPassHeader          = "pass_header"
 	TPassClaimAll        = "pass_claim_all"
+	TDismantleTitle      = "dismantle_title"
+	TDismantleOK         = "dismantle_ok"
+	TOneClickDismantle   = "equip_one_click_dismantle"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"
@@ -171,6 +175,7 @@ var rules = []rule{
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: Mail, anchors: []string{TMailTitle, TMailClose}},
+	{id: DismantleConfirm, anchors: []string{TDismantleTitle, TDismantleOK}},
 	// The pet count dialog was first seen under a tutorial dim; title + Draw
 	// identify it (the weapon one matches GachaCount above it first).
 	{id: PetCount, anchors: []string{THintTitle, TGachaDrawButton}},

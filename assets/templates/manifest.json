@@ -176,6 +176,38 @@
     "note": "DENY: season pass 'Rebate 1000%' tag over the paid unlock"
   },
   {
+    "name": "dismantle_ok",
+    "x": 416,
+    "y": 916,
+    "w": 216,
+    "h": 60,
+    "note": "dismantle confirmation: OK"
+  },
+  {
+    "name": "dismantle_set_close",
+    "x": 640,
+    "y": 280,
+    "w": 50,
+    "h": 50,
+    "note": "dismantle settings: close X"
+  },
+  {
+    "name": "dismantle_set_title",
+    "x": 214,
+    "y": 280,
+    "w": 290,
+    "h": 46,
+    "note": "dismantle settings dialog: title"
+  },
+  {
+    "name": "dismantle_title",
+    "x": 180,
+    "y": 256,
+    "w": 360,
+    "h": 46,
+    "note": "dismantle confirmation: title"
+  },
+  {
     "name": "dlg_cancel",
     "x": 113,
     "y": 828,
@@ -222,6 +254,14 @@
     "w": 172,
     "h": 50,
     "note": "equipment: page header"
+  },
+  {
+    "name": "equip_one_click_dismantle",
+    "x": 256,
+    "y": 1084,
+    "w": 210,
+    "h": 56,
+    "note": "equipment: One-Click Dismantle button"
   },
   {
     "name": "equip_upgrade_btn",
@@ -765,6 +805,6 @@
     "y": 70,
     "w": 100,
     "h": 40,
-    "note": "tutorial: Skip >> button (top right)"
+    "note": "tutorial: Skip \u003e\u003e button (top right)"
   }
 ]
