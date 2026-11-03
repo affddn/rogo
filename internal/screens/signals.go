@@ -2,6 +2,7 @@ package screens
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/affddn/rogo/internal/vision"
 )
@@ -34,13 +35,52 @@ var badgeAt = map[Badge]image.Point{
 type Signals struct {
 	QuestDone bool
 	Badges    map[Badge]bool
+	// Level fingerprints the "BASE nn | JOB n" text; it changes on any
+	// level-up, which is when attribute and skill points arrive.
+	Level string
+}
+
+// levelText covers the base (blue) and job (bright) level numbers.
+var levelText = image.Rect(160, 20, 300, 34)
+
+// LevelChanged compares two level fingerprints, tolerating a few pixels of
+// anti-aliasing noise. A changed digit flips dozens.
+func LevelChanged(a, b string) bool {
+	if len(a) != len(b) {
+		return true
+	}
+	diff := 0
+	for i := range a {
+		if a[i] != b[i] {
+			diff++
+		}
+	}
+	return diff > 6
+}
+
+// fingerprint masks the coloured digit pixels in r, ignoring the map that
+// shows through behind the HUD: stable at a level, different after a level-up.
+func fingerprint(frame image.Image, r image.Rectangle) string {
+	out := make([]byte, 0, (r.Dx()/2)*(r.Dy()/2))
+	for y := r.Min.Y; y < r.Max.Y; y += 2 {
+		for x := r.Min.X; x < r.Max.X; x += 2 {
+			c := color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA)
+			digit := (c.B > 200 && c.R < 130) || (c.R > 220 && c.G > 200 && c.B > 200)
+			if digit {
+				out = append(out, '1')
+			} else {
+				out = append(out, '0')
+			}
+		}
+	}
+	return string(out)
 }
 
 func (s Signals) Has(b Badge) bool { return s.Badges[b] }
 
 // ReadMain extracts signals from a frame already detected as Main.
 func ReadMain(frame image.Image) Signals {
-	s := Signals{QuestDone: Visible(frame, TMainQuestCompleted), Badges: map[Badge]bool{}}
+	s := Signals{QuestDone: Visible(frame, TMainQuestCompleted), Badges: map[Badge]bool{}, Level: fingerprint(frame, levelText)}
 	for b, p := range badgeAt {
 		r := image.Rectangle{Min: p.Sub(image.Pt(8, 8)), Max: p.Add(image.Pt(8, 8))}
 		s.Badges[b] = vision.Ratio(frame, r, vision.IsBadgeRed) > 0.3

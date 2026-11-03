@@ -85,3 +85,14 @@ func TestSummonBadge(t *testing.T) {
 		t.Error("main3: phantom summon upgrade badge")
 	}
 }
+
+func TestLevelFingerprintTracksLevelUps(t *testing.T) {
+	// main.png and main2.png: Base 23 vs 24; main2 and main3 are both 24/4.
+	a, b, c := ReadMain(load(t, "main.png")).Level, ReadMain(load(t, "main2.png")).Level, ReadMain(load(t, "main3.png")).Level
+	if !LevelChanged(a, b) {
+		t.Error("level fingerprint unchanged across a level-up")
+	}
+	if LevelChanged(b, c) {
+		t.Errorf("level fingerprint unstable at the same level:\n%s\n%s", b, c)
+	}
+}
