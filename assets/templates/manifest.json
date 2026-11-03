@@ -96,6 +96,14 @@
     "note": "main: Quest label (right rail)"
   },
   {
+    "name": "main_quest_completed",
+    "x": 36,
+    "y": 919,
+    "w": 106,
+    "h": 26,
+    "note": "main: quest tracker '(Completed)' tag"
+  },
+  {
     "name": "main_stage_challenge",
     "x": 614,
     "y": 1064,

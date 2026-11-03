@@ -22,6 +22,7 @@ const (
 	TMainAdventureIncome = "main_adventure_income"
 	TMainStageChallenge  = "main_stage_challenge"
 	TMainQuest           = "main_quest"
+	TMainQuestCompleted  = "main_quest_completed"
 	TIncomeTitle         = "income_title"
 	TIncomeClose         = "income_close"
 	TIncomeQuickIdle     = "income_quick_idle"
