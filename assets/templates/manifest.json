@@ -320,6 +320,22 @@
     "note": "Hint dialog OK button (taller dialog)"
   },
   {
+    "name": "dungeon1_title",
+    "x": 250,
+    "y": 96,
+    "w": 222,
+    "h": 36,
+    "note": "Dungeon page title: 1. South Gate Beginner"
+  },
+  {
+    "name": "dungeon2_title",
+    "x": 250,
+    "y": 96,
+    "w": 222,
+    "h": 36,
+    "note": "Dungeon page title: 2. Sewer Nightmare"
+  },
+  {
     "name": "dungeon_accept",
     "x": 404,
     "y": 842,

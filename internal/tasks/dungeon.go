@@ -18,15 +18,68 @@ var (
 	// only lasts ~10 s, so these rows are polled with fast band captures.
 	dungeonAccept   = image.Pt(510, 872)
 	dungeonAcceptRY = [2]int{830, 915}
+	// The arrows to the previous and next (harder) dungeon. The page can
+	// open on the last one viewed.
+	dungeonPrev = image.Pt(170, 320)
+	dungeonNext = image.Pt(548, 320)
 )
+
+// dungeonRecommended is each dungeon's recommended combat power as the game
+// shows it (1. South Gate Beginner, 2. Sewer Nightmare, 3. Deep Sea
+// Phantom, which also needs Main Stage 6-12). Harder dungeons pay more.
+var dungeonRecommended = []int{976_200, 3_325_600, 23_100_000}
+
+// dungeonTitles identify the dungeon shown, by index.
+var dungeonTitles = []string{screens.TDungeon1Title, screens.TDungeon2Title}
+
+// dungeonLevel is how many dungeons past the first to step: the hardest
+// whose recommended power the account has. Matched parties are usually far
+// stronger, so the recommendation is a safe floor.
+func dungeonLevel(power int) int {
+	n := 0
+	for i, rec := range dungeonRecommended {
+		if power >= rec {
+			n = i
+		}
+	}
+	return n
+}
 
 // Dungeon spends up to n free dungeon attempts: Auto Match (the button turns
 // into Cancel Match with a timer), Accept as soon as the party popup shows,
 // then wait for the run to finish and the page to come back.
 func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
+	power := 0
+	if err := b.ToMain(ctx); err != nil {
+		return 0, err
+	}
+	if _, f, err := b.Look(ctx); err == nil {
+		power, _ = screens.Power(f)
+	}
 	frame, err := openGameMode(ctx, b, dungeonTile, screens.Dungeon)
 	if err != nil {
 		return 0, err
+	}
+	if lvl := dungeonLevel(power); lvl > 0 && lvl < len(dungeonTitles) {
+		// The page drops arrow taps while it settles, so step and check
+		// the title until it shows the chosen dungeon.
+		for i := 0; i < 8 && !screens.Visible(frame, dungeonTitles[lvl]); i++ {
+			arrow, what := dungeonNext, "harder dungeon"
+			if !screens.Visible(frame, dungeonTitles[0]) && i == 0 {
+				arrow, what = dungeonPrev, "easier dungeon" // opened past it
+			}
+			if err := b.Tap(ctx, arrow, what); err != nil {
+				return 0, err
+			}
+			if _, frame, err = b.Look(ctx); err != nil {
+				return 0, err
+			}
+		}
+		if screens.Visible(frame, dungeonTitles[lvl]) {
+			b.Log.Info("dungeon difficulty chosen", "dungeon", lvl+1, "power", power)
+		} else {
+			b.Log.Warn("could not select dungeon", "dungeon", lvl+1, "shot", b.Save(frame))
+		}
 	}
 	if badged(frame, dungeonAchieveBadge) {
 		if err := dungeonAchievements(ctx, b); err != nil {

@@ -147,3 +147,11 @@ func TestCanActivateOnlyWhenDue(t *testing.T) {
 		t.Errorf("Can Activate found with every reachable tier active (score %.2f)", m.Score)
 	}
 }
+
+func TestDungeonLevel(t *testing.T) {
+	for power, want := range map[int]int{0: 0, 976_200: 0, 3_000_000: 0, 3_325_600: 1, 3_926_300: 1, 30_000_000: 2} {
+		if got := dungeonLevel(power); got != want {
+			t.Errorf("power %d: dungeon level %d, want %d", power, got, want)
+		}
+	}
+}

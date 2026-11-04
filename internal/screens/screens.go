@@ -205,6 +205,8 @@ const (
 	TVersionOldText      = "version_old_text"
 	TAwakeningHeader     = "awakening_header"
 	TCanActivate         = "can_activate"
+	TDungeon1Title       = "dungeon1_title"
+	TDungeon2Title       = "dungeon2_title"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
