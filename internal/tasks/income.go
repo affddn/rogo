@@ -67,11 +67,10 @@ func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {
 	if err := b.TapTemplate(ctx, frame, screens.TDialogOK); err != nil {
 		return err
 	}
-	id, frame, err := b.Wait(ctx, 10*time.Second, screens.Reward)
-	if err != nil {
+	if _, _, err := b.Wait(ctx, 10*time.Second, screens.Reward); err != nil {
 		return err
 	}
 	b.Log.Info("quick idle used")
-	_, err = b.Dismiss(ctx, id, frame)
-	return err
+	// One tap does not always close the reward on a slow link.
+	return closePopups(ctx, b, screens.Income)
 }
