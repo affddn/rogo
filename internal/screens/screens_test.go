@@ -53,6 +53,7 @@ func TestDetect(t *testing.T) {
 		"awaken-3.png":                    Awakening,
 		"guild-town.png":                  GuildTown,
 		"loading.png":                     Loading,
+		"new-day.png":                     NewDay,
 		"guild/donation.png":              GuildDonation,
 		"guild/shop.png":                  GuildShop,
 		"guild/bargain.png":               GuildBargain,

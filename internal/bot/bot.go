@@ -154,6 +154,9 @@ func (b *Bot) TapTemplate(ctx context.Context, frame image.Image, name string) e
 // not know how to close what is showing.
 func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bool, error) {
 	switch id {
+	case screens.NewDay:
+		b.Log.Info("daily reset, confirming")
+		return true, b.Tap(ctx, image.Pt(358, 830), "confirm new day")
 	case screens.VersionOld:
 		b.Log.Warn("game update out, confirming restart")
 		return true, b.Tap(ctx, image.Pt(358, 830), "confirm update")

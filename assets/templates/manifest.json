@@ -1000,6 +1000,14 @@
     "note": "bottom nav: Weapon label"
   },
   {
+    "name": "new_day_text",
+    "x": 96,
+    "y": 590,
+    "w": 520,
+    "h": 60,
+    "note": "System Notice: a new day has dawned, refresh"
+  },
+  {
     "name": "oneclick_ok",
     "x": 420,
     "y": 1058,
