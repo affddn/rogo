@@ -217,3 +217,12 @@ func TestSkillPlusLive(t *testing.T) {
 		t.Error("maxed Katar Mastery read as live")
 	}
 }
+
+func TestRefineOnlyWhenSure(t *testing.T) {
+	if !screens.Visible(capture(t, "refine/page.png"), screens.TRefineSure) {
+		t.Error("100% success not seen for +1")
+	}
+	if screens.Visible(capture(t, "refine/after1.png"), screens.TRefineSure) {
+		t.Error("95% success read as 100%")
+	}
+}

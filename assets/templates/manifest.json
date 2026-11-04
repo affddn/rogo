@@ -1232,6 +1232,30 @@
     "note": "resource realm: Sweep button"
   },
   {
+    "name": "refine_btn",
+    "x": 300,
+    "y": 1100,
+    "w": 120,
+    "h": 40,
+    "note": "Refine button word"
+  },
+  {
+    "name": "refine_header",
+    "x": 4,
+    "y": 20,
+    "w": 176,
+    "h": 40,
+    "note": "Refine page header"
+  },
+  {
+    "name": "refine_sure",
+    "x": 486,
+    "y": 878,
+    "w": 200,
+    "h": 24,
+    "note": "Refine: '(Success Rate: 100%)'"
+  },
+  {
     "name": "resonate_activate",
     "x": 254,
     "y": 1064,

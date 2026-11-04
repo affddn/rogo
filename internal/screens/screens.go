@@ -73,6 +73,7 @@ const (
 	DailySweep       ID = "daily-sweep"
 	Loading          ID = "loading"
 	NewDay           ID = "new-day"
+	Refine           ID = "refine"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -233,6 +234,9 @@ const (
 	TQuestClearStage     = "quest_clear_stage"
 	TNewDayText          = "new_day_text"
 	TMonstersRemaining   = "monsters_remaining"
+	TRefineHeader        = "refine_header"
+	TRefineSure          = "refine_sure"
+	TRefineButton        = "refine_btn"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -331,6 +335,7 @@ var rules = []rule{
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
+	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	{id: CardPage, anchors: []string{TCardHeader, TNavBack}},

@@ -447,7 +447,77 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 		return levels, err
 	}
 	b.Log.Info("equipment enhanced", "levels", levels, "set", enhanceLevels[:setItems], "accessories", enhanceLevels[setItems:])
+	if id, _, err := b.Look(ctx); err == nil && id == screens.Enhance {
+		r, err := refineGear(ctx, b)
+		levels += r
+		if err != nil {
+			return levels, err
+		}
+	}
 	return levels, b.ToMain(ctx)
+}
+
+// refineTab is the Refine tab at the bottom of the Enhance page.
+var refineTab = image.Pt(553, 1240)
+
+// refineHeldUntil skips refining after a pass found nothing at 100%: the
+// slot badges stay lit while Refine Meteorites are left, so they do not say
+// whether a sure refine is waiting.
+var refineHeldUntil time.Time
+
+// refineGear refines badged gear one level at a time, round-robin like
+// enhancing, while the next level is a sure thing. The game shows the odds
+// ("Success Rate: 100%" for +1, 95% for +2 ...) and does not say what a
+// failure costs, so anything short of 100% is left alone. Refine levels
+// carry over to new gear.
+func refineGear(ctx context.Context, b *bot.Bot) (refined int, err error) {
+	if time.Now().Before(refineHeldUntil) {
+		return 0, nil
+	}
+	if _, _, err := b.TapWait(ctx, screens.Enhance, refineTab, "refine tab", 8*time.Second, screens.Refine); err != nil {
+		return 0, err
+	}
+	for round := 0; round < 4; round++ {
+		_, frame, err := b.Look(ctx)
+		if err != nil {
+			return refined, err
+		}
+		progressed := false
+		for _, s := range enhanceSlots {
+			if !badged(frame, s.badge) {
+				continue
+			}
+			if err := b.Tap(ctx, s.icon, "refine slot"); err != nil {
+				return refined, err
+			}
+			_, sel, err := b.Look(ctx)
+			if err != nil {
+				return refined, err
+			}
+			if !screens.Visible(sel, screens.TRefineSure) || !screens.Visible(sel, screens.TRefineButton) {
+				continue
+			}
+			if err := b.TapTemplate(ctx, sel, screens.TRefineButton); err != nil {
+				return refined, err
+			}
+			refined++
+			progressed = true
+			if err := closePopups(ctx, b, screens.Refine); err != nil {
+				return refined, err
+			}
+			if _, frame, err = b.Look(ctx); err != nil {
+				return refined, err
+			}
+		}
+		if !progressed {
+			break
+		}
+	}
+	if refined > 0 {
+		b.Log.Info("gear refined", "levels", refined)
+	}
+	refineHeldUntil = time.Now().Add(12 * time.Hour)
+	return refined, nil
 }
 
 // enhance spends materials one level at a time on the lowest-level badged set

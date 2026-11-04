@@ -53,6 +53,7 @@ func TestDetect(t *testing.T) {
 		"awaken-3.png":                    Awakening,
 		"guild-town.png":                  GuildTown,
 		"loading.png":                     Loading,
+		"refine/page.png":                 Refine,
 		"dungeon-fight.png":               InCombat, // no pause button in dungeons
 		"new-day.png":                     NewDay,
 		"guild/donation.png":              GuildDonation,
