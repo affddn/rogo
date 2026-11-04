@@ -30,12 +30,19 @@ type Bot struct {
 	// Settle is the pause after a tap before looking again; UI transitions
 	// in this game take about a second.
 	Settle time.Duration
+	// KickedAt is when the game last signed out because the account signed
+	// in on another device.
+	KickedAt time.Time
 
 	last image.Image // most recent frame, for the deny-list guard
 }
 
 // ErrDenied is returned for a tap that would land on a deny-listed button.
 var ErrDenied = errors.New("tap refused: deny-listed button")
+
+// ErrKicked means the account signed in on another device and the game
+// signed out; someone may be playing by hand.
+var ErrKicked = errors.New("account signed in on another device")
 
 func New(d *device.Device, log *slog.Logger) *Bot {
 	return &Bot{D: d, Log: log, Shots: "captures/unknown", Settle: 1200 * time.Millisecond}
@@ -118,6 +125,12 @@ func (b *Bot) TapTemplate(ctx context.Context, frame image.Image, name string) e
 // not know how to close what is showing.
 func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bool, error) {
 	switch id {
+	case screens.Kicked:
+		if err := b.TapTemplate(ctx, frame, screens.TKickedConfirm); err != nil {
+			return true, err
+		}
+		b.KickedAt = time.Now()
+		return true, ErrKicked
 	case screens.Reward:
 		return true, b.tapHint(ctx, frame)
 	case screens.GachaCount:
@@ -233,8 +246,12 @@ func (b *Bot) ToMain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if id == screens.Main {
+		switch id {
+		case screens.Main:
 			return nil
+		case screens.Title, screens.Login, screens.AccountChooser:
+			// Signed out (after a kick) or back at the title: log in again.
+			return b.WaitBoot(ctx, 4*time.Minute)
 		}
 		acted, err := b.Dismiss(ctx, id, frame)
 		if err != nil {
@@ -267,9 +284,12 @@ func (b *Bot) ToMain(ctx context.Context) error {
 // tapped by position once the screen is recognised.
 var titleStart = image.Pt(360, 1112)
 
+// firstAccount is the top account row in Android's Google account picker.
+var firstAccount = image.Pt(360, 660)
+
 // WaitBoot takes a freshly launched game from the title screen to the main
-// screen: Start Game, then the offline Idle Rewards popup. Loading screens are
-// waited out.
+// screen: Start Game, Google Login when signed out, then the offline Idle
+// Rewards popup. Loading screens are waited out.
 func (b *Bot) WaitBoot(ctx context.Context, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
@@ -286,6 +306,15 @@ func (b *Bot) WaitBoot(ctx context.Context, timeout time.Duration) error {
 				return fmt.Errorf("title screen: user agreement not ticked; tick it once by hand")
 			}
 			if err := b.Tap(ctx, titleStart, "start game"); err != nil {
+				return err
+			}
+		case screens.Login:
+			b.Log.Info("signed out, logging in with Google")
+			if err := b.TapTemplate(ctx, frame, screens.TLoginGoogle); err != nil {
+				return err
+			}
+		case screens.AccountChooser:
+			if err := b.Tap(ctx, firstAccount, "google account"); err != nil {
 				return err
 			}
 		default:
