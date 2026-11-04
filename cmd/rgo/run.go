@@ -270,10 +270,13 @@ func actions() []*runner.Action {
 				return since >= 45*time.Minute || (since >= wait && stronger)
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				// Read the label now: quests and guide arrows also fight
+				// stages, so st.Stage can be behind, and a loss on the next
+				// stage would read as a clear and reset the misses.
 				before := st.Stage
-				if before == "" { // first run: read the label now
-					if _, f, err := b.Look(ctx); err == nil {
-						before = screens.ReadMain(f).Stage
+				if id, f, err := b.Look(ctx); err == nil && id == screens.Main {
+					if s := screens.ReadMain(f).Stage; s != "" {
+						before = s
 					}
 				}
 				lost, err := tasks.Stage(ctx, b)
