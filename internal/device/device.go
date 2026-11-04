@@ -33,7 +33,9 @@ type Device struct {
 }
 
 func New(serial string) *Device {
-	return &Device{Serial: serial, ADB: "adb", Timeout: 20 * time.Second, Log: func(string, ...any) {}}
+	// A screenshot takes ~4.5 s over the VMOS tunnel but 15-20 s when its
+	// gateway is slow; the tunnel's keepalive drops a dead link sooner.
+	return &Device{Serial: serial, ADB: "adb", Timeout: 45 * time.Second, Log: func(string, ...any) {}}
 }
 
 func (d *Device) run(ctx context.Context, args ...string) ([]byte, error) {
