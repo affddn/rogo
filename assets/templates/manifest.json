@@ -224,6 +224,14 @@
     "note": "cultivation: One-Click Upgrade button"
   },
   {
+    "name": "daily_sweep_title",
+    "x": 274,
+    "y": 410,
+    "w": 172,
+    "h": 40,
+    "note": "Guild Hunt: Daily Sweep confirm title"
+  },
+  {
     "name": "deny_accelerate",
     "x": 254,
     "y": 938,
@@ -510,6 +518,78 @@
     "w": 505,
     "h": 34,
     "note": "guest login Tips dialog: 'You are currently using a guest account' line"
+  },
+  {
+    "name": "guild_ad_donation",
+    "x": 100,
+    "y": 950,
+    "w": 220,
+    "h": 44,
+    "note": "Guild Donation: Ad Donation button"
+  },
+  {
+    "name": "guild_bargain_free",
+    "x": 504,
+    "y": 596,
+    "w": 80,
+    "h": 50,
+    "note": "Guild Bargain: current price 0 (gem and 0)"
+  },
+  {
+    "name": "guild_bargain_title",
+    "x": 4,
+    "y": 20,
+    "w": 172,
+    "h": 40,
+    "note": "Guild Bargain header"
+  },
+  {
+    "name": "guild_donation_title",
+    "x": 250,
+    "y": 280,
+    "w": 222,
+    "h": 40,
+    "note": "Guild Donation popup title"
+  },
+  {
+    "name": "guild_free_donation",
+    "x": 268,
+    "y": 950,
+    "w": 196,
+    "h": 42,
+    "note": "Guild Donation: Free Donation button"
+  },
+  {
+    "name": "guild_hunt_sweep",
+    "x": 80,
+    "y": 1086,
+    "w": 210,
+    "h": 50,
+    "note": "Guild Hunt: Sweep button"
+  },
+  {
+    "name": "guild_hunt_title",
+    "x": 300,
+    "y": 108,
+    "w": 120,
+    "h": 36,
+    "note": "Guild Hunt page title"
+  },
+  {
+    "name": "guild_shop_title",
+    "x": 4,
+    "y": 20,
+    "w": 170,
+    "h": 40,
+    "note": "Guild Shop header"
+  },
+  {
+    "name": "guild_town_hall",
+    "x": 316,
+    "y": 254,
+    "w": 162,
+    "h": 38,
+    "note": "Guild town: Guild Hall label"
   },
   {
     "name": "hint_tap_empty",

@@ -166,9 +166,24 @@ func Baphomet(ctx context.Context, b *bot.Bot) (dodges int, err error) {
 	if !started {
 		return 0, fmt.Errorf("baphomet fight did not start")
 	}
+	dodges, err = watchFight(ctx, b, 90*time.Second) // fights run 50 s
+	if err != nil {
+		return dodges, err
+	}
+	b.Log.Info("baphomet fight over", "dodges", dodges)
+	if err := b.ToMain(ctx); err != nil {
+		return dodges, err
+	}
+	return dodges, nil
+}
+
+// watchFight follows a boss fight until its result screen or limit: it
+// polls the bottom band (about 0.5 s a capture) and taps Dodge whenever the
+// boss's skill prompt shows. Every boss fight the bot starts runs through it.
+func watchFight(ctx context.Context, b *bot.Bot, limit time.Duration) (dodges int, err error) {
 	dodge := assets.MustGet(screens.TBaphDodge)
 	leave := assets.MustGet(screens.TCombatLeave)
-	deadline := time.Now().Add(90 * time.Second) // fights run 50 s
+	deadline := time.Now().Add(limit)
 	bad := 0
 	for time.Now().Before(deadline) {
 		band, err := b.D.Rows(ctx, 720, fightBand[0], fightBand[1])
@@ -195,12 +210,8 @@ func Baphomet(ctx context.Context, b *bot.Bot) (dodges int, err error) {
 			continue
 		}
 		if leave.Find(band, 30).Visible(screens.MinScore) {
-			break
+			return dodges, nil
 		}
-	}
-	b.Log.Info("baphomet fight over", "dodges", dodges)
-	if err := b.ToMain(ctx); err != nil {
-		return dodges, err
 	}
 	return dodges, nil
 }

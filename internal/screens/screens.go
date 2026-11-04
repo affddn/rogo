@@ -64,6 +64,13 @@ const (
 	LimitedQuest     ID = "limited-quest"
 	VersionOld       ID = "version-old"
 	Awakening        ID = "awakening"
+	GuildTown        ID = "guild-town"
+	GuildDonation    ID = "guild-donation"
+	GuildShop        ID = "guild-shop"
+	GuildBargain     ID = "guild-bargain"
+	GuildHunt        ID = "guild-hunt"
+	GuildJoin        ID = "guild-join"
+	DailySweep       ID = "daily-sweep"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -207,6 +214,16 @@ const (
 	TCanActivate         = "can_activate"
 	TDungeon1Title       = "dungeon1_title"
 	TDungeon2Title       = "dungeon2_title"
+	TGuildTownHall       = "guild_town_hall"
+	TGuildDonationTitle  = "guild_donation_title"
+	TGuildFreeDonation   = "guild_free_donation"
+	TGuildAdDonation     = "guild_ad_donation"
+	TGuildShopTitle      = "guild_shop_title"
+	TGuildBargainTitle   = "guild_bargain_title"
+	TGuildHuntTitle      = "guild_hunt_title"
+	TGuildHuntSweep      = "guild_hunt_sweep"
+	TGuildBargainFree    = "guild_bargain_free"
+	TDailySweepTitle     = "daily_sweep_title"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -271,6 +288,8 @@ var rules = []rule{
 	{id: DungeonMatch, anchors: []string{TDungeonAccept, TDungeonDecline}},
 	{id: MVPSweep, anchors: []string{TMVPSweepTitle, TMVPSweepText}},
 	{id: AchieveReward, anchors: []string{TAchieveTitle}},
+	{id: GuildDonation, anchors: []string{TGuildDonationTitle}},
+	{id: DailySweep, anchors: []string{TDailySweepTitle}},
 	{id: LimitedQuest, anchors: []string{TLimitedTitle}},
 	// The login event's popup sits over main.
 	{id: LoginEvent, anchors: []string{TPullsBanner}},
@@ -294,6 +313,10 @@ var rules = []rule{
 	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},
 	{id: CharSkill, anchors: []string{TSkillHeader, TNavBack}},
 	{id: Awakening, anchors: []string{TAwakeningHeader, TNavBack}},
+	{id: GuildTown, anchors: []string{TGuildTownHall}},
+	{id: GuildShop, anchors: []string{TGuildShopTitle}},
+	{id: GuildBargain, anchors: []string{TGuildBargainTitle}},
+	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},

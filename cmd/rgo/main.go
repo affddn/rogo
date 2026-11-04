@@ -54,6 +54,7 @@ var commands = map[string]command{
 	"boss":     {"", cmdBaphomet, false},
 	"mvp":      {"", cmdMVP, false},
 	"dailies":  {"", cmdDailies, false},
+	"guild":    {"", cmdGuild, false},
 	"qpanel":   {"", cmdQuestPanel, false},
 	"pets":     {"", cmdPets, false},
 	"goal":     {"", cmdObjective, false},

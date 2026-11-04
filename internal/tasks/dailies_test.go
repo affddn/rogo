@@ -155,3 +155,33 @@ func TestDungeonLevel(t *testing.T) {
 		}
 	}
 }
+
+func TestGuildGates(t *testing.T) {
+	town := capture(t, "guild-town.png")
+	for name, p := range map[string]image.Point{"donation": guildDonationDot, "shop": guildShopDot, "bargain": guildBargainDot, "hunt": guildHuntDot} {
+		if !badged(town, p) {
+			t.Errorf("town: %s badge not seen", name)
+		}
+	}
+	shop, sold := capture(t, "guild/shop.png"), capture(t, "guild/shop-2.png")
+	for i, it := range guildShopFree {
+		if !badged(shop, it.badge) || badged(sold, it.badge) {
+			t.Errorf("shop free item %d: badge before %v after %v", i, badged(shop, it.badge), badged(sold, it.badge))
+		}
+	}
+	if !badged(capture(t, "guild/bargain.png"), guildBargainDotBtn) {
+		t.Error("bargain button badge not seen")
+	}
+	if screens.Visible(capture(t, "guild/bargain.png"), screens.TGuildBargainFree) {
+		t.Error("deal at 7 diamonds read as free")
+	}
+	if !screens.Visible(capture(t, "guild/bargain-3.png"), screens.TGuildBargainFree) {
+		t.Error("deal at 0 diamonds not read as free")
+	}
+	if !badged(capture(t, "guild/hunt.png"), guildHuntDotBtn) {
+		t.Error("hunt challenge badge not seen")
+	}
+	if mvpButtonLive(capture(t, "guild/hunt.png"), guildHuntSweepBtn) || !mvpButtonLive(capture(t, "guild/hunt-15.png"), guildHuntSweepBtn) {
+		t.Error("hunt sweep liveness wrong")
+	}
+}

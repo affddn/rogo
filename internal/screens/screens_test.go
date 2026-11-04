@@ -51,6 +51,13 @@ func TestDetect(t *testing.T) {
 		"kicked.png":                      Kicked, // over the power-save lock
 		"version-old.png":                 VersionOld,
 		"awaken-3.png":                    Awakening,
+		"guild-town.png":                  GuildTown,
+		"guild/donation.png":              GuildDonation,
+		"guild/shop.png":                  GuildShop,
+		"guild/bargain.png":               GuildBargain,
+		"guild/hunt-15.png":               GuildHunt,
+		"guild/hunt-02.png":               InCombat,
+		"guild/sweep-dlg.png":             DailySweep,
 		"login-dialog.png":                Login,
 		"account-chooser.png":             AccountChooser,
 		"title-loggedin.png":              Title,

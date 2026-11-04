@@ -217,6 +217,16 @@ func actions() []*runner.Action {
 				st.Add("daily_claims", n)
 				return out{Progress: n > 0}, err
 			}},
+		// Guild: donations, free shop items, bargain, Guild Hunt. Its
+		// dailies reset at midnight, and the bargain deal refreshes during
+		// the day, so it runs every 3 hours.
+		{Name: "guild", Priority: 64,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("guild", now) >= 3*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Guild(ctx, b)
+				st.Add("guild_steps", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   mvpRun},
@@ -414,6 +424,12 @@ func mvpRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 func cmdDailies(ctx context.Context, d *device.Device, _ []string) error {
 	n, err := tasks.Dailies(ctx, newBot(d))
 	fmt.Println("claimed", n)
+	return err
+}
+
+func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Guild(ctx, newBot(d))
+	fmt.Println("steps", n)
 	return err
 }
 

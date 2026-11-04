@@ -209,9 +209,14 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		// costs one of the free daily attempts, which the dungeon chore
 		// would spend anyway.
 		return true, b.TapTemplate(ctx, frame, screens.TDungeonAccept)
-	case screens.Dungeon, screens.Baphomet, screens.MVP, screens.GrowthGift, screens.Mall:
+	case screens.Dungeon, screens.Baphomet, screens.MVP, screens.GrowthGift, screens.Mall,
+		screens.GuildTown, screens.GuildShop, screens.GuildBargain, screens.GuildHunt:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.DailySweep:
+		return true, b.Tap(ctx, image.Pt(219, 830), "cancel sweep")
+	case screens.GuildDonation:
+		return true, b.Tap(ctx, image.Pt(664, 296), "close donation")
 	case screens.AchieveReward:
 		return true, b.Tap(ctx, image.Pt(664, 172), "close achievements")
 	case screens.LimitedQuest:
