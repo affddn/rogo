@@ -437,8 +437,15 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	if err := b.TapTemplate(ctx, frame, screens.TEquipUpgrade); err != nil {
 		return 0, err
 	}
-	if _, _, err = b.Wait(ctx, 10*time.Second, screens.Enhance); err != nil {
+	// The page reopens on the tab used last, Refine once refining has run.
+	id, _, err := b.Wait(ctx, 10*time.Second, screens.Enhance, screens.Refine)
+	if err != nil {
 		return 0, err
+	}
+	if id == screens.Refine {
+		if _, _, err := b.TapWait(ctx, screens.Refine, enhanceTab, "enhance tab", 8*time.Second, screens.Enhance); err != nil {
+			return 0, err
+		}
 	}
 
 	n, err = enhance(ctx, b)
@@ -457,8 +464,11 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	return levels, b.ToMain(ctx)
 }
 
-// refineTab is the Refine tab at the bottom of the Enhance page.
-var refineTab = image.Pt(553, 1240)
+// The Enhance and Refine tabs at the bottom of the gear upgrade page.
+var (
+	enhanceTab = image.Pt(453, 1240)
+	refineTab  = image.Pt(553, 1240)
+)
 
 // refineHeldUntil skips refining after a pass found nothing at 100%: the
 // slot badges stay lit while Refine Meteorites are left, so they do not say
