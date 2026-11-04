@@ -74,3 +74,32 @@ func TestPickRunsAStarvedActionFirst(t *testing.T) {
 		t.Fatalf("picked %s right after stage ran, want guide", a.Name)
 	}
 }
+
+func TestWaitsSurviveARestartButNotDowntime(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.json")
+	st, _ := state.Load(path)
+	always := func(screens.Signals, *state.State, time.Time) bool { return true }
+	actions := func() []*Action {
+		return []*Action{{Name: "stage", Priority: 50, Ready: always}, {Name: "guide", Priority: 87, Ready: always}}
+	}
+	t0 := time.Now().Add(-time.Hour)
+	New(nil, st, actions()...).pick(screens.Signals{}, t0) // stage starts waiting
+	if err := st.Save(); err != nil {
+		t.Fatal(err)
+	}
+
+	st2, _ := state.Load(path)
+	r := New(nil, st2, actions()...)
+	if a := r.pick(screens.Signals{}, t0.Add(46*time.Minute)); a.Name != "stage" {
+		t.Fatalf("after a restart picked %s, want stage (waited 46 min)", a.Name)
+	}
+
+	// Ten hours off: the wait is moved past the downtime.
+	st3, _ := state.Load(path)
+	st3.Waiting["stage"] = t0
+	st3.PauseWaits(10 * time.Hour)
+	r = New(nil, st3, actions()...)
+	if a := r.pick(screens.Signals{}, t0.Add(10*time.Hour+30*time.Minute)); a.Name != "guide" {
+		t.Fatalf("after downtime picked %s, want guide (stage waited 30 min of running time)", a.Name)
+	}
+}

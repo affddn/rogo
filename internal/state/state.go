@@ -43,6 +43,12 @@ type State struct {
 	Growth     int       `json:"growth_since_defeat"`
 	LastDefeat time.Time `json:"last_defeat"`
 
+	// Waiting is when each action became ready without being run; it
+	// survives restarts so a long wait is not forgotten. SavedAt lets
+	// downtime be left out of it.
+	Waiting map[string]time.Time `json:"waiting"`
+	SavedAt time.Time            `json:"saved_at"`
+
 	path string
 }
 
@@ -81,6 +87,20 @@ func (s *State) init() {
 	if s.Counters == nil {
 		s.Counters = map[string]int{}
 	}
+	if s.Waiting == nil {
+		s.Waiting = map[string]time.Time{}
+	}
+}
+
+// PauseWaits moves every wait forward by d, for time the bot was not
+// running: being off, paused or held does not count as waiting.
+func (s *State) PauseWaits(d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	for k, t := range s.Waiting {
+		s.Waiting[k] = t.Add(d)
+	}
 }
 
 // Save writes atomically so a crash mid-write cannot corrupt the file.
@@ -88,6 +108,7 @@ func (s *State) Save() error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
 		return err
 	}
+	s.SavedAt = time.Now()
 	raw, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err

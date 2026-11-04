@@ -63,10 +63,9 @@ type Runner struct {
 	// ahead of higher priorities.
 	Starve time.Duration
 
-	resumed    time.Time // loop start or the last unpause
-	holdUntil  time.Time
-	lastPower  int
-	readySince map[string]time.Time
+	resumed   time.Time // loop start or the last unpause
+	holdUntil time.Time
+	lastPower int
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
@@ -78,24 +77,31 @@ func (r *Runner) Run(ctx context.Context) error {
 	log, st := r.B.Log, r.State
 	streak := 0
 	r.resumed = time.Now()
+	if !st.SavedAt.IsZero() {
+		st.PauseWaits(r.resumed.Sub(st.SavedAt)) // the bot was off
+	}
 	wasPaused := false
+	var idleSince time.Time // start of a pause or kick hold
 	for {
-		if r.paused() {
-			wasPaused = true
+		if r.paused() || time.Now().Before(r.holdUntil) {
+			if r.paused() {
+				wasPaused = true
+			}
+			if idleSince.IsZero() {
+				idleSince = time.Now()
+			}
 			if err := bot.Sleep(ctx, 5*time.Second); err != nil {
 				return err
 			}
 			continue
+		}
+		if !idleSince.IsZero() {
+			st.PauseWaits(time.Since(idleSince))
+			idleSince = time.Time{}
 		}
 		if wasPaused {
 			// Resuming hands the account back to the bot, hold or not.
 			wasPaused, r.resumed, r.holdUntil = false, time.Now(), time.Time{}
-		}
-		if time.Now().Before(r.holdUntil) {
-			if err := bot.Sleep(ctx, 5*time.Second); err != nil {
-				return err
-			}
-			continue
 		}
 		now := time.Now()
 		if st.Rollover(now) {
@@ -147,6 +153,7 @@ func (r *Runner) Run(ctx context.Context) error {
 			continue // paused while looking; honour it before acting
 		}
 		if a == nil {
+			r.save() // keep the waits current across a restart
 			if err := bot.Sleep(ctx, r.Idle); err != nil {
 				return err
 			}
@@ -197,33 +204,31 @@ func (r *Runner) Run(ctx context.Context) error {
 // and passed over for Starve: then the longest-waiting goes first, so a
 // steady stream of quest and badge work cannot shut out stage pushes.
 func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
-	if r.readySince == nil {
-		r.readySince = map[string]time.Time{}
-	}
+	waiting := r.State.Waiting
 	var first, starved *Action
 	for _, a := range r.Actions {
 		if r.State.Snoozed(a.Name, now) || !a.Ready(sig, r.State, now) {
-			delete(r.readySince, a.Name)
+			delete(waiting, a.Name)
 			continue
 		}
-		since, seen := r.readySince[a.Name]
+		since, seen := waiting[a.Name]
 		if !seen {
 			since = now
-			r.readySince[a.Name] = now
+			waiting[a.Name] = now
 		}
 		if first == nil {
 			first = a
 		}
-		if r.Starve > 0 && now.Sub(since) >= r.Starve && (starved == nil || since.Before(r.readySince[starved.Name])) {
+		if r.Starve > 0 && now.Sub(since) >= r.Starve && (starved == nil || since.Before(waiting[starved.Name])) {
 			starved = a
 		}
 	}
 	if starved != nil {
-		delete(r.readySince, starved.Name)
+		delete(waiting, starved.Name)
 		return starved
 	}
 	if first != nil {
-		delete(r.readySince, first.Name)
+		delete(waiting, first.Name)
 	}
 	return first
 }
