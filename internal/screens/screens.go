@@ -408,14 +408,17 @@ func inMall(frame image.Image) bool {
 // show the map through them and fail on dark maps, so they are not used.
 var mainNav = []string{TNavCharacter, TNavWeapon, TNavEquipment, TNavPet, TNavGameMode}
 
+// onMain spots the main screen by its bottom nav icons. A guide arrow's
+// ring can sit on one of them, so one may be missing.
 func onMain(frame image.Image) bool {
+	missing := 0
 	for _, name := range mainNav {
 		m := assets.MustGet(name).Find(frame, Margin)
 		if m.Score < MinScore || m.Bright < 0.6 || m.Bright > 1.25 {
-			return false
+			missing++
 		}
 	}
-	return true
+	return missing <= 1
 }
 
 // Present reports whether an icon is on screen by shape alone, for main

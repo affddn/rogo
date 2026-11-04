@@ -40,6 +40,7 @@ func TestDetect(t *testing.T) {
 		"boot/26.png":                     IdleRewards,
 		"stage-r11.png":                   StageDefeat,
 		"main3.png":                       Main,
+		"main-guide-ring.png":             Main, // guide ring on the Equipment icon
 		"unknown/20261103-182537.076.png": Main, // elite banner over Stage Challenge
 		"unknown/20261103-182646.827.png": Main, // auto-equip popup
 		"weapon.png":                      WeaponGacha,
