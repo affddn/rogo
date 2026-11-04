@@ -48,9 +48,15 @@ func New(d *device.Device, log *slog.Logger) *Bot {
 	return &Bot{D: d, Log: log, Shots: "captures/unknown", Settle: 1200 * time.Millisecond}
 }
 
-// Look takes a full screenshot and classifies it.
+// Look takes a full screenshot and classifies it. A screenshot normally takes
+// about 4.5 s over the tunnel; one that stalls past the device timeout is
+// retried once rather than failing the action.
 func (b *Bot) Look(ctx context.Context) (screens.ID, image.Image, error) {
 	frame, err := b.D.Screenshot(ctx)
+	if err != nil && ctx.Err() == nil {
+		b.Log.Warn("screenshot failed, retrying", "err", err)
+		frame, err = b.D.Screenshot(ctx)
+	}
 	if err != nil {
 		return screens.Unknown, nil, err
 	}
