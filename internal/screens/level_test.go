@@ -45,3 +45,23 @@ func TestAttributeAllocation(t *testing.T) {
 		})
 	}
 }
+
+func TestDiamonds(t *testing.T) {
+	cases := map[string]int{
+		"dia/p-6879.png": 6879, "dia/p-6819.png": 6819, "dia/p-6744.png": 6744,
+		"dia/p-6644.png": 6644, "dia/p-3294.png": 3294, "dia/p-3295.png": 3295,
+		"main-after-qi.png": 6802, "build/05-attr.png": 6772, "skills/job15.png": 6803,
+		"shop/12-weapon-gacha-draw.png": 6699, "shop/25-growth-after.png": 6760,
+	}
+	for file, want := range cases {
+		t.Run(file, func(t *testing.T) {
+			if got, ok := Diamonds(load(t, file)); !ok || got != want {
+				t.Errorf("read %d %v, want %d", got, ok, want)
+			}
+		})
+	}
+	// Under a modal the bar dims and must not be misread.
+	if n, ok := Diamonds(load(t, "qi-confirm-free.png")); ok {
+		t.Errorf("read %d through a dimmed bar", n)
+	}
+}

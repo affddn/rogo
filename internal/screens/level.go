@@ -19,16 +19,39 @@ func EnhanceLevel(frame image.Image) (int, bool) { return readNumber(frame, enhL
 
 const glyphW, glyphH = 8, 12
 
-// readNumber reads the digits in r: ink columns split into glyphs, each
-// scaled to a glyphW x glyphH mask and matched against digitMasks.
+// font is a digit style: what counts as ink, the shapes each digit takes,
+// and the widest single digit (wider runs are touching digits, split evenly).
+type font struct {
+	ink       func(color.RGBA) bool
+	refs      []digitRef
+	maxDigitW int
+	maxDigits int
+}
+
+type digitRef struct {
+	digit int
+	mask  string
+}
+
+// panelFont is the dark or coloured digits on the beige panels: Enhance
+// levels (orange current, green next) and Attribute page counts.
+var panelFont = font{ink: levelInk, refs: digitRefs, maxDigits: 3}
+
+// readNumber reads panel digits in r.
 func readNumber(frame image.Image, r image.Rectangle) (int, bool) {
-	glyphs := glyphMasks(frame, r)
-	if len(glyphs) == 0 || len(glyphs) > 3 {
+	return panelFont.read(frame, r)
+}
+
+// read reads the digits in r: ink columns split into glyphs, each scaled to
+// a glyphW x glyphH mask and matched against the font's references.
+func (f font) read(frame image.Image, r image.Rectangle) (int, bool) {
+	glyphs := f.glyphs(frame, r)
+	if len(glyphs) == 0 || len(glyphs) > f.maxDigits {
 		return 0, false
 	}
 	n := 0
 	for _, g := range glyphs {
-		d, ok := classifyDigit(g)
+		d, ok := classifyDigit(g, f.refs)
 		if !ok {
 			return 0, false
 		}
@@ -42,11 +65,21 @@ func readNumber(frame image.Image, r image.Rectangle) (int, bool) {
 // edges binarise alike.
 func levelInk(c color.RGBA) bool { return c.B < 135 }
 
-func glyphMasks(frame image.Image, r image.Rectangle) []string {
+func (f font) glyphs(frame image.Image, r image.Rectangle) []string {
 	ink := func(x, y int) bool {
-		return levelInk(color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA))
+		return f.ink(color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA))
 	}
 	var masks []string
+	add := func(x0, x1 int) {
+		parts := 1
+		if f.maxDigitW > 0 {
+			parts = (x1 - x0 + f.maxDigitW - 1) / f.maxDigitW
+		}
+		for i := 0; i < parts; i++ {
+			a, b := x0+(x1-x0)*i/parts, x0+(x1-x0)*(i+1)/parts
+			masks = append(masks, glyphMask(ink, image.Rect(a, r.Min.Y, b, r.Max.Y)))
+		}
+	}
 	start := -1
 	for x := r.Min.X; x <= r.Max.X; x++ {
 		col := false
@@ -59,7 +92,7 @@ func glyphMasks(frame image.Image, r image.Rectangle) []string {
 		if col && start < 0 {
 			start = x
 		} else if !col && start >= 0 {
-			masks = append(masks, glyphMask(ink, image.Rect(start, r.Min.Y, x, r.Max.Y)))
+			add(start, x)
 			start = -1
 		}
 	}
@@ -108,12 +141,12 @@ func glyphMask(ink func(x, y int) bool, g image.Rectangle) string {
 // fewer than for any other digit; anything closer is refused rather than
 // guessed. Leaving each reference out, a true digit is within 13 cells of
 // another of its own, and an unseen shape can come within 2 of another digit.
-func classifyDigit(m string) (int, bool) {
+func classifyDigit(m string, refs []digitRef) (int, bool) {
 	var dist [10]int
 	for d := range dist {
 		dist[d] = len(m)
 	}
-	for _, ref := range digitRefs {
+	for _, ref := range refs {
 		diff := 0
 		for i := range m {
 			if m[i] != ref.mask[i] {
@@ -138,10 +171,7 @@ func classifyDigit(m string) (int, bool) {
 
 // digitRefs are the shapes each digit takes on the glyph grid, from Enhance
 // page levels ("Lv.57", orange and green) and Attribute page counts.
-var digitRefs = []struct {
-	digit int
-	mask  string
-}{
+var digitRefs = []digitRef{
 	{0, "..####...######..##########..######..######..######..######..######..#######.###.#######..#####."},
 	{0, "..####...######..##..###.##..###.#....####....####....####....##.##...##.##..###.###.###..#####."},
 	{0, "..####...#####...######..##..#####...#####....####....####....####....##.##..###.###.##...#####."},
@@ -206,3 +236,68 @@ func AttributeAllocation(frame image.Image) (alloc [6]int, ok bool) {
 
 // AttributePoints reads the unspent Attribute Points.
 func AttributePoints(frame image.Image) (int, bool) { return readNumber(frame, attrPoints) }
+
+// diamondBar is the diamond count in the top bar, right of the gem icon.
+var diamondBar = image.Rect(610, 20, 712, 50)
+
+// barFont is the top bar's pale digits on its dark pill. Neighbouring digits
+// can touch ("6772" reads as 6, 77, 2), so runs wider than one digit split.
+var barFont = font{
+	ink:       func(c color.RGBA) bool { return c.R > 200 && c.G > 200 && c.B > 160 },
+	refs:      barDigitRefs,
+	maxDigitW: 12,
+	maxDigits: 6,
+}
+
+// Diamonds reads the diamond count from the top bar of an undimmed page.
+func Diamonds(frame image.Image) (int, bool) { return barFont.read(frame, diamondBar) }
+
+// barDigitRefs are the top bar's digit shapes, from diamond counts seen on
+// the main, Weapon Gacha, Attribute, Skill and Mall pages.
+var barDigitRefs = []digitRef{
+	{0, "..#####...######.##...##.##....####....####....####....####....#.##....#.##...##.###.###..#####."},
+	{0, "...####...######.##...##.##....#.##....####....####....#.##....#.##....#.##...##..##.###..#####."},
+	{0, "...##......####...######.##...#####....####....####....####....####...##.##...##.###..##..#####."},
+	{1, "########..######.....###.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
+	{2, "..#####..##########...####....##......##.....##.....###....###....###....####...#####...########"},
+	{2, "..#####..#########....####....##......##....###.....###....###....###....###....#####...########"},
+	{2, "..#####..#########....####....##......##.....##.....###....###....###....###....#####...########"},
+	{2, "..#####..#########....####....##......##.....##.....###....###....###....###.....####...########"},
+	{3, ".######.##########....##......##.....###...####.....####......##......###.....#####..##########."},
+	{3, "..#####..######..##..###.....###.....##.....###.....####......##......####....######.###.######."},
+	{3, "..####...######..##..###.....###.....##.....###.....####......##......####....######.###.######."},
+	{4, "...###.....####...#####...#####...##.##..##..##.##...##.################...#####.....##......##."},
+	{4, "...###.....####....####...#####...##.##..##..##..##..##.##...##.################...#####.....##."},
+	{4, "....###....#####...#####..######..##..##.##...####....##################....####......##......#."},
+	{4, "....###....#####...#####...#####...#..##..##..##.##...##.###############....####......##......#."},
+	{4, "....###.....####...#####...#####...#..##..##..##.##...##.###############....####......##......#."},
+	{5, ".#######.#######.##......##......###.....######.......##......##......##......#####.###########."},
+	{6, "....##.....###....###.....##.....###....#######.###...####....####....####....#####...#########."},
+	{6, "....##.....###....###.....##.....###....#######.###...####....####....####....#####...##.######."},
+	{6, "....##.....###.....##.....##......###....######..##...#####...#####...##.##...##.#######..#####."},
+	{6, "....##.....###.....##......#......###....######.###...#####...#####...#####...##.#######..#####."},
+	{6, "....##.....###.....##......#......###....######.###...#####....####....####...##.###.###..#####."},
+	{6, "....##.....###.....##......#......##.....######.###...#####...#####...#####...##.#######.######."},
+	{6, "....##.....###.....##......#......##.....######.###...#####...#####...#####...##.###.###.######."},
+	{6, "....##.....###.....##......#......##.....######.###...#####...#####....####...##.###.###.######."},
+	{6, "....##.....###.....##......#......##.....######.###...#####....####....####...##.###.###..#####."},
+	{6, "....##.....###.....##......#......##.....######..###..#####...#####....####...##.###..##..#####."},
+	{6, "....##.....###.....##......#......##.....######..###..##.##...#####....#.##...##.###..##..#####."},
+	{7, "################......##.....###.....##.....###....###.....##......##.....##......##......#....."},
+	{7, "########.#######......##.....###.....##.....###....###.....##......##.....##......##......#....."},
+	{7, "########.#######.......#......##......##....###.....###....###.....###....###.....###.....##...."},
+	{7, ".######.################.....###.....##.....###.....##....####....###....###.....##......##....."},
+	{8, ".######.##########....####....##.##..###.######.###..#####....####....####....#####..###.######."},
+	{8, "..#####..###.#####....##.#....##.##...##.######.###...####....####....####....#####..###.######."},
+	{8, "..#####...######.###..##.##...##..##..##..#####..###..##.##...#####...##.##...##.###.###..#####."},
+	{8, "..#####...##.###.###..##.##...##..##..##..#####..###..#####...#####....####...##.###.###..#####."},
+	{8, "...####...##.###.##...##..#...##..##..##..#####..###..##.##....####....####...##.###.###..#####."},
+	{9, ".######.##########....####....####....####....##########.#######....####....###.....##....####.."},
+	{9, ".######.##########....####....####.....#########.#######....####....###.....##.....###....###..."},
+	{9, ".######.##########....####....####.....###....##########.#######....####....###.....##....####.."},
+	{9, ".######.##########....####.....###.....###....##########.#######....####....###.....##....####.."},
+	{9, ".######.##########....####.....###.....###....######.###.#######....####....###.....##....####.."},
+	{9, "..#####..##########...#####....####....#.#######..######....####....###.....##.....###.....##..."},
+	{9, "...###....#####.###########...####....####....#####...##.#######....###.....###....###....###..."},
+	{9, "...##.....#####..##########...####....####....#####...##.#######.....##.....###....###....###..."},
+}
