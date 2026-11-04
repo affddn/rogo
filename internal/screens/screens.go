@@ -54,6 +54,8 @@ const (
 	AccountChooser   ID = "account-chooser"
 	InCombat         ID = "in-combat"
 	ValuePack        ID = "value-pack"
+	MVP              ID = "mvp"
+	MVPSweep         ID = "mvp-sweep"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -169,6 +171,11 @@ const (
 	TLoginGoogle         = "login_google"
 	TAccountChooser      = "account_chooser"
 	TCombatPause         = "combat_pause"
+	TMVPHeader           = "mvp_header"
+	TMVPChallenge        = "mvp_challenge"
+	TMVPSweep            = "mvp_sweep"
+	TMVPSweepTitle       = "mvp_sweep_title"
+	TMVPSweepText        = "mvp_sweep_text"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -228,6 +235,7 @@ var rules = []rule{
 	// header both dialogs share.
 	{id: InsertCard, anchors: []string{TInsertCardTitle, TInsertCardClose}},
 	{id: DungeonMatch, anchors: []string{TDungeonAccept, TDungeonDecline}},
+	{id: MVPSweep, anchors: []string{TMVPSweepTitle, TMVPSweepText}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: Mail, anchors: []string{TMailTitle, TMailClose}},
@@ -254,6 +262,7 @@ var rules = []rule{
 	{id: GameMode, anchors: []string{TGameModeHeader, TNavBack}},
 	{id: Realm, anchors: []string{TRealmHeader, TNavBack}},
 	{id: Baphomet, anchors: []string{TBaphTitle, TBaphChallenge}},
+	{id: MVP, anchors: []string{TMVPHeader, TMVPChallenge}},
 	{id: Dungeon, anchors: []string{TDungeonHeader},
 		anyOf: []string{TDungeonAutoMatch, TDungeonCancelMatch}, need: 1},
 }

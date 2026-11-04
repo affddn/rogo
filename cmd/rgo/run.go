@@ -207,6 +207,9 @@ func actions() []*runner.Action {
 				st.Add("boss_dodges", n)
 				return out{Progress: true}, err
 			}},
+		{Name: "mvp", Priority: 63, Snooze: time.Hour,
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
+			Run:   mvpRun},
 		{Name: "dungeon", Priority: 62, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -293,6 +296,8 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		st.Add("boss_dodges", n)
 		st.LastRun["baphomet"] = time.Now()
 		return out{Progress: err == nil}, err
+	case screens.MVP:
+		return mvpRun(ctx, b, st)
 	case screens.Dungeon:
 		n, err := dungeonRuns(ctx, b, st)
 		return out{Progress: n > 0, Growth: n > 0}, err
@@ -376,6 +381,22 @@ const diamondReserve = 1000
 func cmdDiamonds(ctx context.Context, d *device.Device, _ []string) error {
 	spent, err := tasks.DiamondDraws(ctx, newBot(d), diamondReserve)
 	fmt.Println("spent", spent)
+	return err
+}
+
+// mvpRun challenges the MVP boss and spends the day's sweeps.
+func mvpRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+	challenged, sweeps, done, err := tasks.MVP(ctx, b)
+	st.Add("mvp_sweeps", sweeps)
+	if done {
+		st.Daily["mvp_done"] = true
+	}
+	return out{Progress: challenged || sweeps > 0}, err
+}
+
+func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
+	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
+	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
 	return err
 }
 

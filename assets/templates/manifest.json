@@ -696,6 +696,46 @@
     "note": "main: System label"
   },
   {
+    "name": "mvp_challenge",
+    "x": 104,
+    "y": 1124,
+    "w": 150,
+    "h": 42,
+    "note": "MVP Challenge: Challenge button"
+  },
+  {
+    "name": "mvp_header",
+    "x": 4,
+    "y": 22,
+    "w": 176,
+    "h": 40,
+    "note": "MVP Challenge page header"
+  },
+  {
+    "name": "mvp_sweep",
+    "x": 424,
+    "y": 1124,
+    "w": 210,
+    "h": 42,
+    "note": "MVP Challenge: Sweep Highest Difficulty button"
+  },
+  {
+    "name": "mvp_sweep_text",
+    "x": 168,
+    "y": 506,
+    "w": 320,
+    "h": 34,
+    "note": "MVP sweep dialog: Sweeping Current Highest Difficulty"
+  },
+  {
+    "name": "mvp_sweep_title",
+    "x": 300,
+    "y": 404,
+    "w": 120,
+    "h": 46,
+    "note": "MVP sweep dialog title"
+  },
+  {
     "name": "nav_back",
     "x": 4,
     "y": 1192,

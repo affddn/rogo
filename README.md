@@ -24,6 +24,8 @@ digits) and runs the highest-priority action that is ready:
 | 69 | diamond-draws | every 3 h: diamonds above a 1,000 reserve go to weapon draws, then cultivation |
 | 68 | pets | Pet badge (free-ticket pet gacha, activate/upgrade, auto formation) |
 | 65 | realm | daily, or Game Mode badge (challenge once per tab, then sweep) |
+| 63 | mvp | daily: challenge the MVP boss (free; climbs difficulties for first-clear rewards), then 3 sweeps |
+| 62 | dungeon | daily: Auto Match, Accept, three runs |
 | 60 | income | daily free Quick Idle unused, or every 2 h |
 | 55 | baphomet | every 3 h; taps Dodge on boss-skill prompts |
 | 50 | stage | after growth since the last defeat; backs off 5 min..2 h while nothing clears |
@@ -109,7 +111,7 @@ Once per fresh container (data lives in the `sayadroid-data` volume):
 | `report` | counters and per-action status from `data/state.json` |
 | `status` | detected screen and visible templates |
 | `boot`, `home` | launch to main / back out to main |
-| `income`, `quests`, `qpanel`, `grow`, `gacha`, `realm`, `boss`, `stage` | run one chore |
+| `income`, `quests`, `qpanel`, `grow`, `gacha`, `diamonds`, `realm`, `boss`, `mvp`, `dungeon`, `stage` | run one chore |
 | `shot`, `tap`, `back`, `launch`, `stop`, `info` | device primitives |
 | `crop`, `match`, `pixel` | template tooling against saved screenshots |
 

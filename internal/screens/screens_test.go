@@ -55,6 +55,10 @@ func TestDetect(t *testing.T) {
 		"title-loggedout.png":             Title,
 		"realm-fight-2.png":               InCombat,
 		"value-pack.png":                  ValuePack,
+		"mvp.png":                         MVP,
+		"mvp-swd-4.png":                   MVP, // both buttons greyed
+		"mvp-sweep.png":                   MVPSweep,
+		"mvp-1.png":                       InCombat,
 		"after-vp.png":                    Main,   // Ant Cave: dark map behind the icons
 		"income-cave.png":                 Income, // close X dimmed by the cave
 		"income-after-qi.png":             Income,
