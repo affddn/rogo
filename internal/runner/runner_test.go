@@ -52,3 +52,25 @@ func TestKickHoldsUnlessJustResumed(t *testing.T) {
 		t.Fatalf("kicks counted %d, want 2", st.Counters["kicks"])
 	}
 }
+
+func TestPickRunsAStarvedActionFirst(t *testing.T) {
+	st, _ := state.Load(filepath.Join(t.TempDir(), "s.json"))
+	always := func(screens.Signals, *state.State, time.Time) bool { return true }
+	r := New(nil, st,
+		&Action{Name: "stage", Priority: 50, Ready: always},
+		&Action{Name: "guide", Priority: 87, Ready: always},
+	)
+	t0 := time.Now()
+	if a := r.pick(screens.Signals{}, t0); a.Name != "guide" {
+		t.Fatalf("picked %s first, want guide", a.Name)
+	}
+	if a := r.pick(screens.Signals{}, t0.Add(30*time.Minute)); a.Name != "guide" {
+		t.Fatalf("picked %s after 30 min, want guide", a.Name)
+	}
+	if a := r.pick(screens.Signals{}, t0.Add(46*time.Minute)); a.Name != "stage" {
+		t.Fatalf("picked %s after stage waited 46 min, want stage", a.Name)
+	}
+	if a := r.pick(screens.Signals{}, t0.Add(47*time.Minute)); a.Name != "guide" {
+		t.Fatalf("picked %s right after stage ran, want guide", a.Name)
+	}
+}

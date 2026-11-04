@@ -59,14 +59,19 @@ type Runner struct {
 	// in on another device, so it does not fight someone playing by hand.
 	KickHold time.Duration
 
-	resumed   time.Time // loop start or the last unpause
-	holdUntil time.Time
-	lastPower int
+	// Starve is how long a ready action may be passed over before it runs
+	// ahead of higher priorities.
+	Starve time.Duration
+
+	resumed    time.Time // loop start or the last unpause
+	holdUntil  time.Time
+	lastPower  int
+	readySince map[string]time.Time
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
 	sort.SliceStable(actions, func(i, j int) bool { return actions[i].Priority > actions[j].Priority })
-	return &Runner{B: b, State: st, Actions: actions, JobTimeout: 10 * time.Minute, RestartAfter: 3, Idle: 2 * time.Minute, KickHold: 30 * time.Minute}
+	return &Runner{B: b, State: st, Actions: actions, JobTimeout: 10 * time.Minute, RestartAfter: 3, Idle: 2 * time.Minute, KickHold: 30 * time.Minute, Starve: 45 * time.Minute}
 }
 
 func (r *Runner) Run(ctx context.Context) error {
@@ -188,16 +193,39 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 }
 
+// pick returns the highest-priority ready action, unless one has been ready
+// and passed over for Starve: then the longest-waiting goes first, so a
+// steady stream of quest and badge work cannot shut out stage pushes.
 func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
+	if r.readySince == nil {
+		r.readySince = map[string]time.Time{}
+	}
+	var first, starved *Action
 	for _, a := range r.Actions {
-		if r.State.Snoozed(a.Name, now) {
+		if r.State.Snoozed(a.Name, now) || !a.Ready(sig, r.State, now) {
+			delete(r.readySince, a.Name)
 			continue
 		}
-		if a.Ready(sig, r.State, now) {
-			return a
+		since, seen := r.readySince[a.Name]
+		if !seen {
+			since = now
+			r.readySince[a.Name] = now
+		}
+		if first == nil {
+			first = a
+		}
+		if r.Starve > 0 && now.Sub(since) >= r.Starve && (starved == nil || since.Before(r.readySince[starved.Name])) {
+			starved = a
 		}
 	}
-	return nil
+	if starved != nil {
+		delete(r.readySince, starved.Name)
+		return starved
+	}
+	if first != nil {
+		delete(r.readySince, first.Name)
+	}
+	return first
 }
 
 // logPower records combat power when it changes.
