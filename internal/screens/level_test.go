@@ -8,6 +8,7 @@ func TestEnhanceLevel(t *testing.T) {
 		"lv/cape.png": {56, 57}, "lv/boots.png": {55, 56}, "lv/pendant.png": {11, 12},
 		"lv/belt-59.png": {59, 60}, "lv/armor-63.png": {63, 64},
 		"lv/armor-70.png": {70, 71}, // touching digits
+		"lv/slot4.png":    {71, 72}, "lv/slot5.png": {71, 72},
 	}
 	for file, want := range cases {
 		t.Run(file, func(t *testing.T) {
