@@ -131,6 +131,9 @@ func (r *Runner) Run(ctx context.Context) error {
 			}
 			if errors.Is(err, device.ErrTransport) {
 				log.Warn("phone link failed on the way to main", "err", err)
+				if err := r.linkFailed(ctx); err != nil {
+					return err
+				}
 				continue
 			}
 			streak++
@@ -148,6 +151,10 @@ func (r *Runner) Run(ctx context.Context) error {
 			}
 			continue
 		}
+		if st.LinkFails > 0 {
+			log.Info("phone link back", "after_failures", st.LinkFails)
+		}
+		st.LinkOK, st.LinkFails = time.Now(), 0
 		sig := screens.ReadMain(frame)
 		r.logPower(frame)
 		st.Seen = sig.Level
@@ -180,7 +187,9 @@ func (r *Runner) Run(ctx context.Context) error {
 			// The link to the phone failed, not the game: restarting the
 			// game cannot help, so reconnect and let the action come round.
 			log.Warn("action cut short by the phone link", "action", a.Name, "err", err)
-			r.save()
+			if err := r.linkFailed(ctx); err != nil {
+				return err
+			}
 			continue
 		}
 		if err != nil {
@@ -243,6 +252,20 @@ func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
 		delete(waiting, first.Name)
 	}
 	return first
+}
+
+// linkFailed backs off after a phone-link failure: 30 s, doubling to 5 min
+// while failures continue. A slow VMOS link recovers on its own, and
+// screenshots that time out mid-transfer only add to its load.
+func (r *Runner) linkFailed(ctx context.Context) error {
+	st := r.State
+	st.LinkFails++
+	r.save()
+	wait := min(30*time.Second<<min(st.LinkFails-1, 4), 5*time.Minute)
+	if st.LinkFails > 1 {
+		r.B.Log.Warn("phone link still failing, backing off", "failures", st.LinkFails, "wait", wait)
+	}
+	return bot.Sleep(ctx, wait)
 }
 
 // logPower records combat power when it changes.

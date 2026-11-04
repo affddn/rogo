@@ -28,7 +28,15 @@ func cmdReport(_ context.Context, _ *device.Device, args []string) error {
 		return err
 	}
 	now := time.Now()
-	fmt.Printf("game day %s, growth since last stage defeat %d\n\n", s.Day, s.Growth)
+	fmt.Printf("game day %s, growth since last stage defeat %d\n", s.Day, s.Growth)
+	switch {
+	case s.LinkOK.IsZero():
+	case s.LinkFails > 0:
+		fmt.Printf("phone link: FAILING, %d failures since main was last seen %s ago\n", s.LinkFails, now.Sub(s.LinkOK).Round(time.Minute))
+	default:
+		fmt.Printf("phone link: ok, main seen %s ago\n", now.Sub(s.LinkOK).Round(time.Second))
+	}
+	fmt.Println()
 	fmt.Println("counters")
 	for _, k := range slices.Sorted(maps.Keys(s.Counters)) {
 		fmt.Printf("  %-24s %d\n", k, s.Counters[k])

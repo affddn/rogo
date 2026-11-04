@@ -53,6 +53,11 @@ type State struct {
 	Waiting map[string]time.Time `json:"waiting"`
 	SavedAt time.Time            `json:"saved_at"`
 
+	// LinkOK is the last time the main screen was reached; LinkFails counts
+	// phone-link failures since.
+	LinkOK    time.Time `json:"link_ok"`
+	LinkFails int       `json:"link_fails"`
+
 	path string
 }
 

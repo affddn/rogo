@@ -99,6 +99,15 @@ func (b *Bot) TapWait(ctx context.Context, from screens.ID, p image.Point, what 
 		return screens.Unknown, nil, err
 	}
 	id, frame, err := b.Wait(ctx, timeout, ids...)
+	if errors.Is(err, ErrTimeout) && id == screens.PowerSave {
+		// A slow screenshot let the game dim into power saving before the
+		// tap landed; unlock and tap again.
+		b.Log.Info("power saving came up mid-tap, unlocking")
+		if _, err := b.Dismiss(ctx, id, frame); err != nil {
+			return id, frame, err
+		}
+		id = from
+	}
 	if !errors.Is(err, ErrTimeout) || id != from {
 		return id, frame, err
 	}

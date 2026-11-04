@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -113,5 +114,17 @@ func TestTransportErrorsAreMarked(t *testing.T) {
 	}
 	if errors.Is(fmt.Errorf("could not reach main screen"), device.ErrTransport) {
 		t.Fatal("a game error read as transport")
+	}
+}
+
+func TestLinkFailedBacksOffAndCounts(t *testing.T) {
+	st, _ := state.Load(filepath.Join(t.TempDir(), "s.json"))
+	r := New(&bot.Bot{Log: slog.New(slog.NewTextHandler(io.Discard, nil))}, st)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // the sleep returns at once; only the count matters here
+	_ = r.linkFailed(ctx)
+	_ = r.linkFailed(ctx)
+	if st.LinkFails != 2 {
+		t.Fatalf("link fails %d, want 2", st.LinkFails)
 	}
 }
