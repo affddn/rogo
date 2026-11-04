@@ -79,3 +79,15 @@ func TestRailLabelsOnEveryMap(t *testing.T) {
 		}
 	}
 }
+
+func TestAutoOnWithMultiSummon(t *testing.T) {
+	for file, want := range map[string]bool{
+		"auto-done.png":       true, // 4x: green ring on the Summon Elite badge
+		"daily/after-buy.png": true, // 1x: green arrows on Auto
+		"auto-1.png":          false,
+	} {
+		if got := autoOn(capture(t, file)); got != want {
+			t.Errorf("%s: autoOn %v, want %v", file, got, want)
+		}
+	}
+}

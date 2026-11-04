@@ -59,6 +59,7 @@ const (
 	GrowthGift       ID = "growth-gift"
 	LoginEvent       ID = "login-event"
 	Mall             ID = "mall"
+	SummonLevelHint  ID = "summon-level-hint"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -190,6 +191,10 @@ const (
 	TMallTopUpTab        = "mall_topup_tab"
 	TMallAdFreeWord      = "mall_adfree_word"
 	TClaimAllWord        = "claimall_word"
+	TAutoSummonMulti     = "autosummon_text_multi"
+	TMultiSummonLabel    = "multisummon_label"
+	TMultiSummon4x       = "multisummon_4x"
+	TSummonLevelHint     = "summon_level_hint"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -260,6 +265,11 @@ var rules = []rule{
 	// identify it (the weapon one matches GachaCount above it first).
 	{id: PetCount, anchors: []string{THintTitle, TGachaDrawButton}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
+	// With the Monthly Card the dialog gains a Multi-Summon row and its text
+	// moves down.
+	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonMulti}},
+	// "Upgrade the Summon Level for better gear. Continue at this level?"
+	{id: SummonLevelHint, anchors: []string{TSummonLevelHint}},
 	// The close X sits over the map and dims on dark ones; Yield Bonus is
 	// on the dialog's own panel.
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeYieldBonus}},

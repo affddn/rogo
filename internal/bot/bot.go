@@ -211,6 +211,9 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
 	case screens.LoginEvent:
 		return true, b.Tap(ctx, image.Pt(662, 155), "close login event")
+	case screens.SummonLevelHint:
+		// Keep summoning; the summon-upgrade chore raises the level.
+		return true, b.TapTemplate(ctx, frame, screens.TDialogOK)
 	case screens.MVPSweep:
 		return true, b.Tap(ctx, image.Pt(219, 830), "cancel sweep")
 	case screens.CombatEnded:

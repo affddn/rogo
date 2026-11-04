@@ -11,14 +11,19 @@ import (
 )
 
 // The Auto toggle left of Summon Elite. Its arrows turn green when on; the
-// on and off icons are too alike for template matching.
+// on and off icons are too alike for template matching. With multi-summon
+// the green arrows ring a "4x" badge on the Summon Elite icon instead.
 var (
-	autoButton = image.Pt(262, 1022)
-	autoIcon   = image.Rect(240, 1004, 286, 1044)
+	autoButton      = image.Pt(262, 1022)
+	autoIcon        = image.Rect(240, 1004, 286, 1044)
+	multiBadge      = image.Rect(305, 980, 350, 1020)
+	multiSummonOpen = image.Pt(547, 744)
+	multiSummon4x   = image.Pt(545, 686)
 )
 
 func autoOn(frame image.Image) bool {
-	return vision.Ratio(frame, autoIcon, vision.IsGreenText) > 0.04
+	return vision.Ratio(frame, autoIcon, vision.IsGreenText) > 0.04 ||
+		vision.Ratio(frame, multiBadge, vision.IsGreenText) > 0.03
 }
 
 // AutoSummon keeps the game's own elite auto-summon running. It spends Dead
@@ -42,11 +47,33 @@ func AutoSummon(ctx context.Context, b *bot.Bot) (enabled bool, err error) {
 	if err != nil {
 		return false, err
 	}
+	// Multi-summon (Monthly Card) spends 4 branches for 4 elites' drops at
+	// once: the same gear per branch, sooner.
+	if screens.Visible(frame, screens.TMultiSummonLabel) && !screens.Visible(frame, screens.TMultiSummon4x) {
+		if err := b.Tap(ctx, multiSummonOpen, "multi-summon"); err != nil {
+			return false, err
+		}
+		if err := b.Tap(ctx, multiSummon4x, "4x"); err != nil {
+			return false, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return false, err
+		}
+	}
 	if err := b.TapTemplate(ctx, frame, screens.THintOK); err != nil {
 		return false, err
 	}
-	if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Main); err != nil {
+	id, frame, err := b.Wait(ctx, 8*time.Second, screens.Main, screens.SummonLevelHint)
+	if err != nil {
 		return false, err
+	}
+	if id == screens.SummonLevelHint {
+		if _, err := b.Dismiss(ctx, id, frame); err != nil {
+			return false, err
+		}
+		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Main); err != nil {
+			return false, err
+		}
 	}
 	if !autoOn(frame) {
 		b.Log.Warn("auto summon still off after confirming")

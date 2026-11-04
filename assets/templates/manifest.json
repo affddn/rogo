@@ -40,6 +40,14 @@
     "note": "auto-summon hint: 'Auto-summon Elites for gear'"
   },
   {
+    "name": "autosummon_text_multi",
+    "x": 212,
+    "y": 574,
+    "w": 296,
+    "h": 34,
+    "note": "auto-summon hint with Multi-Summon row: 'Auto-summon Elites for gear'"
+  },
+  {
     "name": "baph_challenge",
     "x": 254,
     "y": 1116,
@@ -760,6 +768,22 @@
     "note": "Mall bottom bar: Top Up tab (on every Mall page)"
   },
   {
+    "name": "multisummon_4x",
+    "x": 500,
+    "y": 728,
+    "w": 60,
+    "h": 34,
+    "note": "auto-summon hint: 4x selected"
+  },
+  {
+    "name": "multisummon_label",
+    "x": 84,
+    "y": 732,
+    "w": 150,
+    "h": 28,
+    "note": "auto-summon hint: Multi-Summon label (Monthly Card)"
+  },
+  {
     "name": "mvp_challenge",
     "x": 104,
     "y": 1124,
@@ -1086,6 +1110,14 @@
     "w": 212,
     "h": 56,
     "note": "stage result: Leave button"
+  },
+  {
+    "name": "summon_level_hint",
+    "x": 90,
+    "y": 550,
+    "w": 540,
+    "h": 60,
+    "note": "hint: upgrade Summon Level? continue at this level"
   },
   {
     "name": "summonup_close",
