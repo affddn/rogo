@@ -79,7 +79,7 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 }
 
 // Enhance slots on the Enhance page: the item icon and its upgrade badge.
-var enhanceSlots = []struct{ icon, badge image.Point }{
+var enhanceSlots = [...]struct{ icon, badge image.Point }{
 	{image.Pt(67, 163), image.Pt(118, 115)},  // armor
 	{image.Pt(67, 275), image.Pt(118, 227)},  // belt
 	{image.Pt(67, 387), image.Pt(118, 339)},  // pants
@@ -89,6 +89,19 @@ var enhanceSlots = []struct{ icon, badge image.Point }{
 	{image.Pt(67, 497), image.Pt(118, 449)},  // accessory left
 	{image.Pt(653, 497), image.Pt(704, 449)}, // accessory right
 }
+
+// setItems is how many of enhanceSlots, the first ones, count toward Enhance
+// Resonance; the two accessories do not.
+const setItems = 6
+
+// enhanceLevels caches each slot's level as read on the Enhance page (0: not
+// read yet). Every selection reads it again, so it stays in step with the
+// game across runs.
+var enhanceLevels [len(enhanceSlots)]int
+
+// unreadLevel stands in for a level the digit reader could not read: the
+// slot goes last rather than soaking up every level.
+const unreadLevel = 1000
 
 // bagTile21 is the top strip of the 21st tile in the Equipment page's gear
 // grid (row 4, column 3). Empty slots show the panel's beige.
@@ -242,9 +255,8 @@ func badged(frame image.Image, p image.Point) bool {
 	return vision.Ratio(frame, image.Rectangle{Min: p.Sub(image.Pt(7, 7)), Max: p.Add(image.Pt(7, 7))}, vision.IsBadgeRed) > 0.25
 }
 
-// Equipment enhances gear one level at a time, round-robin over every slot
-// that shows an upgrade badge, so levels stay even for the set resonance
-// bonus. It stops when nothing is badged or the cost turns unaffordable.
+// Equipment activates cards, equips marked upgrades, dismantles spares once
+// the bag passes 20, then enhances gear (see enhance).
 func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	// Equipment opens on whichever tab is badged; Card first if it is.
 	frame, err := open(ctx, b, screens.TNavEquipment, screens.Equipment, screens.CardPage)
@@ -288,47 +300,89 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 		return 0, err
 	}
 
-	for round := 0; round < 30; round++ {
+	n, err = enhance(ctx, b)
+	levels += n
+	if err != nil {
+		return levels, err
+	}
+	b.Log.Info("equipment enhanced", "levels", levels, "set", enhanceLevels[:setItems], "accessories", enhanceLevels[setItems:])
+	return levels, b.ToMain(ctx)
+}
+
+// enhance spends materials one level at a time on the lowest-level badged set
+// item, so all six reach the next Enhance Resonance tier (every 5 levels)
+// together and the tier is activated as soon as it unlocks. Accessories get
+// levels only when no set item can. It stops when nothing is badged or the
+// next level is unaffordable.
+func enhance(ctx context.Context, b *bot.Bot) (levels int, err error) {
+	selected := -1
+	for step := 0; step < 50; step++ {
 		id, frame, err := b.Look(ctx)
 		if err != nil {
 			return levels, err
 		}
 		if id != screens.Enhance {
 			b.Log.Warn("left enhance page", "screen", id)
-			break
+			return levels, nil
 		}
 		if ok, err := resonate(ctx, b, frame); err != nil {
 			return levels, err
 		} else if ok {
 			levels++ // counts as growth for the planner
+			selected = -1
 			continue
 		}
-		progressed := false
-		for _, s := range enhanceSlots {
-			if !badged(frame, s.badge) {
-				continue
-			}
-			if err := b.Tap(ctx, s.icon, "enhance slot"); err != nil {
-				return levels, err
-			}
-			_, sel, err := b.Look(ctx)
-			if err != nil {
-				return levels, err
-			}
-			if vision.Ratio(sel, enhanceCost, vision.IsGreenText) < 0.05 {
-				b.Log.Info("enhance materials exhausted")
-				return levels, b.ToMain(ctx)
-			}
-			if err := b.TapTemplate(ctx, sel, screens.TEnhanceButton); err != nil {
-				return levels, err
-			}
-			levels++
-			progressed = true
+		i, ok := lowestBadged(frame)
+		if !ok {
+			return levels, nil
 		}
-		if !progressed {
-			break
+		if i != selected {
+			if err := b.Tap(ctx, enhanceSlots[i].icon, "enhance slot"); err != nil {
+				return levels, err
+			}
+			if _, frame, err = b.Look(ctx); err != nil {
+				return levels, err
+			}
+			selected = i
 		}
+		firstRead := enhanceLevels[i] == 0
+		if lv, ok := screens.EnhanceLevel(frame); ok {
+			enhanceLevels[i] = lv
+		} else if firstRead {
+			b.Log.Warn("could not read enhance level", "slot", i, "shot", b.Save(frame))
+			enhanceLevels[i] = unreadLevel
+		}
+		if firstRead {
+			continue // pick again knowing this slot's level
+		}
+		if vision.Ratio(frame, enhanceCost, vision.IsGreenText) < 0.05 {
+			b.Log.Info("enhance materials exhausted")
+			return levels, nil
+		}
+		if err := b.TapTemplate(ctx, frame, screens.TEnhanceButton); err != nil {
+			return levels, err
+		}
+		enhanceLevels[i]++
+		levels++
 	}
-	b.Log.Info("equipment enhanced", "levels", levels)
-	return levels, b.ToMain(ctx)
+	return levels, nil
+}
+
+// lowestBadged picks the badged set item with the lowest known level (unread
+// ones first, so they get read), else the lowest badged accessory.
+func lowestBadged(frame image.Image) (int, bool) {
+	pick := func(from, to int) int {
+		best := -1
+		for i := from; i < to; i++ {
+			if badged(frame, enhanceSlots[i].badge) && (best < 0 || enhanceLevels[i] < enhanceLevels[best]) {
+				best = i
+			}
+		}
+		return best
+	}
+	if i := pick(0, setItems); i >= 0 {
+		return i, true
+	}
+	i := pick(setItems, len(enhanceSlots))
+	return i, i >= 0
 }
