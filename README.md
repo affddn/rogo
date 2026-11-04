@@ -30,8 +30,8 @@ digits) and runs the highest-priority action that is ready:
 | 40 | mail | every 6 h: Claim All |
 
 Unknown screens are handled generically: guide arrows are followed, tutorials
-skipped, lone OK prompts confirmed, "tap empty area" popups closed, and the
-back key is the last resort. An action that changes nothing is snoozed so a badge the bot cannot clear
+skipped, lone OK prompts confirmed, "tap empty area" popups closed, a fight
+already under way is waited out, and the back key is the last resort. An action that changes nothing is snoozed so a badge the bot cannot clear
 (paid offers, cosmetics) stops pulling it in. Progress, failures, snoozes and
 daily flags persist in `data/state.json`; daily flags reset at 00:00 GMT+8.
 Three failed actions in a row, or a deny-listed tap, restart the game.
@@ -59,7 +59,8 @@ and tap is measured on that render.
 make build
 
 # Option A: VMOS API keys in .env (see .env.example); rgo manages the tunnel
-#           itself and renews it before its 7-day expiry.
+#           itself: a day before its 7-day expiry it closes it and opens a
+#           fresh one (VMOS hands back an open tunnel unchanged).
 # Option A2: the ssh command + Connection key from "Local debugging" in .env
 #           (RGO_TUNNEL_*); rgo serves it natively and redials drops.
 bin/rgo run

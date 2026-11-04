@@ -316,7 +316,7 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 	case screens.QuestPanel:
 		n, err := tasks.QuestPanel(ctx, b)
 		return out{Progress: n > 0}, err
-	case screens.Unknown:
+	case screens.Unknown, screens.InCombat:
 		// Stage quests start the stage battle straight from the tracker.
 		lost, err := tasks.WaitStage(ctx, b)
 		if lost {

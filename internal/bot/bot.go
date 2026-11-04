@@ -252,6 +252,13 @@ func (b *Bot) ToMain(ctx context.Context) error {
 		case screens.Title, screens.Login, screens.AccountChooser:
 			// Signed out (after a kick) or back at the title: log in again.
 			return b.WaitBoot(ctx, 4*time.Minute)
+		case screens.InCombat:
+			// A fight already under way (a realm run, a stage battle) plays
+			// out by itself and ignores back; wait for it.
+			if err := b.waitFight(ctx, 10*time.Minute); err != nil {
+				return err
+			}
+			continue
 		}
 		acted, err := b.Dismiss(ctx, id, frame)
 		if err != nil {
@@ -278,6 +285,22 @@ func (b *Bot) ToMain(ctx context.Context) error {
 		}
 	}
 	return fmt.Errorf("could not reach main screen")
+}
+
+// waitFight waits until the fight on screen is over or timeout passes.
+func (b *Bot) waitFight(ctx context.Context, timeout time.Duration) error {
+	b.Log.Info("waiting for a fight to finish")
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		id, _, err := b.Look(ctx)
+		if err != nil || id != screens.InCombat {
+			return err
+		}
+		if err := sleep(ctx, 5*time.Second); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // titleStart is the Start Game text on the title screen; it glows, so it is

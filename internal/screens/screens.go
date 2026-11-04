@@ -52,6 +52,7 @@ const (
 	Kicked           ID = "kicked"
 	Login            ID = "login"
 	AccountChooser   ID = "account-chooser"
+	InCombat         ID = "in-combat"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -162,6 +163,7 @@ const (
 	TLoginTitle          = "login_title"
 	TLoginGoogle         = "login_google"
 	TAccountChooser      = "account_chooser"
+	TCombatPause         = "combat_pause"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -275,5 +277,17 @@ func Detect(frame image.Image) ID {
 			return r.id
 		}
 	}
+	if inCombat(frame) {
+		return InCombat
+	}
 	return Unknown
+}
+
+// inCombat spots a fight under way (realm, stage, boss) by its pause button.
+// The button is see-through, so it reads 0.8x to 1.6x as bright as the
+// template depending on the map; a dimmer one sits under a popup, which is
+// left Unknown so the usual popup handling still runs.
+func inCombat(frame image.Image) bool {
+	m := assets.MustGet(TCombatPause).Find(frame, Margin)
+	return m.Score >= MinScore && m.Bright >= 0.75
 }

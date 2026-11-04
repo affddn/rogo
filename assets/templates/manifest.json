@@ -136,6 +136,14 @@
     "note": "boss fight result: Leave button"
   },
   {
+    "name": "combat_pause",
+    "x": 22,
+    "y": 1204,
+    "w": 48,
+    "h": 48,
+    "note": "pause button shown during any fight (realm, stage)"
+  },
+  {
     "name": "cult_activate_all",
     "x": 428,
     "y": 1094,

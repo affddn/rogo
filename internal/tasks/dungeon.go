@@ -168,7 +168,7 @@ func awaitRun(ctx context.Context, b *bot.Bot) bool {
 			}
 		case id == screens.Dungeon:
 			return sawBattle
-		case id == screens.Unknown:
+		case id == screens.Unknown, id == screens.InCombat:
 			sawBattle = true
 		default:
 			_, _ = b.Dismiss(ctx, id, f)

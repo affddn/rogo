@@ -53,6 +53,11 @@ func TestDetect(t *testing.T) {
 		"account-chooser.png":             AccountChooser,
 		"title-loggedin.png":              Title,
 		"title-loggedout.png":             Title,
+		"realm-fight-2.png":               InCombat,
+		"stage-r1.png":                    InCombat,
+		"stage-r10.png":                   InCombat, // pause button 1.57x as bright
+		"baph-fight/05.png":               InCombat,
+		"baph-fight/02.png":               Unknown, // dimmed under the dodge hint
 	}
 	for file, want := range cases {
 		// Subtests, so a capture missing on this machine skips only itself.
