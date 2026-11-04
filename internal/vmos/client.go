@@ -99,7 +99,15 @@ func (c *Client) EnableADB(ctx context.Context, padCode string) error {
 		map[string]any{"padCodes": []string{padCode}, "openStatus": 1}, nil)
 }
 
-// ADBInfo opens (or extends) the adb tunnel for valid minutes, 1440..10080.
+// CloseADB closes the instance's adb tunnel; the adb service stays on and the
+// next ADBInfo opens a fresh tunnel.
+func (c *Client) CloseADB(ctx context.Context, padCode string) error {
+	return c.post(ctx, "/vcpcloud/api/padApi/adb",
+		map[string]any{"padCode": padCode, "enable": false}, nil)
+}
+
+// ADBInfo returns the adb tunnel, opening one valid for valid (1..7 days) when
+// none is open. An open tunnel comes back unchanged, expiry included.
 func (c *Client) ADBInfo(ctx context.Context, padCode string, valid time.Duration) (*ADB, error) {
 	mins := min(max(int(valid.Minutes()), 1440), 10080)
 	var a ADB

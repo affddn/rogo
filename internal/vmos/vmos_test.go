@@ -66,3 +66,21 @@ func TestADBInfoSignsAndDecodes(t *testing.T) {
 		t.Fatalf("expires %v %v", exp, err)
 	}
 }
+
+func TestCloseADBDisablesTheTunnel(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &got)
+		json.NewEncoder(w).Encode(map[string]any{"code": 200, "msg": "success"})
+	}))
+	defer srv.Close()
+	c := NewClient("ak", "sk")
+	c.BaseURL = srv.URL
+	if err := c.CloseADB(context.Background(), "APP6AL9EDCDYK2NE"); err != nil {
+		t.Fatal(err)
+	}
+	if got["padCode"] != "APP6AL9EDCDYK2NE" || got["enable"] != false {
+		t.Fatalf("close sent %v", got)
+	}
+}

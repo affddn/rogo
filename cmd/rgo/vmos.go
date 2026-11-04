@@ -82,6 +82,16 @@ func (v *vmosTunnel) Refresh(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("vmos adb info: %w", err)
 	}
+	// An open tunnel keeps its old expiry; with under a day left, close it so
+	// VMOS opens a fresh 7-day one.
+	if exp, _ := a.Expires(); time.Until(exp) < 24*time.Hour {
+		v.log.Info("vmos adb tunnel expires soon, opening a new one", "expires", a.ExpireTime)
+		if err := v.client.CloseADB(ctx, v.pad); err != nil {
+			v.log.Warn("vmos adb close failed, keeping the old tunnel", "err", err)
+		} else if a, err = v.client.ADBInfo(ctx, v.pad, 7*24*time.Hour); err != nil {
+			return fmt.Errorf("vmos adb info after close: %w", err)
+		}
+	}
 	if err := v.tunnel.Update(a); err != nil {
 		return err
 	}
