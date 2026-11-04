@@ -137,3 +137,13 @@ func TestRaiseStarBadge(t *testing.T) {
 		t.Error("raise star badge seen after raising")
 	}
 }
+
+func TestCanActivateOnlyWhenDue(t *testing.T) {
+	can := assets.MustGet(screens.TCanActivate)
+	if m := can.FindIn(capture(t, "awaken-2.png"), awakeningTiers); !m.Visible(screens.MinScore) {
+		t.Error("Can Activate not found on a due tier")
+	}
+	if m := can.FindIn(capture(t, "awaken-3.png"), awakeningTiers); m.Visible(screens.MinScore) {
+		t.Errorf("Can Activate found with every reachable tier active (score %.2f)", m.Score)
+	}
+}

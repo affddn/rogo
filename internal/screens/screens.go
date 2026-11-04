@@ -63,6 +63,7 @@ const (
 	AchieveReward    ID = "achievement-reward"
 	LimitedQuest     ID = "limited-quest"
 	VersionOld       ID = "version-old"
+	Awakening        ID = "awakening"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -202,6 +203,8 @@ const (
 	TLimitedTitle        = "limited_title"
 	TRailLimited         = "rail_limited"
 	TVersionOldText      = "version_old_text"
+	TAwakeningHeader     = "awakening_header"
+	TCanActivate         = "can_activate"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -288,6 +291,7 @@ var rules = []rule{
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
 	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},
 	{id: CharSkill, anchors: []string{TSkillHeader, TNavBack}},
+	{id: Awakening, anchors: []string{TAwakeningHeader, TNavBack}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},

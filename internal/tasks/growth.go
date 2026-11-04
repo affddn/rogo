@@ -9,6 +9,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/bot"
 	"github.com/affddn/rogo/internal/screens"
 	"github.com/affddn/rogo/internal/vision"
@@ -63,7 +64,7 @@ var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
 // equipping it) was made by hand.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
-	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill)
+	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill, screens.Awakening)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +128,61 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			return true, err
 		}
 	}
-	return spent > 0 || skillsDone, b.ToMain(ctx)
+	awoken, err := awaken(ctx, b)
+	if err != nil {
+		return true, err
+	}
+	return spent > 0 || skillsDone || awoken > 0, b.ToMain(ctx)
+}
+
+var (
+	awakeningTab = image.Pt(553, 1235)
+	// The build's two awakenings (Assassin: Shadow Assault on Skill CRIT,
+	// Killing Intent Rhythm on STR) and the tier list under them.
+	awakenings     = []image.Point{{213, 140}, {507, 140}}
+	awakeningTiers = image.Rect(120, 440, 705, 1170)
+)
+
+// awaken activates every Awakening tier whose stat threshold is met. Tiers
+// add Skill DMG, PATK and skill effects; they do nothing until activated.
+func awaken(ctx context.Context, b *bot.Bot) (int, error) {
+	_, frame, err := b.Look(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if id := screens.Detect(frame); id != screens.Awakening {
+		if _, _, err = b.TapWait(ctx, id, awakeningTab, "awakening tab", 8*time.Second, screens.Awakening); err != nil {
+			return 0, err
+		}
+	}
+	can := assets.MustGet(screens.TCanActivate)
+	n := 0
+	for _, a := range awakenings {
+		if err := b.Tap(ctx, a, "awakening"); err != nil {
+			return n, err
+		}
+		for i := 0; i < 6; i++ {
+			_, frame, err := b.Look(ctx)
+			if err != nil {
+				return n, err
+			}
+			m := can.FindIn(frame, awakeningTiers)
+			if !m.Visible(screens.MinScore) {
+				break
+			}
+			if err := b.Tap(ctx, m.Center(), "activate awakening tier"); err != nil {
+				return n, err
+			}
+			n++
+			if err := closePopups(ctx, b, screens.Awakening); err != nil {
+				return n, err
+			}
+		}
+	}
+	if n > 0 {
+		b.Log.Info("awakening tiers activated", "count", n)
+	}
+	return n, nil
 }
 
 // skills spends unspent skill points with the Recommended skill allocation.

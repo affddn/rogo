@@ -56,6 +56,14 @@
     "note": "auto-summon hint with Multi-Summon row: 'Auto-summon Elites for gear'"
   },
   {
+    "name": "awakening_header",
+    "x": 8,
+    "y": 22,
+    "w": 168,
+    "h": 40,
+    "note": "Character Awakening page header"
+  },
+  {
     "name": "baph_challenge",
     "x": 254,
     "y": 1116,
@@ -94,6 +102,14 @@
     "w": 100,
     "h": 48,
     "note": "Special Pass: Daily Benefits label"
+  },
+  {
+    "name": "can_activate",
+    "x": 572,
+    "y": 470,
+    "w": 122,
+    "h": 26,
+    "note": "Awakening tier: orange 'Can Activate'"
   },
   {
     "name": "card_activate",

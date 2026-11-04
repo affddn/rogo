@@ -50,6 +50,7 @@ func TestDetect(t *testing.T) {
 		"sayadroid/main-new3.png":         Main,
 		"kicked.png":                      Kicked, // over the power-save lock
 		"version-old.png":                 VersionOld,
+		"awaken-3.png":                    Awakening,
 		"login-dialog.png":                Login,
 		"account-chooser.png":             AccountChooser,
 		"title-loggedin.png":              Title,
