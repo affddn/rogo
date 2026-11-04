@@ -8,6 +8,14 @@
     "note": "Android Google account chooser title (Choose an account)"
   },
   {
+    "name": "achieve_title",
+    "x": 204,
+    "y": 154,
+    "w": 310,
+    "h": 40,
+    "note": "Achievement Reward popup title (dungeon and other modes)"
+  },
+  {
     "name": "attr_confirm",
     "x": 634,
     "y": 1088,
@@ -640,6 +648,14 @@
     "note": "Hint: Account logged in on another device"
   },
   {
+    "name": "limited_title",
+    "x": 220,
+    "y": 236,
+    "w": 280,
+    "h": 58,
+    "note": "Limited Quest popup title"
+  },
+  {
     "name": "login_google",
     "x": 180,
     "y": 598,
@@ -1014,6 +1030,14 @@
     "w": 102,
     "h": 26,
     "note": "left rail: Growth Gift label"
+  },
+  {
+    "name": "rail_limited",
+    "x": 116,
+    "y": 303,
+    "w": 84,
+    "h": 42,
+    "note": "left rail: Limited Quest label"
   },
   {
     "name": "rail_mall",

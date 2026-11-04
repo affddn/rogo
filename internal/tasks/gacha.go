@@ -29,7 +29,11 @@ func isTeal(c color.RGBA) bool { return c.G > 140 && c.R < 90 }
 // offers and claims the Draw Level achievement chests (100 tickets each).
 // It only confirms a draw whose cost icon is the ticket, never diamonds.
 func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
-	if _, err := openWeaponGacha(ctx, b); err != nil {
+	frame, err := openWeaponGacha(ctx, b)
+	if err != nil {
+		return 0, err
+	}
+	if err := adDraw(ctx, b, frame); err != nil {
 		return 0, err
 	}
 
@@ -73,6 +77,28 @@ func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
 	}
 	b.Log.Info("weapon gacha done", "batches", batches)
 	return batches, b.ToMain(ctx)
+}
+
+// The ad button left of Draw 1 Time: a free 10-draw a day, ad-free with
+// the Kafra Lifetime Card. Its badge shows while it is unused.
+var (
+	gachaAdButton = image.Pt(132, 1033)
+	gachaAdBadge  = image.Pt(153, 1012)
+)
+
+// adDraw takes the day's free draw from the ad button if it is due.
+func adDraw(ctx context.Context, b *bot.Bot, frame image.Image) error {
+	if !badged(frame, gachaAdBadge) {
+		return nil
+	}
+	if err := b.Tap(ctx, gachaAdButton, "free ad draw"); err != nil {
+		return err
+	}
+	b.Log.Info("free ad draw taken")
+	if err := bot.Sleep(ctx, 3*time.Second); err != nil {
+		return err
+	}
+	return closePopups(ctx, b, screens.WeaponGacha)
 }
 
 // openWeaponGacha opens the Weapon Gacha tab with Skip Animation ticked.

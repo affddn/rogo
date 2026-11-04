@@ -56,6 +56,7 @@ func Dailies(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 		{screens.TRailPulls, screens.LoginEvent, loginEvent},
 		{screens.TRailGrowth, screens.GrowthGift, growthGift},
 		{screens.TRailMall, screens.Mall, mall},
+		{screens.TRailLimited, screens.LimitedQuest, limitedQuest},
 	} {
 		if err := b.ToMain(ctx); err != nil {
 			return claimed, err
@@ -82,6 +83,16 @@ func Dailies(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 		b.Log.Info("daily rewards claimed", "count", claimed)
 	}
 	return claimed, b.ToMain(ctx)
+}
+
+// limitedQuest claims the timed Limited Quest once it is complete; until
+// then its button reads Go.
+func limitedQuest(ctx context.Context, b *bot.Bot) (int, error) {
+	n, err := claimButtons(ctx, b, screens.LimitedQuest, image.Rect(150, 860, 570, 1010), 0)
+	if err != nil {
+		return n, err
+	}
+	return n, b.Tap(ctx, image.Pt(648, 250), "close limited quest")
 }
 
 func loginEvent(ctx context.Context, b *bot.Bot) (int, error) {

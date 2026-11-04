@@ -56,6 +56,8 @@ func TestDetect(t *testing.T) {
 		"realm-fight-2.png":               InCombat,
 		"value-pack.png":                  ValuePack,
 		"mvp.png":                         MVP,
+		"modes/dg-achieve.png":            AchieveReward,
+		"modes/limited.png":               LimitedQuest,
 		"auto-multi.png":                  AutoSummonHint,
 		"auto-4x.png":                     AutoSummonHint,
 		"auto-levelhint.png":              SummonLevelHint,

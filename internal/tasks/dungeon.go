@@ -28,6 +28,14 @@ func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	if badged(frame, dungeonAchieveBadge) {
+		if err := dungeonAchievements(ctx, b); err != nil {
+			return 0, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return 0, err
+		}
+	}
 	for runs < n {
 		if screens.Visible(frame, screens.TDungeonZeroLeft) {
 			b.Log.Info("dungeon attempts used up")
@@ -56,6 +64,48 @@ func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
 		}
 	}
 	return runs, b.ToMain(ctx)
+}
+
+var (
+	dungeonAchieveButton = image.Pt(650, 145)
+	dungeonAchieveBadge  = image.Pt(678, 116)
+	achieveList          = image.Rect(50, 370, 670, 1110)
+	// The achievement chest at the top of the popup; it levels up as
+	// achievements are claimed.
+	achieveChest      = image.Pt(634, 280)
+	achieveChestBadge = image.Pt(661, 258)
+)
+
+// dungeonAchievements claims the dungeon's achievement rewards (clears,
+// kills, joins), which pay coins and enhance metal; one Claim takes every
+// finished one. Then the achievement chest, while it is badged.
+func dungeonAchievements(ctx context.Context, b *bot.Bot) error {
+	if _, _, err := b.TapWait(ctx, screens.Dungeon, dungeonAchieveButton, "dungeon achievements", 8*time.Second, screens.AchieveReward); err != nil {
+		return err
+	}
+	n, err := claimButtons(ctx, b, screens.AchieveReward, achieveList, 2)
+	if err != nil {
+		return err
+	}
+	_, frame, err := b.Look(ctx)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < 3 && badged(frame, achieveChestBadge); i++ {
+		if err := b.Tap(ctx, achieveChest, "achievement chest"); err != nil {
+			return err
+		}
+		n++
+		if err := closePopups(ctx, b, screens.AchieveReward); err != nil {
+			return err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return err
+		}
+	}
+	b.Log.Info("dungeon achievements claimed", "count", n)
+	_, err = b.Dismiss(ctx, screens.Detect(frame), frame)
+	return err
 }
 
 // ErrNoAttempts means "Challenge Attempts: 0/3": today's attempts are used.

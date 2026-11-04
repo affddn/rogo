@@ -209,6 +209,10 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	case screens.Dungeon, screens.Baphomet, screens.MVP, screens.GrowthGift, screens.Mall:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.AchieveReward:
+		return true, b.Tap(ctx, image.Pt(664, 172), "close achievements")
+	case screens.LimitedQuest:
+		return true, b.Tap(ctx, image.Pt(648, 250), "close limited quest")
 	case screens.LoginEvent:
 		return true, b.Tap(ctx, image.Pt(662, 155), "close login event")
 	case screens.SummonLevelHint:

@@ -60,6 +60,8 @@ const (
 	LoginEvent       ID = "login-event"
 	Mall             ID = "mall"
 	SummonLevelHint  ID = "summon-level-hint"
+	AchieveReward    ID = "achievement-reward"
+	LimitedQuest     ID = "limited-quest"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -195,6 +197,9 @@ const (
 	TMultiSummonLabel    = "multisummon_label"
 	TMultiSummon4x       = "multisummon_4x"
 	TSummonLevelHint     = "summon_level_hint"
+	TAchieveTitle        = "achieve_title"
+	TLimitedTitle        = "limited_title"
+	TRailLimited         = "rail_limited"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -255,6 +260,8 @@ var rules = []rule{
 	{id: InsertCard, anchors: []string{TInsertCardTitle, TInsertCardClose}},
 	{id: DungeonMatch, anchors: []string{TDungeonAccept, TDungeonDecline}},
 	{id: MVPSweep, anchors: []string{TMVPSweepTitle, TMVPSweepText}},
+	{id: AchieveReward, anchors: []string{TAchieveTitle}},
+	{id: LimitedQuest, anchors: []string{TLimitedTitle}},
 	// The login event's popup sits over main.
 	{id: LoginEvent, anchors: []string{TPullsBanner}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},

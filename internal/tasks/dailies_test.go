@@ -91,3 +91,21 @@ func TestAutoOnWithMultiSummon(t *testing.T) {
 		}
 	}
 }
+
+func TestDungeonAndGachaBadges(t *testing.T) {
+	if !badged(capture(t, "modes/dungeon.png"), dungeonAchieveBadge) {
+		t.Error("dungeon achievement badge not seen")
+	}
+	if !badged(capture(t, "modes/gacha-ad.png"), gachaAdBadge) {
+		t.Error("gacha ad draw badge not seen")
+	}
+	if badged(capture(t, "shop/12-weapon-gacha-draw.png"), gachaAdBadge) {
+		t.Error("gacha ad badge seen before the Lifetime Card")
+	}
+	if m := assets.MustGet(screens.TClaimWord).FindIn(capture(t, "modes/dg-achieve.png"), achieveList); !m.Visible(screens.MinScore) {
+		t.Error("achievement Claim not found")
+	}
+	if m := assets.MustGet(screens.TRailLimited).FindIn(capture(t, "daily/main.png"), leftRail); m.Score < 0.7 {
+		t.Errorf("Limited Quest label scored %.2f", m.Score)
+	}
+}
