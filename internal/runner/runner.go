@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"image"
 	"os"
 	"sort"
 	"time"
@@ -51,12 +52,16 @@ type Runner struct {
 	// PauseFile, while it exists, holds the loop so someone can use the
 	// phone by hand without the bot fighting them.
 	PauseFile string
+	// ProgressFile, when set, gets a "time,power" line whenever combat
+	// power changes.
+	ProgressFile string
 	// KickHold is how long the bot stays signed out after the account signs
 	// in on another device, so it does not fight someone playing by hand.
 	KickHold time.Duration
 
 	resumed   time.Time // loop start or the last unpause
 	holdUntil time.Time
+	lastPower int
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
@@ -128,6 +133,7 @@ func (r *Runner) Run(ctx context.Context) error {
 			continue
 		}
 		sig := screens.ReadMain(frame)
+		r.logPower(frame)
 		st.Seen = sig.Level
 		st.PowerNow = sig.Power
 
@@ -192,6 +198,26 @@ func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
 		}
 	}
 	return nil
+}
+
+// logPower records combat power when it changes.
+func (r *Runner) logPower(frame image.Image) {
+	p, ok := screens.Power(frame)
+	if !ok || p == r.lastPower {
+		return
+	}
+	r.lastPower = p
+	r.B.Log.Info("power", "power", p)
+	if r.ProgressFile == "" {
+		return
+	}
+	f, err := os.OpenFile(r.ProgressFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		r.B.Log.Error("progress log", "err", err)
+		return
+	}
+	defer f.Close()
+	fmt.Fprintf(f, "%s,%d\n", time.Now().Format(time.RFC3339), p)
 }
 
 // kicked reports whether err is the game signing out because the account

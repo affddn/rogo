@@ -65,3 +65,25 @@ func TestDiamonds(t *testing.T) {
 		t.Errorf("read %d through a dimmed bar", n)
 	}
 }
+
+func TestPower(t *testing.T) {
+	cases := map[string]int{
+		"main3.png": 474600, "unknown/20261103-182537.076.png": 534600, "shop/00-main.png": 1814100,
+		"idle-now.png": 1876500, "main-after-qi.png": 1966500, "daily/after-buy.png": 2085600,
+		"auto-done.png": 2085600, "value-pack.png": 0, // dimmed under a modal
+	}
+	for file, want := range cases {
+		t.Run(file, func(t *testing.T) {
+			got, ok := Power(load(t, file))
+			if want == 0 {
+				if ok {
+					t.Errorf("read %d through a dimmed screen", got)
+				}
+				return
+			}
+			if !ok || got != want {
+				t.Errorf("read %d %v, want %d", got, ok, want)
+			}
+		})
+	}
+}

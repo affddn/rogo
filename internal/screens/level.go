@@ -66,10 +66,24 @@ func (f font) read(frame image.Image, r image.Rectangle) (int, bool) {
 func levelInk(c color.RGBA) bool { return c.B < 135 }
 
 func (f font) glyphs(frame image.Image, r image.Rectangle) []string {
-	ink := func(x, y int) bool {
+	var masks []string
+	for _, g := range f.runs(frame, r) {
+		masks = append(masks, glyphMask(f.inkAt(frame), g))
+	}
+	return masks
+}
+
+func (f font) inkAt(frame image.Image) func(x, y int) bool {
+	return func(x, y int) bool {
 		return f.ink(color.RGBAModel.Convert(frame.At(x, y)).(color.RGBA))
 	}
-	var masks []string
+}
+
+// runs splits r into glyph boxes: runs of columns holding ink, with runs
+// wider than one digit cut evenly.
+func (f font) runs(frame image.Image, r image.Rectangle) []image.Rectangle {
+	ink := f.inkAt(frame)
+	var boxes []image.Rectangle
 	add := func(x0, x1 int) {
 		parts := 1
 		if f.maxDigitW > 0 {
@@ -77,7 +91,7 @@ func (f font) glyphs(frame image.Image, r image.Rectangle) []string {
 		}
 		for i := 0; i < parts; i++ {
 			a, b := x0+(x1-x0)*i/parts, x0+(x1-x0)*(i+1)/parts
-			masks = append(masks, glyphMask(ink, image.Rect(a, r.Min.Y, b, r.Max.Y)))
+			boxes = append(boxes, image.Rect(a, r.Min.Y, b, r.Max.Y))
 		}
 	}
 	start := -1
@@ -96,7 +110,7 @@ func (f font) glyphs(frame image.Image, r image.Rectangle) []string {
 			start = -1
 		}
 	}
-	return masks
+	return boxes
 }
 
 // glyphMask crops g to its ink rows and samples it onto the glyph grid: a
@@ -142,7 +156,7 @@ func glyphMask(ink func(x, y int) bool, g image.Rectangle) string {
 // guessed. Leaving each reference out, a true digit is within 13 cells of
 // another of its own, and an unseen shape can come within 2 of another digit.
 func classifyDigit(m string, refs []digitRef) (int, bool) {
-	var dist [10]int
+	var dist [11]int // digits, and 10 for a suffix such as "K"
 	for d := range dist {
 		dist[d] = len(m)
 	}
@@ -156,7 +170,7 @@ func classifyDigit(m string, refs []digitRef) (int, bool) {
 		dist[ref.digit] = min(dist[ref.digit], diff)
 	}
 	best, second := 0, len(m)
-	for d := 1; d < 10; d++ {
+	for d := 1; d < len(dist); d++ {
 		if dist[d] < dist[best] {
 			best = d
 		}
@@ -300,4 +314,91 @@ var barDigitRefs = []digitRef{
 	{9, "..#####..##########...#####....####....#.#######..######....####....###.....##.....###.....##..."},
 	{9, "...###....#####.###########...####....####....#####...##.#######....###.....###....###....###..."},
 	{9, "...##.....#####..##########...####....####....#####...##.#######.....##.....###....###....###..."},
+}
+
+// powerDigits is the combat power under the portrait ("2085.6K"), clear of
+// the sparkle at the pill's right end.
+var powerDigits = image.Rect(180, 64, 292, 94)
+
+// powerFont is the power's cream digits on the brown pill. Reference 10 is
+// the "K" suffix; a decimal point is a run no wider than powerDotW.
+var powerFont = font{
+	ink:       func(c color.RGBA) bool { return c.R > 225 && c.G > 215 && c.B > 170 },
+	refs:      powerRefs,
+	maxDigitW: 14,
+}
+
+const powerDotW = 3
+
+// Power reads combat power, in points ("2085.6K" is 2085600), from an
+// undimmed main screen.
+func Power(frame image.Image) (int, bool) {
+	boxes := powerFont.runs(frame, powerDigits)
+	if len(boxes) < 3 {
+		return 0, false
+	}
+	ink := powerFont.inkAt(frame)
+	tenths, decimals, dot := 0, 0, false
+	for i, g := range boxes {
+		if g.Dx() <= powerDotW {
+			if dot {
+				return 0, false
+			}
+			dot = true
+			continue
+		}
+		d, ok := classifyDigit(glyphMask(ink, g), powerFont.refs)
+		if !ok {
+			return 0, false
+		}
+		if d == 10 { // K, the last glyph
+			if i != len(boxes)-1 {
+				return 0, false
+			}
+			for ; decimals < 1; decimals++ {
+				tenths *= 10
+			}
+			return tenths * 100, decimals == 1
+		}
+		tenths = tenths*10 + d
+		if dot {
+			decimals++
+		}
+	}
+	return 0, false
+}
+
+// powerRefs are the power font's shapes (10 is "K"), from power readings
+// between 474.6K and 2085.6K on 3 and 4 Nov.
+var powerRefs = []digitRef{
+	{0, "...###....####...##########...#####...####.....###.....###.....###....#####...##.##...##..#####."},
+	{1, "..#####.################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
+	{1, "..###...################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
+	{1, "....###.################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
+	{1, "....#...################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
+	{2, "....##....################.....###.....#......##.....###....###....####...###....###....########"},
+	{3, "...##.....#####..#######.#....##......##....###....####.....####......##.......###....##.#######"},
+	{4, ".....#......###....####...#####...##.##...##.##..##..##..##..##.################.....###.....##."},
+	{4, ".....#......###....####...#####...##.##...#..##..##..##..##..##.################.....###......#."},
+	{4, ".....#......###....####...##.##...##.##...#..##..##..##..##..##.################.....##......##."},
+	{4, ".....#......###....####....#.##...##.##...#..##..##..##..##..##.################.....###.....##."},
+	{5, "..######.#######.#######.##......##.....#######..##..###......##.......#.......#......#########."},
+	{5, "..######.#######.#######.##......##......######..##..###......##.......#.......#......##########"},
+	{5, "...####...######.######..###.....###.....######..###.###......##......##......##......#########."},
+	{6, "....##.....###.....###....###.....###....######..##########...#####...#####...#####...##.######."},
+	{6, ".....#......##.....###....###.....###....######..##########...#####...#####...#####...##.######."},
+	{6, ".....#......##.....###....###.....###....######..##########...#####....####...##.##...##.#######"},
+	{6, ".....#......##.....###....###.....###....#####...##########...#####...#####...##.##...##.######."},
+	{6, ".....#......##.....###....###.....##.....######..##########..######...#####...#####...##.######."},
+	{7, "..######################......##.....###....###.....###....###.....###.....#......##......##...."},
+	{7, "..##############.#######......##.....###.....##.....##......##.....###.....##.....###.....##...."},
+	{8, "...##.....#####..#######.##...##.##...##.#######..######.###..#####....####....####...##.#######"},
+	{8, "...##.....####...######..##...##.##...##.######...#####..##..######...#####...#####...##.######."},
+	{8, "....##....#####..######..##...##.##...##..#####...#####..##..######...#####...##.##...##.######."},
+	{9, "...###....#####..##########...#####...#####...##.##..###..######...####......#......##.....##..."},
+	{10, "##...#####...#####..###.##.###..#####...####....####....#####...##.###..##..##..##...##.##....##"},
+	{10, ".#....####...#####...#####..###.######..#####...#####...#####...##..##..##...##.##...###.#....##"},
+	{10, ".#.....###....####...#####..###.##.###..#####...#####...######..##..##..##...##.##...###.#....##"},
+	{10, ".......###....####...#####..###.##.###..#####...#####...#####...##..##..##...##.##...#####....##"},
+	{10, ".......#.#....####...#####..###.##.###..#####...#####...#####...##..##..##...##.##...#####....##"},
 }
