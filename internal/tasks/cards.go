@@ -21,6 +21,10 @@ var (
 		{228, 562}, {438, 562}, {648, 562},
 	}
 	cardTileFromCorner = image.Pt(-73, 112)
+	// One-Click Raise Star Level: spends duplicate cards on star levels,
+	// each raising the album bonus. Badged while a level is affordable.
+	raiseStar      = image.Pt(360, 1046)
+	raiseStarBadge = image.Pt(458, 1027)
 )
 
 // cards activates every badged card on the Card page's album, then fills
@@ -72,6 +76,23 @@ func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
 	}
 	if activated > 0 {
 		b.Log.Info("cards activated", "count", activated)
+	}
+	for i := 0; i < 5; i++ {
+		_, frame, err := b.Look(ctx)
+		if err != nil {
+			return activated, err
+		}
+		if !badged(frame, raiseStarBadge) {
+			break
+		}
+		if err := b.Tap(ctx, raiseStar, "raise card star level"); err != nil {
+			return activated, err
+		}
+		activated++
+		b.Log.Info("card star level raised")
+		if err := closePopups(ctx, b, screens.CardPage); err != nil {
+			return activated, err
+		}
 	}
 	n, err := insertCards(ctx, b)
 	return activated + n, err

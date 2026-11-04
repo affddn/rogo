@@ -109,3 +109,31 @@ func TestDungeonAndGachaBadges(t *testing.T) {
 		t.Errorf("Limited Quest label scored %.2f", m.Score)
 	}
 }
+
+func TestBetterWeaponMarked(t *testing.T) {
+	before, after := capture(t, "star-weapon.png"), capture(t, "star-equip.png")
+	if !badged(before, weaponEquipBadge) || badged(after, weaponEquipBadge) {
+		t.Errorf("Equipment badge before %v after %v, want true false", badged(before, weaponEquipBadge), badged(after, weaponEquipBadge))
+	}
+	if tile, ok := badgedWeaponTile(before); !ok || tile != image.Pt(520, 950) {
+		t.Errorf("badged tile %v %v, want the Legendary at (520,950)", tile, ok)
+	}
+}
+
+func TestPetAdDrawBadge(t *testing.T) {
+	if !badged(capture(t, "pet-gacha-ad.png"), petAdBadge) {
+		t.Error("pet ad draw badge not seen")
+	}
+	if badged(capture(t, "star-pet.png"), petAdBadge) != badged(capture(t, "pet-gacha-ad.png"), petAdBadge) {
+		t.Error("same capture read differently")
+	}
+}
+
+func TestRaiseStarBadge(t *testing.T) {
+	if !badged(capture(t, "card-raise-star.png"), raiseStarBadge) {
+		t.Error("raise star badge not seen")
+	}
+	if badged(capture(t, "card-raise-done.png"), raiseStarBadge) {
+		t.Error("raise star badge seen after raising")
+	}
+}

@@ -1056,6 +1056,14 @@
     "note": "left rail: Free 4000 Pulls label"
   },
   {
+    "name": "raise_star_word",
+    "x": 270,
+    "y": 1022,
+    "w": 180,
+    "h": 50,
+    "note": "Card page: One-Click Raise Star Level button"
+  },
+  {
     "name": "realm_challenge_btn",
     "x": 538,
     "y": 864,

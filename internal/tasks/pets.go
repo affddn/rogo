@@ -20,6 +20,10 @@ var (
 	petFormationDot = image.Pt(282, 1100)
 	petGachaSkip    = image.Rect(458, 950, 478, 970)
 	petGachaSkipTap = image.Pt(468, 960)
+	// The ad button: a free 10-draw a day, ad-free with the Kafra Lifetime
+	// Card; badged while unused.
+	petAdButton = image.Pt(93, 1052)
+	petAdBadge  = image.Pt(127, 1019)
 )
 
 // Pets draws pet gacha with free tickets only (the multi-draw button must
@@ -36,6 +40,22 @@ func Pets(ctx context.Context, b *bot.Bot) (steps int, err error) {
 		}
 		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.PetGacha); err != nil {
 			return 0, err
+		}
+	}
+	if badged(frame, petAdBadge) {
+		if err := b.Tap(ctx, petAdButton, "free pet ad draw"); err != nil {
+			return steps, err
+		}
+		steps++
+		b.Log.Info("free pet ad draw taken")
+		if err := bot.Sleep(ctx, 3*time.Second); err != nil {
+			return steps, err
+		}
+		if err := closePopups(ctx, b, screens.PetGacha); err != nil {
+			return steps, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return steps, err
 		}
 	}
 	for draws := 0; draws < 5 && shapeSeen(frame, screens.TPetTicketIcon); draws++ {
