@@ -75,6 +75,7 @@ func TestDetect(t *testing.T) {
 		"mvp-1.png":                       InCombat,
 		"after-vp.png":                    Main,   // Ant Cave: dark map behind the icons
 		"income-cave.png":                 Income, // close X dimmed by the cave
+		"income-qi-ring.png":              Income, // guide ring on Quick Idle
 		"income-after-qi.png":             Income,
 		"qi-confirm-free.png":             QuickIdleConfirm,
 		"value-pack-2.png":                ValuePack,
@@ -217,6 +218,9 @@ func TestFeatureIconsOnDarkMap(t *testing.T) {
 func TestQuickIdleFreeSigns(t *testing.T) {
 	if !Visible(load(t, "income-cave.png"), TIncomeFreeLabel) {
 		t.Error("green Free: label not seen")
+	}
+	if !Visible(load(t, "income-qi-ring.png"), TIncomeFreeLabel) {
+		t.Error("Free: 1/2 (Monthly Card) not seen as free")
 	}
 	if !Visible(load(t, "qi-confirm-free.png"), TQuickIdleFree) {
 		t.Error("(Free this time) not seen on the confirm")

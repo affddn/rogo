@@ -50,11 +50,13 @@ func freeQuickIdle(frame image.Image) bool {
 	return screens.Visible(frame, screens.TIncomeTicketIcon) || screens.Visible(frame, screens.TIncomeFreeLabel)
 }
 
+// quickIdleButton is the dialog's Quick Idle button. A guide arrow's ring
+// often sits on it, so it is tapped by position; the confirm dialog that
+// follows decides whether it is free.
+var quickIdleButton = image.Pt(523, 1046)
+
 func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {
-	if err := b.TapTemplate(ctx, frame, screens.TIncomeQuickIdle); err != nil {
-		return err
-	}
-	_, frame, err := b.Wait(ctx, 10*time.Second, screens.QuickIdleConfirm)
+	_, frame, err := b.TapWait(ctx, screens.Income, quickIdleButton, "quick idle", 10*time.Second, screens.QuickIdleConfirm)
 	if err != nil {
 		return err
 	}
