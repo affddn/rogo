@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"image"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -11,7 +12,9 @@ import (
 // FollowGuide taps through the chain of guide arrows that starts on the main
 // screen (quest guidance, unlocked features), up to a bounded number of
 // steps, then returns to main. Every tap is still deny-list guarded.
-func FollowGuide(ctx context.Context, b *bot.Bot) (steps int, landed screens.ID, err error) {
+// FollowGuide taps through the guide arrows. skip, when set, vetoes an
+// arrow's target (a stage push the planner is holding back).
+func FollowGuide(ctx context.Context, b *bot.Bot, skip func(image.Point) bool) (steps int, landed screens.ID, err error) {
 	for steps < 10 {
 		id, frame, err := b.Look(ctx)
 		landed = id
@@ -30,6 +33,10 @@ func FollowGuide(ctx context.Context, b *bot.Bot) (steps int, landed screens.ID,
 			if a, ok = screens.FindGuideArrow(frame); !ok {
 				break
 			}
+		}
+		if skip != nil && skip(a.Target) {
+			b.Log.Info("guide arrow skipped", "x", a.Target.X, "y", a.Target.Y)
+			break
 		}
 		b.Log.Info("guide step", "screen", id, "x", a.Target.X, "y", a.Target.Y)
 		if err := b.Tap(ctx, a.Target, "guide arrow"); err != nil {

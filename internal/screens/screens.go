@@ -71,6 +71,7 @@ const (
 	GuildHunt        ID = "guild-hunt"
 	GuildJoin        ID = "guild-join"
 	DailySweep       ID = "daily-sweep"
+	Loading          ID = "loading"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -227,6 +228,8 @@ const (
 	TSkillStealthEnh     = "skill_lbl_stealthenh"
 	TSkillSupersonic     = "skill_lbl_supersonic"
 	TSkillKIR            = "skill_lbl_kir"
+	TLoadingText         = "loading_text"
+	TQuestClearStage     = "quest_clear_stage"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -261,6 +264,7 @@ type rule struct {
 // Modals first: whatever is on top wins.
 var rules = []rule{
 	{id: Reward, anchors: []string{TRewardCongrats}},
+	{id: Loading, anchors: []string{TLoadingText}},
 	// A paid offer that pops over main after progress (a new stage map).
 	{id: ValuePack, anchors: []string{TValuePackTitle, TValuePackClose}},
 	// Shown over whatever was up, power-save lock included, when the account

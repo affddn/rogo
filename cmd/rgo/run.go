@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"image"
 	"path/filepath"
 	"time"
 
@@ -67,7 +68,9 @@ func actions() []*runner.Action {
 		{Name: "guide", Priority: 87, Snooze: 20 * time.Minute,
 			Ready: func(s sig, _ *st, _ time.Time) bool { return s.HasArrow },
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				n, landed, err := tasks.FollowGuide(ctx, b)
+				n, landed, err := tasks.FollowGuide(ctx, b, func(p image.Point) bool {
+					return stageStuck(st) && p.In(stageButton)
+				})
 				st.Add("guide_steps", n)
 				// The guide often leads to a mode whose chore we already
 				// have (the current quest wants it); run it now instead of
@@ -93,7 +96,11 @@ func actions() []*runner.Action {
 		// Unfinished main quest: let the tracker take us to its objective
 		// and do it. Snoozed after each try; some objectives need time.
 		{Name: "quest-go", Priority: 84,
-			Ready: func(s sig, _ *st, _ time.Time) bool { return !s.QuestDone },
+			Ready: func(s sig, st *st, _ time.Time) bool {
+				// A stage quest's objective is the stage fight; hold it while
+				// the stage is stuck, like the stage action does.
+				return !s.QuestDone && !(s.StageQuest && stageStuck(st))
+			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
 				landed, err := tasks.QuestGo(ctx, b)
@@ -258,8 +265,7 @@ func actions() []*runner.Action {
 				if st.StageMisses > 0 && st.PowerLost > 0 && st.Power > 0 {
 					// Stuck on a stage (a chapter boss): a retry before real
 					// growth loses the same way, so wait for 5% more power.
-					stronger = float64(st.Power) >= 1.05*float64(st.PowerLost)
-					return since >= 3*time.Hour || (since >= wait && stronger)
+					return since >= 3*time.Hour || (since >= wait && !stageStuck(st))
 				}
 				return since >= 45*time.Minute || (since >= wait && stronger)
 			},
@@ -295,6 +301,16 @@ func actions() []*runner.Action {
 				return out{Progress: cleared}, nil
 			}},
 	}
+}
+
+// stageButton is the main screen's Stage Challenge button.
+var stageButton = image.Rect(600, 990, 720, 1110)
+
+// stageStuck reports a stage that keeps being lost at today's power: no
+// retry pays until power is 5% above the last defeat.
+func stageStuck(st *st) bool {
+	return st.StageMisses > 0 && st.PowerLost > 0 && st.Power > 0 &&
+		float64(st.Power) < 1.05*float64(st.PowerLost)
 }
 
 // dungeonRuns spends dungeon attempts until the game greys out Auto Match;

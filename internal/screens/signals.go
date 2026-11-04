@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/affddn/rogo/assets"
 	"image"
 	"image/color"
 
@@ -59,6 +60,9 @@ type Signals struct {
 	// System and SeasonPass report the main-screen icons that open those
 	// menus; a new character gets them only after a while.
 	System, SeasonPass bool
+	// StageQuest is set when the main quest is "Clear Main Stage ...":
+	// following it starts the stage fight.
+	StageQuest bool
 }
 
 // navLabel covers the bottom-nav labels of features that unlock with level.
@@ -148,6 +152,7 @@ func ReadMain(frame image.Image) Signals {
 		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {
 			return c.R > 225 && c.G > 225 && c.B > 210
 		}),
+		StageQuest: StageQuest(frame),
 		System:     Present(frame, TMainSystem),
 		SeasonPass: Present(frame, TMainSeasonPass),
 	}
@@ -170,4 +175,13 @@ func (s Signals) Unlocked(b Badge) bool { return !s.Locked[b] }
 // scroll moved anything.
 func Fingerprint(frame image.Image, r image.Rectangle) string {
 	return mask(frame, r, 12, func(c color.RGBA) bool { return int(c.R)+int(c.G)+int(c.B) > 420 })
+}
+
+// questRow is the main-quest tracker's text row.
+var questRow = image.Rect(90, 912, 320, 948)
+
+// StageQuest reports whether the main quest asks for a stage clear. The
+// tracker text is white over the map, so it is matched by shape.
+func StageQuest(frame image.Image) bool {
+	return assets.MustGet(TQuestClearStage).FindIn(frame, questRow).Score >= MinScore
 }

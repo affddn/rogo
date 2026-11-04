@@ -52,6 +52,7 @@ func TestDetect(t *testing.T) {
 		"version-old.png":                 VersionOld,
 		"awaken-3.png":                    Awakening,
 		"guild-town.png":                  GuildTown,
+		"loading.png":                     Loading,
 		"guild/donation.png":              GuildDonation,
 		"guild/shop.png":                  GuildShop,
 		"guild/bargain.png":               GuildBargain,
@@ -235,5 +236,16 @@ func TestQuickIdleFreeSigns(t *testing.T) {
 	}
 	if Visible(load(t, "income-after-qi.png"), TIncomeFreeLabel) {
 		t.Error("Free: label seen where a ticket shows instead")
+	}
+}
+
+func TestStageQuest(t *testing.T) {
+	if !StageQuest(load(t, "main-stagequest.png")) {
+		t.Error("Clear Main Stage quest not seen")
+	}
+	for _, f := range []string{"main3.png", "daily/main.png", "after-vp.png"} {
+		if StageQuest(load(t, f)) {
+			t.Errorf("%s: other quest read as a stage quest", f)
+		}
 	}
 }

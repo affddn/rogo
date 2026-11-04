@@ -303,6 +303,11 @@ func (b *Bot) ToMain(ctx context.Context) error {
 		case screens.Title, screens.Login, screens.AccountChooser:
 			// Signed out (after a kick) or back at the title: log in again.
 			return b.WaitBoot(ctx, 4*time.Minute)
+		case screens.Loading:
+			if err := sleep(ctx, 3*time.Second); err != nil {
+				return err
+			}
+			continue
 		case screens.InCombat:
 			// A fight already under way (a realm run, a stage battle) plays
 			// out by itself and ignores back; wait for it.
