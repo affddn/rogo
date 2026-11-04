@@ -51,18 +51,37 @@ type Runner struct {
 	// PauseFile, while it exists, holds the loop so someone can use the
 	// phone by hand without the bot fighting them.
 	PauseFile string
+	// KickHold is how long the bot stays signed out after the account signs
+	// in on another device, so it does not fight someone playing by hand.
+	KickHold time.Duration
+
+	resumed   time.Time // loop start or the last unpause
+	holdUntil time.Time
 }
 
 func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
 	sort.SliceStable(actions, func(i, j int) bool { return actions[i].Priority > actions[j].Priority })
-	return &Runner{B: b, State: st, Actions: actions, JobTimeout: 10 * time.Minute, RestartAfter: 3, Idle: 2 * time.Minute}
+	return &Runner{B: b, State: st, Actions: actions, JobTimeout: 10 * time.Minute, RestartAfter: 3, Idle: 2 * time.Minute, KickHold: 30 * time.Minute}
 }
 
 func (r *Runner) Run(ctx context.Context) error {
 	log, st := r.B.Log, r.State
 	streak := 0
+	r.resumed = time.Now()
+	wasPaused := false
 	for {
 		if r.paused() {
+			wasPaused = true
+			if err := bot.Sleep(ctx, 5*time.Second); err != nil {
+				return err
+			}
+			continue
+		}
+		if wasPaused {
+			// Resuming hands the account back to the bot, hold or not.
+			wasPaused, r.resumed, r.holdUntil = false, time.Now(), time.Time{}
+		}
+		if time.Now().Before(r.holdUntil) {
 			if err := bot.Sleep(ctx, 5*time.Second); err != nil {
 				return err
 			}
@@ -77,6 +96,9 @@ func (r *Runner) Run(ctx context.Context) error {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
+			if r.kicked(err) {
+				continue
+			}
 			log.Error("game not ready", "err", err)
 			if err := bot.Sleep(ctx, time.Minute); err != nil {
 				return err
@@ -86,6 +108,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		if err := r.B.ToMain(ctx); err != nil {
 			if ctx.Err() != nil {
 				return ctx.Err()
+			}
+			if r.kicked(err) {
+				continue
 			}
 			streak++
 			log.Error("cannot reach main", "err", err)
@@ -125,6 +150,9 @@ func (r *Runner) Run(ctx context.Context) error {
 			return ctx.Err()
 		}
 		st.LastRun[a.Name] = time.Now()
+		if r.kicked(err) {
+			continue
+		}
 		if err != nil {
 			streak++
 			st.Fails[a.Name]++
@@ -164,6 +192,25 @@ func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
 		}
 	}
 	return nil
+}
+
+// kicked reports whether err is the game signing out because the account
+// signed in on another device. Someone is playing by hand then, so the bot
+// holds for KickHold before logging back in. A kick found within minutes of
+// starting or resuming is from before the hand-over and is not held.
+func (r *Runner) kicked(err error) bool {
+	if !errors.Is(err, bot.ErrKicked) {
+		return false
+	}
+	r.State.Add("kicks", 1)
+	r.save()
+	if time.Since(r.resumed) < 5*time.Minute {
+		r.B.Log.Warn("account was signed in elsewhere before resume, logging back in")
+		return true
+	}
+	r.holdUntil = time.Now().Add(r.KickHold)
+	r.B.Log.Warn("account signed in on another device, holding", "until", r.holdUntil.Format(time.TimeOnly))
+	return true
 }
 
 func (r *Runner) paused() bool {
@@ -223,7 +270,7 @@ func (r *Runner) restart(ctx context.Context) {
 		r.B.Log.Error("relaunch failed", "err", err)
 		return
 	}
-	if err := r.B.WaitBoot(ctx, 4*time.Minute); err != nil {
+	if err := r.B.WaitBoot(ctx, 4*time.Minute); err != nil && !r.kicked(err) {
 		r.B.Log.Error("game did not reach main screen", "err", err)
 	}
 }

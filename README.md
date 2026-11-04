@@ -36,6 +36,12 @@ back key is the last resort. An action that changes nothing is snoozed so a badg
 daily flags persist in `data/state.json`; daily flags reset at 00:00 GMT+8.
 Three failed actions in a row, or a deny-listed tap, restart the game.
 
+Signed out, the bot logs back in with Google Login and picks the phone's first
+Google account. When the game signs out because the account signed in on
+another device, the bot leaves it signed out for 30 minutes so it does not kick
+whoever is playing; a kick it finds right after starting or resuming (or
+deleting `data/pause`) is treated as a hand-over and it logs straight back in.
+
 ## Supported phones
 
 rgo needs Android 13, arm64, and a 720x1280 screen at 320 dpi: every template
