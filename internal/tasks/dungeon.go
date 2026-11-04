@@ -8,6 +8,7 @@ import (
 
 	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/bot"
+	"github.com/affddn/rogo/internal/device"
 	"github.com/affddn/rogo/internal/screens"
 )
 
@@ -268,6 +269,11 @@ func awaitRun(ctx context.Context, b *bot.Bot) bool {
 	for time.Now().Before(deadline) {
 		id, f, err := b.Look(ctx)
 		if err != nil {
+			// A slow phone link must not end the wait: leaving now would
+			// back out of the party's run.
+			if errors.Is(err, device.ErrTransport) && ctx.Err() == nil {
+				continue
+			}
 			return false
 		}
 		switch {

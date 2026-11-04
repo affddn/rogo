@@ -904,6 +904,14 @@
     "note": "Mall bottom bar: Top Up tab (on every Mall page)"
   },
   {
+    "name": "monsters_remaining",
+    "x": 250,
+    "y": 180,
+    "w": 168,
+    "h": 22,
+    "note": "fight HUD: 'Monsters Remaining' (dungeon, guild hunt)"
+  },
+  {
     "name": "multisummon_4x",
     "x": 500,
     "y": 728,

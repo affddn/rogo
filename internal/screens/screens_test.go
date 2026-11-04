@@ -53,6 +53,7 @@ func TestDetect(t *testing.T) {
 		"awaken-3.png":                    Awakening,
 		"guild-town.png":                  GuildTown,
 		"loading.png":                     Loading,
+		"dungeon-fight.png":               InCombat, // no pause button in dungeons
 		"new-day.png":                     NewDay,
 		"guild/donation.png":              GuildDonation,
 		"guild/shop.png":                  GuildShop,
@@ -92,7 +93,7 @@ func TestDetect(t *testing.T) {
 		"stage-r1.png":                    InCombat,
 		"stage-r10.png":                   InCombat, // pause button 1.57x as bright
 		"baph-fight/05.png":               InCombat,
-		"baph-fight/02.png":               Unknown, // dimmed under the dodge hint
+		"baph-fight/02.png":               InCombat, // fight HUD; its pause button reads dim
 	}
 	for file, want := range cases {
 		// Subtests, so a capture missing on this machine skips only itself.

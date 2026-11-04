@@ -232,6 +232,7 @@ const (
 	TLoadingText         = "loading_text"
 	TQuestClearStage     = "quest_clear_stage"
 	TNewDayText          = "new_day_text"
+	TMonstersRemaining   = "monsters_remaining"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -421,6 +422,11 @@ func Present(frame image.Image, name string) bool {
 // template depending on the map; a dimmer one sits under a popup, which is
 // left Unknown so the usual popup handling still runs.
 func inCombat(frame image.Image) bool {
-	m := assets.MustGet(TCombatPause).Find(frame, Margin)
-	return m.Score >= MinScore && m.Bright >= 0.75
+	if m := assets.MustGet(TCombatPause).Find(frame, Margin); m.Score >= MinScore && m.Bright >= 0.75 {
+		return true
+	}
+	// Dungeon runs have no pause button; their HUD shows "Monsters
+	// Remaining" (white over the map, so by shape).
+	m := assets.MustGet(TMonstersRemaining).Find(frame, Margin)
+	return m.Score >= 0.8 && m.Bright >= 0.75
 }
