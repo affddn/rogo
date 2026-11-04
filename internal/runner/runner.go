@@ -235,30 +235,48 @@ func backoff(fails int) time.Duration {
 func (r *Runner) ensureGame(ctx context.Context) error {
 	d := r.B.D
 	if !d.Online(ctx) {
-		r.B.Log.Warn("device offline, reconnecting")
-		if r.Reconnect != nil {
-			if err := r.Reconnect(ctx); err != nil {
-				return err
-			}
-		}
-		// A stale "offline" entry survives a new tunnel session; drop it so
-		// adb performs a fresh handshake.
-		d.Disconnect(ctx)
-		if err := d.Connect(ctx); err != nil {
+		if err := r.reconnect(ctx); err != nil {
 			return err
-		}
-		if !d.Online(ctx) {
-			return fmt.Errorf("device %s still offline", d.Serial)
 		}
 	}
 	if d.AppRunning(ctx, bot.Package) && d.AppFocused(ctx, bot.Package) {
 		return nil
+	}
+	// A tunnel that drops between the checks fails them too; reconnect and
+	// look again rather than relaunching a game that is still running.
+	if !d.Online(ctx) {
+		if err := r.reconnect(ctx); err != nil {
+			return err
+		}
+		if d.AppRunning(ctx, bot.Package) && d.AppFocused(ctx, bot.Package) {
+			return nil
+		}
 	}
 	r.B.Log.Warn("game not in front, launching")
 	if err := d.Launch(ctx, bot.Package); err != nil {
 		return err
 	}
 	return r.B.WaitBoot(ctx, 4*time.Minute)
+}
+
+func (r *Runner) reconnect(ctx context.Context) error {
+	d := r.B.D
+	r.B.Log.Warn("device offline, reconnecting")
+	if r.Reconnect != nil {
+		if err := r.Reconnect(ctx); err != nil {
+			return err
+		}
+	}
+	// A stale "offline" entry survives a new tunnel session; drop it so
+	// adb performs a fresh handshake.
+	d.Disconnect(ctx)
+	if err := d.Connect(ctx); err != nil {
+		return err
+	}
+	if !d.Online(ctx) {
+		return fmt.Errorf("device %s still offline", d.Serial)
+	}
+	return nil
 }
 
 func (r *Runner) restart(ctx context.Context) {
