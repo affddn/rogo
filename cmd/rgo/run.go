@@ -144,6 +144,20 @@ func actions() []*runner.Action {
 				st.Add("cultivate_steps", c)
 				return out{Progress: n+c > 0, Growth: c > 0}, err
 			}},
+		// Diamonds above the reserve go to weapon draws, then the new
+		// weapons get cultivated.
+		{Name: "diamond-draws", Priority: 69,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("diamond-draws", now) >= 3*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				spent, err := tasks.DiamondDraws(ctx, b, diamondReserve)
+				st.Add("diamonds_spent", spent)
+				if err != nil || spent == 0 {
+					return out{Progress: spent > 0}, err
+				}
+				c, err := tasks.WeaponCultivate(ctx, b)
+				st.Add("cultivate_steps", c)
+				return out{Progress: true, Growth: c > 0}, err
+			}},
 		{Name: "pets", Priority: 68, Snooze: time.Hour, Ready: badge(screens.BadgePet),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.Pets(ctx, b)
@@ -352,6 +366,16 @@ func cmdRun(ctx context.Context, d *device.Device, args []string) error {
 
 func cmdStage(ctx context.Context, d *device.Device, _ []string) error {
 	_, err := tasks.Stage(ctx, newBot(d))
+	return err
+}
+
+// diamondReserve is kept back from diamond spending for weekly Mall deals
+// (100 weapon coins for 200 diamonds once unlocked) and events.
+const diamondReserve = 1000
+
+func cmdDiamonds(ctx context.Context, d *device.Device, _ []string) error {
+	spent, err := tasks.DiamondDraws(ctx, newBot(d), diamondReserve)
+	fmt.Println("spent", spent)
 	return err
 }
 

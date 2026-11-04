@@ -21,6 +21,7 @@ digits) and runs the highest-priority action that is ready:
 | 80 | attributes | Character badge **and** a level-up since last run: stat points by the damage model in `internal/tasks/build.go`, skill points by Recommended |
 | 75 | equipment | Equipment badge (cards, dismantle when bag > 20, enhance resonance, round-robin enhance) |
 | 70 | weapon | Weapon badge (gacha in max batches, then cultivation) |
+| 69 | diamond-draws | every 3 h: diamonds above a 1,000 reserve go to weapon draws, then cultivation |
 | 68 | pets | Pet badge (free-ticket pet gacha, activate/upgrade, auto formation) |
 | 65 | realm | daily, or Game Mode badge (challenge once per tab, then sweep) |
 | 60 | income | daily free Quick Idle unused, or every 2 h |

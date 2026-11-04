@@ -29,23 +29,8 @@ func isTeal(c color.RGBA) bool { return c.G > 140 && c.R < 90 }
 // offers and claims the Draw Level achievement chests (100 tickets each).
 // It only confirms a draw whose cost icon is the ticket, never diamonds.
 func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
-	// Weapon opens on whichever tab is badged.
-	frame, err := open(ctx, b, screens.TNavWeapon, screens.WeaponGacha, screens.WeaponCultivate)
-	if err != nil {
+	if _, err := openWeaponGacha(ctx, b); err != nil {
 		return 0, err
-	}
-	if screens.Detect(frame) != screens.WeaponGacha {
-		if err := b.Tap(ctx, weaponGachaTab, "weapon gacha tab"); err != nil {
-			return 0, err
-		}
-		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.WeaponGacha); err != nil {
-			return 0, err
-		}
-	}
-	if vision.Ratio(frame, gachaSkip, isTeal) < 0.2 {
-		if err := b.Tap(ctx, gachaSkipTap, "skip animation"); err != nil {
-			return 0, err
-		}
 	}
 
 	for batches < 10 {
@@ -88,6 +73,26 @@ func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
 	}
 	b.Log.Info("weapon gacha done", "batches", batches)
 	return batches, b.ToMain(ctx)
+}
+
+// openWeaponGacha opens the Weapon Gacha tab with Skip Animation ticked.
+func openWeaponGacha(ctx context.Context, b *bot.Bot) (image.Image, error) {
+	// Weapon opens on whichever tab is badged.
+	frame, err := open(ctx, b, screens.TNavWeapon, screens.WeaponGacha, screens.WeaponCultivate)
+	if err != nil {
+		return nil, err
+	}
+	if id := screens.Detect(frame); id != screens.WeaponGacha {
+		if _, frame, err = b.TapWait(ctx, id, weaponGachaTab, "weapon gacha tab", 8*time.Second, screens.WeaponGacha); err != nil {
+			return nil, err
+		}
+	}
+	if vision.Ratio(frame, gachaSkip, isTeal) < 0.2 {
+		if err := b.Tap(ctx, gachaSkipTap, "skip animation"); err != nil {
+			return nil, err
+		}
+	}
+	return frame, nil
 }
 
 // closePopups taps away level-up and result popups until want shows again.
