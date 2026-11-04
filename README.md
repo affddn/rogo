@@ -117,6 +117,10 @@ Once per fresh container (data lives in the `sayadroid-data` volume):
 | `shot`, `tap`, `back`, `launch`, `stop`, `info` | device primitives |
 | `crop`, `match`, `pixel` | template tooling against saved screenshots |
 
+Only unknown screens are saved (to `captures/unknown`, for adding
+templates); they are pruned to the last 7 days and at most 500 files at
+start and each game day. Everything else is read from memory.
+
 `touch data/pause` holds the loop so you can use the phone by hand; delete it
 to resume. `-dry-run` logs taps instead of sending them.
 

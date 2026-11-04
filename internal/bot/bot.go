@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/affddn/rogo/assets"
@@ -452,4 +453,48 @@ func sleep(ctx context.Context, d time.Duration) error {
 	case <-t.C:
 		return nil
 	}
+}
+
+// PruneShots deletes saved screenshots older than maxAge, then the oldest
+// beyond maxFiles. Only the bot's own unknown-screen shots live in Shots;
+// they are kept for adding templates, not forever.
+func (b *Bot) PruneShots(maxAge time.Duration, maxFiles int) (removed int) {
+	entries, err := os.ReadDir(b.Shots)
+	if err != nil {
+		return 0
+	}
+	type shot struct {
+		path string
+		mod  time.Time
+	}
+	var keep []shot
+	cutoff := time.Now().Add(-maxAge)
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".png" {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		p := filepath.Join(b.Shots, e.Name())
+		if info.ModTime().Before(cutoff) {
+			if os.Remove(p) == nil {
+				removed++
+			}
+			continue
+		}
+		keep = append(keep, shot{p, info.ModTime()})
+	}
+	sort.Slice(keep, func(i, j int) bool { return keep[i].mod.Before(keep[j].mod) })
+	for len(keep) > maxFiles {
+		if os.Remove(keep[0].path) == nil {
+			removed++
+		}
+		keep = keep[1:]
+	}
+	if removed > 0 {
+		b.Log.Info("old screenshots pruned", "removed", removed, "kept", len(keep))
+	}
+	return removed
 }

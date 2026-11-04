@@ -77,6 +77,7 @@ func New(b *bot.Bot, st *state.State, actions ...*Action) *Runner {
 func (r *Runner) Run(ctx context.Context) error {
 	log, st := r.B.Log, r.State
 	streak := 0
+	r.B.PruneShots(keepShotsFor, keepShotsMax)
 	r.resumed = time.Now()
 	if !st.SavedAt.IsZero() {
 		st.PauseWaits(r.resumed.Sub(st.SavedAt)) // the bot was off
@@ -107,6 +108,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		now := time.Now()
 		if st.Rollover(now) {
 			log.Info("new game day", "day", st.Day)
+			r.B.PruneShots(keepShotsFor, keepShotsMax)
 			r.save()
 		}
 		if err := r.ensureGame(ctx); err != nil {
@@ -253,6 +255,12 @@ func (r *Runner) pick(sig screens.Signals, now time.Time) *Action {
 	}
 	return first
 }
+
+// Unknown-screen shots are kept a week, at most 500 (about 350 MB).
+const (
+	keepShotsFor = 7 * 24 * time.Hour
+	keepShotsMax = 500
+)
 
 // linkFailed backs off after a phone-link failure: 30 s, doubling to 5 min
 // while failures continue. A slow VMOS link recovers on its own, and

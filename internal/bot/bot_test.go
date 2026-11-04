@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -158,5 +159,36 @@ func TestTapRefusesCardRenewalPrice(t *testing.T) {
 	b.Shots, b.Settle, b.last = t.TempDir(), 0, frame
 	if err := b.Tap(context.Background(), image.Pt(497, 803), "monthly card price"); !errors.Is(err, ErrDenied) {
 		t.Fatalf("tap on RM 8.99: got %v, want ErrDenied", err)
+	}
+}
+
+func TestPruneShots(t *testing.T) {
+	dir := t.TempDir()
+	b := New(device.New("test"), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	b.Shots = dir
+	old := time.Now().Add(-10 * 24 * time.Hour)
+	for i := 0; i < 6; i++ {
+		p := filepath.Join(dir, fmt.Sprintf("%02d.png", i))
+		if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		mod := time.Now().Add(time.Duration(i) * time.Minute)
+		if i < 2 {
+			mod = old
+		}
+		os.Chtimes(p, mod, mod)
+	}
+	os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("keep"), 0o644)
+	// 2 too old, then the oldest of the remaining 4 beyond 3.
+	if n := b.PruneShots(7*24*time.Hour, 3); n != 3 {
+		t.Errorf("removed %d, want 3", n)
+	}
+	left, _ := os.ReadDir(dir)
+	var names []string
+	for _, e := range left {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, ",") != "03.png,04.png,05.png,notes.txt" {
+		t.Errorf("left %v", names)
 	}
 }
