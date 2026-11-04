@@ -245,6 +245,12 @@ func actions() []*runner.Action {
 				wait := min(5*time.Minute<<min(st.StageMisses, 3), 45*time.Minute)
 				since := st.Since("stage", now)
 				stronger := st.Growth > 0 || screens.LevelChanged(s.Power, st.PowerAtDefeat)
+				if st.StageMisses > 0 && st.PowerLost > 0 && st.Power > 0 {
+					// Stuck on a stage (a chapter boss): a retry before real
+					// growth loses the same way, so wait for 5% more power.
+					stronger = float64(st.Power) >= 1.05*float64(st.PowerLost)
+					return since >= 3*time.Hour || (since >= wait && stronger)
+				}
 				return since >= 45*time.Minute || (since >= wait && stronger)
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -257,7 +263,7 @@ func actions() []*runner.Action {
 				lost, err := tasks.Stage(ctx, b)
 				if lost {
 					st.Growth, st.LastDefeat = 0, time.Now()
-					st.PowerAtDefeat = st.PowerNow
+					st.PowerAtDefeat, st.PowerLost = st.PowerNow, st.Power
 				}
 				st.Add("stage_runs", 1)
 				if err != nil {

@@ -239,6 +239,7 @@ func (r *Runner) logPower(frame image.Image) {
 	if !ok || p == r.lastPower {
 		return
 	}
+	r.State.Power = p
 	r.lastPower = p
 	r.B.Log.Info("power", "power", p)
 	if r.ProgressFile == "" {

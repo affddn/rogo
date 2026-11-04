@@ -37,6 +37,10 @@ type State struct {
 	PowerAtDefeat string `json:"power_at_defeat"`
 	// PowerNow is the latest power fingerprint read on main.
 	PowerNow string `json:"power_now"`
+	// Power is the latest combat power read on main, and PowerLost what it
+	// was at the last stage defeat.
+	Power     int `json:"power"`
+	PowerLost int `json:"power_at_defeat_value"`
 
 	// Growth counts upgrades since the last stage defeat; a stage retry
 	// before any growth would lose the same way.
