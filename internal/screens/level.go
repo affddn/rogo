@@ -35,7 +35,8 @@ type digitRef struct {
 
 // panelFont is the dark or coloured digits on the beige panels: Enhance
 // levels (orange current, green next) and Attribute page counts.
-var panelFont = font{ink: levelInk, refs: digitRefs, maxDigits: 3}
+// Digits can touch ("70"), so runs wider than one digit are split.
+var panelFont = font{ink: levelInk, refs: digitRefs, maxDigitW: 14, maxDigits: 3}
 
 // readNumber reads panel digits in r.
 func readNumber(frame image.Image, r image.Rectangle) (int, bool) {
@@ -198,6 +199,7 @@ var digitRefs = []digitRef{
 	{1, "..#####.#######.########....####....####....####....####....####....####....####....###.....###."},
 	{1, "..#####.#######...######....####....####....####....####....####....####....####....####....###."},
 	{1, "..####..#######.########....####....####....####....####....####....####....####....####....####"},
+	{1, "##.######################.....###.....##......##......##......##......##......##......##......##"}, // half of a touching "71"
 	{2, "..#####..##################..######..###....####...####....####...####...####...################"},
 	{2, "..#####..##################..#####...###....####....###....###....###....###....######..########"},
 	{2, "..####...##################...####....##....####...####....###....###....###....######..########"},
