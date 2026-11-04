@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"image"
+	"image/color"
 	"time"
 
 	"github.com/affddn/rogo/assets"
@@ -14,10 +15,10 @@ import (
 var (
 	questButton = image.Pt(670, 270) // right rail Quest
 	questTabs   = []image.Point{{206, 246}, {508, 246}}
-	// Activity chests sit at fixed spots along the progress bar; a badge
-	// above one means it can be opened.
-	questChests = []image.Point{{192, 345}, {286, 345}, {380, 345}, {474, 345}, {568, 345}}
-	chestBadge  = image.Pt(28, -26) // from chest centre
+	// Activity chests (20..100 points) sit at fixed spots along the progress
+	// bar; one that can be opened glows and carries a badge.
+	questChests = []image.Point{{195, 345}, {303, 345}, {411, 345}, {519, 345}, {628, 345}}
+	chestBadge  = image.Pt(27, -26) // from chest centre
 	questList   = image.Rect(500, 430, 680, 1150)
 )
 
@@ -27,10 +28,7 @@ func QuestPanel(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return 0, err
 	}
-	if err := b.Tap(ctx, questButton, "quest panel"); err != nil {
-		return 0, err
-	}
-	if _, _, err := b.Wait(ctx, 8*time.Second, screens.QuestPanel); err != nil {
+	if _, _, err := b.TapWait(ctx, screens.Main, questButton, "quest panel", 8*time.Second, screens.QuestPanel); err != nil {
 		return 0, err
 	}
 	claim := assets.MustGet(screens.TQuestClaim)
@@ -67,12 +65,19 @@ func QuestPanel(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 	return claimed, b.ToMain(ctx)
 }
 
+// readyChest returns the first activity chest that can be opened: badged or
+// glowing (either shows alone now and then). Glowing chests have a fifth of
+// their surroundings near-white; locked and opened ones under 1%.
 func readyChest(frame image.Image) (image.Point, bool) {
 	for _, c := range questChests {
 		p := c.Add(chestBadge)
-		if vision.Ratio(frame, image.Rect(p.X-7, p.Y-7, p.X+7, p.Y+7), vision.IsBadgeRed) > 0.25 {
+		badged := vision.Ratio(frame, image.Rect(p.X-7, p.Y-7, p.X+7, p.Y+7), vision.IsBadgeRed) > 0.25
+		glow := vision.Ratio(frame, image.Rect(c.X-50, c.Y-53, c.X+50, c.Y+27), chestGlow) > 0.08
+		if badged || glow {
 			return c, true
 		}
 	}
 	return image.Point{}, false
 }
+
+func chestGlow(c color.RGBA) bool { return c.R >= 250 && c.G >= 238 && c.B >= 150 }

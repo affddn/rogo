@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"image"
 	"image/png"
 	"os"
 	"testing"
@@ -50,6 +51,29 @@ func TestDungeonZeroAttempts(t *testing.T) {
 		f.Close()
 		if got := screens.Visible(img, screens.TDungeonZeroLeft); got != want {
 			t.Errorf("%s: zero attempts = %v, want %v", file, got, want)
+		}
+	}
+}
+
+func TestReadyChest(t *testing.T) {
+	cases := map[string]struct {
+		ok bool
+		at image.Point
+	}{
+		"qpanel-daily-chest.png": {true, image.Pt(519, 345)}, // 80
+		"qpanel-weekly.png":      {true, image.Pt(303, 345)}, // 40 (60 too)
+		"questpanel.png":         {false, image.Point{}},
+		"questweekly.png":        {false, image.Point{}},
+	}
+	for file, want := range cases {
+		f, err := os.Open("../../captures/" + file)
+		if err != nil {
+			t.Skipf("reference capture %s not present", file)
+		}
+		img, _ := png.Decode(f)
+		f.Close()
+		if at, ok := readyChest(img); ok != want.ok || at != want.at {
+			t.Errorf("%s: readyChest = %v %v, want %v %v", file, at, ok, want.at, want.ok)
 		}
 	}
 }
