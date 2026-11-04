@@ -71,6 +71,9 @@ const (
 	TIncomeTicketIcon    = "income_ticket_icon"
 	TQuickIdleTitle      = "quickidle_title"
 	TQuickIdleTicketCost = "quickidle_ticket_cost"
+	TQuickIdleFree       = "qi_free_text"
+	TIncomeFreeLabel     = "income_free_label"
+	TIncomeYieldBonus    = "income_yield_bonus"
 	TDialogOK            = "dlg_ok"
 	TDialogCancel        = "dlg_cancel"
 	TRewardCongrats      = "reward_congrats"
@@ -233,7 +236,9 @@ var rules = []rule{
 	// identify it (the weapon one matches GachaCount above it first).
 	{id: PetCount, anchors: []string{THintTitle, TGachaDrawButton}},
 	{id: AutoSummonHint, anchors: []string{THintTitle, TAutoSummonText}},
-	{id: Income, anchors: []string{TIncomeTitle, TIncomeClose}},
+	// The close X sits over the map and dims on dark ones; Yield Bonus is
+	// on the dialog's own panel.
+	{id: Income, anchors: []string{TIncomeTitle, TIncomeYieldBonus}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
 	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},
 	{id: CharSkill, anchors: []string{TSkillHeader, TNavBack}},

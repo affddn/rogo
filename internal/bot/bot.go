@@ -37,6 +37,10 @@ type Bot struct {
 	last image.Image // most recent frame, for the deny-list guard
 }
 
+// IncomeClose is the Adventure Income dialog's X. It sits over the map and
+// dims on dark ones, so it is tapped by position.
+var IncomeClose = image.Pt(663, 217)
+
 // ErrDenied is returned for a tap that would land on a deny-listed button.
 var ErrDenied = errors.New("tap refused: deny-listed button")
 
@@ -165,7 +169,7 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	case screens.QuickIdleConfirm, screens.AutoSummonHint:
 		return true, b.TapTemplate(ctx, frame, screens.TDialogCancel)
 	case screens.Income:
-		return true, b.TapTemplate(ctx, frame, screens.TIncomeClose)
+		return true, b.Tap(ctx, IncomeClose, "close income")
 	case screens.IdleRewards:
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
 	case screens.Resonate:

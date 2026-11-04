@@ -55,7 +55,10 @@ func TestDetect(t *testing.T) {
 		"title-loggedout.png":             Title,
 		"realm-fight-2.png":               InCombat,
 		"value-pack.png":                  ValuePack,
-		"after-vp.png":                    Main, // Ant Cave: dark map behind the icons
+		"after-vp.png":                    Main,   // Ant Cave: dark map behind the icons
+		"income-cave.png":                 Income, // close X dimmed by the cave
+		"income-after-qi.png":             Income,
+		"qi-confirm-free.png":             QuickIdleConfirm,
 		"value-pack-2.png":                ValuePack,
 		"stage-r1.png":                    InCombat,
 		"stage-r10.png":                   InCombat, // pause button 1.57x as bright
@@ -190,5 +193,17 @@ func TestFeatureIconsOnDarkMap(t *testing.T) {
 	s := ReadMain(load(t, "after-vp.png")) // Ant Cave
 	if !s.System || !s.SeasonPass {
 		t.Errorf("system %v, season pass %v on the Ant Cave map; want both", s.System, s.SeasonPass)
+	}
+}
+
+func TestQuickIdleFreeSigns(t *testing.T) {
+	if !Visible(load(t, "income-cave.png"), TIncomeFreeLabel) {
+		t.Error("green Free: label not seen")
+	}
+	if !Visible(load(t, "qi-confirm-free.png"), TQuickIdleFree) {
+		t.Error("(Free this time) not seen on the confirm")
+	}
+	if Visible(load(t, "income-after-qi.png"), TIncomeFreeLabel) {
+		t.Error("Free: label seen where a ticket shows instead")
 	}
 }

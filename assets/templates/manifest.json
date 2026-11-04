@@ -472,6 +472,14 @@
     "note": "income dialog: close X"
   },
   {
+    "name": "income_free_label",
+    "x": 482,
+    "y": 984,
+    "w": 48,
+    "h": 22,
+    "note": "income dialog: green 'Free:' over Quick Idle (free use left)"
+  },
+  {
     "name": "income_quick_idle",
     "x": 418,
     "y": 1018,
@@ -814,6 +822,14 @@
     "w": 290,
     "h": 30,
     "note": "power saving lock: 'Swipe right to unlock.'"
+  },
+  {
+    "name": "qi_free_text",
+    "x": 236,
+    "y": 596,
+    "w": 240,
+    "h": 28,
+    "note": "Quick Idle confirm: '(Free this time)'"
   },
   {
     "name": "questp_claim",

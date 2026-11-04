@@ -14,9 +14,10 @@ import (
 var adventureIncome = image.Pt(61, 1072)
 
 // Income opens Adventure Income, which claims the idle stash on open, and
-// spends the daily free Quick Idle ticket. A Quick Idle that costs diamonds is
-// never confirmed. ticketLeft reports whether a free ticket was still there
-// after the run (false once today's ticket is spent).
+// spends free Quick Idles: the daily one ("Free: 1/1", "Free this time" on
+// the confirm) and Quick Idle tickets. A Quick Idle that costs diamonds is
+// never confirmed. ticketLeft reports whether a free one was still there
+// after the run.
 func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return false, err
@@ -28,7 +29,7 @@ func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 	}
 	b.Log.Info("income claimed")
 
-	if screens.Visible(frame, screens.TIncomeTicketIcon) {
+	for i := 0; i < 5 && freeQuickIdle(frame); i++ {
 		if err := quickIdle(ctx, b, frame); err != nil {
 			return false, err
 		}
@@ -36,13 +37,17 @@ func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 			return false, err
 		}
 	}
-	ticketLeft = screens.Visible(frame, screens.TIncomeTicketIcon)
+	ticketLeft = freeQuickIdle(frame)
 
-	if err := b.TapTemplate(ctx, frame, screens.TIncomeClose); err != nil {
+	if err := b.Tap(ctx, bot.IncomeClose, "close income"); err != nil {
 		return ticketLeft, err
 	}
 	_, _, err = b.Wait(ctx, 10*time.Second, screens.Main)
 	return ticketLeft, err
+}
+
+func freeQuickIdle(frame image.Image) bool {
+	return screens.Visible(frame, screens.TIncomeTicketIcon) || screens.Visible(frame, screens.TIncomeFreeLabel)
 }
 
 func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {
@@ -53,8 +58,8 @@ func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {
 	if err != nil {
 		return err
 	}
-	if !screens.Visible(frame, screens.TQuickIdleTicketCost) {
-		b.Log.Warn("quick idle asks for something other than a ticket, cancelling")
+	if !screens.Visible(frame, screens.TQuickIdleTicketCost) && !screens.Visible(frame, screens.TQuickIdleFree) {
+		b.Log.Warn("quick idle is not free, cancelling", "shot", b.Save(frame))
 		return b.TapTemplate(ctx, frame, screens.TDialogCancel)
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TDialogOK); err != nil {
