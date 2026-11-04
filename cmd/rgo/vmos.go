@@ -129,6 +129,32 @@ func (v *vmosTunnel) Start(ctx context.Context) error {
 	return nil
 }
 
+// cmdTunnelRotate closes the phone's adb tunnel session so the next connect
+// gets a fresh one, which can land on a less busy VMOS gateway. A running
+// bot reconnects to it on its own.
+func cmdTunnelRotate(ctx context.Context, _ *device.Device, _ []string) error {
+	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	v, ok := newVMOSTunnel(log)
+	if !ok || v.client == nil {
+		return fmt.Errorf("rotating needs VMOS API keys in .env")
+	}
+	before, err := v.client.ADBInfo(ctx, v.pad, 7*24*time.Hour)
+	if err != nil {
+		return err
+	}
+	if err := v.client.CloseADB(ctx, v.pad); err != nil {
+		return err
+	}
+	after, err := v.client.ADBInfo(ctx, v.pad, 7*24*time.Hour)
+	if err != nil {
+		return err
+	}
+	fb, _ := vmos.ParseCommand(before.Command)
+	fa, _ := vmos.ParseCommand(after.Command)
+	fmt.Printf("gateway %s:%d -> %s:%d, expires %s\n", fb.Host, fb.Port, fa.Host, fa.Port, after.ExpireTime)
+	return nil
+}
+
 // cmdTunnel serves the adb tunnel on localhost:15555 until interrupted.
 func cmdTunnel(ctx context.Context, _ *device.Device, _ []string) error {
 	log := slog.New(slog.NewTextHandler(os.Stderr, nil))

@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
+	"github.com/affddn/rogo/internal/device"
 	"github.com/affddn/rogo/internal/screens"
 	"github.com/affddn/rogo/internal/state"
 )
@@ -101,5 +103,15 @@ func TestWaitsSurviveARestartButNotDowntime(t *testing.T) {
 	r = New(nil, st3, actions()...)
 	if a := r.pick(screens.Signals{}, t0.Add(10*time.Hour+30*time.Minute)); a.Name != "guide" {
 		t.Fatalf("after downtime picked %s, want guide (stage waited 30 min of running time)", a.Name)
+	}
+}
+
+func TestTransportErrorsAreMarked(t *testing.T) {
+	err := fmt.Errorf("equipment: %w", fmt.Errorf("%w: adb exec-out screencap -p: signal: killed", device.ErrTransport))
+	if !errors.Is(err, device.ErrTransport) {
+		t.Fatal("wrapped transport error not recognised")
+	}
+	if errors.Is(fmt.Errorf("could not reach main screen"), device.ErrTransport) {
+		t.Fatal("a game error read as transport")
 	}
 }

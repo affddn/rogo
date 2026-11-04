@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
+	"github.com/affddn/rogo/internal/device"
 	"github.com/affddn/rogo/internal/screens"
 	"github.com/affddn/rogo/internal/state"
 )
@@ -128,6 +129,10 @@ func (r *Runner) Run(ctx context.Context) error {
 			if r.kicked(err) {
 				continue
 			}
+			if errors.Is(err, device.ErrTransport) {
+				log.Warn("phone link failed on the way to main", "err", err)
+				continue
+			}
 			streak++
 			log.Error("cannot reach main", "err", err)
 			if streak >= r.RestartAfter {
@@ -169,6 +174,13 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 		st.LastRun[a.Name] = time.Now()
 		if r.kicked(err) {
+			continue
+		}
+		if errors.Is(err, device.ErrTransport) {
+			// The link to the phone failed, not the game: restarting the
+			// game cannot help, so reconnect and let the action come round.
+			log.Warn("action cut short by the phone link", "action", a.Name, "err", err)
+			r.save()
 			continue
 		}
 		if err != nil {

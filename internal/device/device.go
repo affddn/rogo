@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"image"
 	"image/draw"
@@ -38,6 +39,10 @@ func New(serial string) *Device {
 	return &Device{Serial: serial, ADB: "adb", Timeout: 45 * time.Second, Log: func(string, ...any) {}}
 }
 
+// ErrTransport marks a failure of the link to the phone (an adb command that
+// failed or timed out, a screenshot cut short) rather than of the game.
+var ErrTransport = errors.New("phone link")
+
 func (d *Device) run(ctx context.Context, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, d.Timeout)
 	defer cancel()
@@ -46,7 +51,7 @@ func (d *Device) run(ctx context.Context, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, d.ADB, full...)
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("adb %s: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(stderr.String()))
+		return nil, fmt.Errorf("%w: adb %s: %w: %s", ErrTransport, strings.Join(args, " "), err, strings.TrimSpace(stderr.String()))
 	}
 	return stdout.Bytes(), nil
 }
@@ -95,7 +100,7 @@ func (d *Device) Screenshot(ctx context.Context) (*image.RGBA, error) {
 	}
 	img, err := png.Decode(bytes.NewReader(out))
 	if err != nil {
-		return nil, fmt.Errorf("decode screenshot: %w", err)
+		return nil, fmt.Errorf("%w: decode screenshot: %w", ErrTransport, err)
 	}
 	return toRGBA(img), nil
 }
@@ -118,11 +123,11 @@ func (d *Device) Rows(ctx context.Context, width, y0, y1 int) (*image.RGBA, erro
 	}
 	zr, err := gzip.NewReader(bytes.NewReader(out))
 	if err != nil {
-		return nil, fmt.Errorf("rows: %w", err)
+		return nil, fmt.Errorf("%w: rows: %w", ErrTransport, err)
 	}
 	pix, err := io.ReadAll(zr)
 	if err != nil {
-		return nil, fmt.Errorf("rows: %w", err)
+		return nil, fmt.Errorf("%w: rows: %w", ErrTransport, err)
 	}
 	if want := (y1 - y0) * width * 4; len(pix) != want {
 		return nil, fmt.Errorf("rows: got %d bytes, want %d", len(pix), want)
