@@ -54,6 +54,8 @@ func TestDetect(t *testing.T) {
 		"title-loggedin.png":              Title,
 		"title-loggedout.png":             Title,
 		"realm-fight-2.png":               InCombat,
+		"value-pack.png":                  ValuePack,
+		"value-pack-2.png":                ValuePack,
 		"stage-r1.png":                    InCombat,
 		"stage-r10.png":                   InCombat, // pause button 1.57x as bright
 		"baph-fight/05.png":               InCombat,

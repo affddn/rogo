@@ -53,6 +53,7 @@ const (
 	Login            ID = "login"
 	AccountChooser   ID = "account-chooser"
 	InCombat         ID = "in-combat"
+	ValuePack        ID = "value-pack"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -165,6 +166,8 @@ const (
 	TLoginGoogle         = "login_google"
 	TAccountChooser      = "account_chooser"
 	TCombatPause         = "combat_pause"
+	TValuePackTitle      = "value_pack_title"
+	TValuePackClose      = "value_pack_close"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -175,6 +178,8 @@ var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete", "de
 // for paid buttons whose label changes (pass prices differ per tab).
 var DenyAreas = map[ID][]image.Rectangle{
 	SeasonPass: {image.Rect(410, 1060, 660, 1170)},
+	// The pack's price button ("RM 8.99"); the back key does not close it.
+	ValuePack: {image.Rect(240, 915, 480, 1000)},
 }
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
@@ -195,6 +200,8 @@ type rule struct {
 // Modals first: whatever is on top wins.
 var rules = []rule{
 	{id: Reward, anchors: []string{TRewardCongrats}},
+	// A paid offer that pops over main after progress (a new stage map).
+	{id: ValuePack, anchors: []string{TValuePackTitle, TValuePackClose}},
 	// Shown over whatever was up, power-save lock included, when the account
 	// signs in on another device.
 	{id: Kicked, anchors: []string{TKickedText, TKickedConfirm}},

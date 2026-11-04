@@ -164,6 +164,9 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TIdleClaim)
 	case screens.Resonate:
 		return true, b.TapTemplate(ctx, frame, screens.TResonateClose)
+	case screens.ValuePack:
+		b.Log.Info("closing paid Value Pack offer")
+		return true, b.TapTemplate(ctx, frame, screens.TValuePackClose)
 	case screens.SeasonPass:
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
 	case screens.PowerSave:

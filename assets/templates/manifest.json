@@ -1014,5 +1014,21 @@
     "w": 100,
     "h": 40,
     "note": "tutorial: Skip \u003e\u003e button (top right)"
+  },
+  {
+    "name": "value_pack_close",
+    "x": 624,
+    "y": 186,
+    "w": 32,
+    "h": 32,
+    "note": "Value Pack popup close X"
+  },
+  {
+    "name": "value_pack_title",
+    "x": 300,
+    "y": 245,
+    "w": 316,
+    "h": 56,
+    "note": "paid Value Pack popup title"
   }
 ]

@@ -118,3 +118,26 @@ func TestTapWaitTapsAgainOnlyWhileStillOnFrom(t *testing.T) {
 		t.Fatalf("taps sent:\n%s\nwant one", got)
 	}
 }
+
+func TestTapRefusesValuePackPrice(t *testing.T) {
+	f, err := os.Open("../../captures/value-pack.png")
+	if err != nil {
+		t.Skip("reference capture value-pack.png not present")
+	}
+	defer f.Close()
+	frame, err := png.Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := device.New("test")
+	d.DryRun = true
+	b := New(d, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	b.Shots, b.Settle, b.last = t.TempDir(), 0, frame
+
+	if err := b.Tap(context.Background(), image.Pt(360, 958), "price"); !errors.Is(err, ErrDenied) {
+		t.Fatalf("tap on RM 8.99: got %v, want ErrDenied", err)
+	}
+	if err := b.Tap(context.Background(), image.Pt(640, 202), "close"); err != nil {
+		t.Fatalf("tap on close refused: %v", err)
+	}
+}
