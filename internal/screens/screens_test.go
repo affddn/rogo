@@ -55,9 +55,12 @@ func TestDetect(t *testing.T) {
 		"title-loggedout.png":             Title,
 	}
 	for file, want := range cases {
-		if got := Detect(load(t, file)); got != want {
-			t.Errorf("%s: detected %s, want %s", file, got, want)
-		}
+		// Subtests, so a capture missing on this machine skips only itself.
+		t.Run(file, func(t *testing.T) {
+			if got := Detect(load(t, file)); got != want {
+				t.Errorf("detected %s, want %s", got, want)
+			}
+		})
 	}
 }
 
