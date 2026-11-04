@@ -49,6 +49,9 @@ const (
 	WeaponGacha      ID = "weapon-gacha"
 	GachaCount       ID = "gacha-count"
 	GuestBind        ID = "guest-bind"
+	Kicked           ID = "kicked"
+	Login            ID = "login"
+	AccountChooser   ID = "account-chooser"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -154,6 +157,11 @@ const (
 	TGachaCostTicket     = "gacha_cost_ticket"
 	TGuestBindText       = "guestbind_text"
 	TGuestBindCancel     = "guestbind_cancel"
+	TKickedText          = "kicked_text"
+	TKickedConfirm       = "kicked_confirm"
+	TLoginTitle          = "login_title"
+	TLoginGoogle         = "login_google"
+	TAccountChooser      = "account_chooser"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
@@ -184,9 +192,16 @@ type rule struct {
 // Modals first: whatever is on top wins.
 var rules = []rule{
 	{id: Reward, anchors: []string{TRewardCongrats}},
+	// Shown over whatever was up, power-save lock included, when the account
+	// signs in on another device.
+	{id: Kicked, anchors: []string{TKickedText, TKickedConfirm}},
 	{id: PowerSave, anchors: []string{TPowerSaveSwipe}},
 	// Guest logins get a bind-your-account nag over the title screen.
 	{id: GuestBind, anchors: []string{TGuestBindText, TGuestBindCancel}},
+	// Android's Google account picker, opened by Google Login.
+	{id: AccountChooser, anchors: []string{TAccountChooser}},
+	// The Login dialog leaves the title screen undimmed, so it goes first.
+	{id: Login, anchors: []string{TLoginTitle, TLoginGoogle}},
 	{id: Title, anchors: []string{TTitleAgreeText}},
 	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},

@@ -48,6 +48,11 @@ func TestDetect(t *testing.T) {
 		"sayadroid/guest-bind.png":        GuestBind,
 		"sayadroid/main-new2.png":         Main, // new character: no quest/system icons
 		"sayadroid/main-new3.png":         Main,
+		"kicked.png":                      Kicked, // over the power-save lock
+		"login-dialog.png":                Login,
+		"account-chooser.png":             AccountChooser,
+		"title-loggedin.png":              Title,
+		"title-loggedout.png":             Title,
 	}
 	for file, want := range cases {
 		if got := Detect(load(t, file)); got != want {

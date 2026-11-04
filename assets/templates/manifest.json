@@ -1,5 +1,13 @@
 [
   {
+    "name": "account_chooser",
+    "x": 150,
+    "y": 420,
+    "w": 420,
+    "h": 54,
+    "note": "Android Google account chooser title (Choose an account)"
+  },
+  {
     "name": "attr_confirm",
     "x": 634,
     "y": 1088,
@@ -542,6 +550,38 @@
     "w": 180,
     "h": 50,
     "note": "job change page header"
+  },
+  {
+    "name": "kicked_confirm",
+    "x": 270,
+    "y": 810,
+    "w": 180,
+    "h": 44,
+    "note": "kicked Hint Confirm button"
+  },
+  {
+    "name": "kicked_text",
+    "x": 100,
+    "y": 592,
+    "w": 515,
+    "h": 60,
+    "note": "Hint: Account logged in on another device"
+  },
+  {
+    "name": "login_google",
+    "x": 180,
+    "y": 598,
+    "w": 300,
+    "h": 46,
+    "note": "Login dialog Google Login button (Google logo + label)"
+  },
+  {
+    "name": "login_title",
+    "x": 300,
+    "y": 495,
+    "w": 120,
+    "h": 44,
+    "note": "Login dialog title"
   },
   {
     "name": "mail_claim_all",
