@@ -56,6 +56,7 @@ func TestDetect(t *testing.T) {
 		"loading.png":                     Loading,
 		"refine/page.png":                 Refine,
 		"dungeon/party-invite.png":        PartyInvite,
+		"arena/page.png":                  RuneArena,
 		"dungeon-fight.png":               InCombat, // no pause button in dungeons
 		"new-day.png":                     NewDay,
 		"guild/donation.png":              GuildDonation,

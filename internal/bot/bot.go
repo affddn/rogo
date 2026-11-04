@@ -223,7 +223,7 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		// would spend anyway.
 		return true, b.TapTemplate(ctx, frame, screens.TDungeonAccept)
 	case screens.Dungeon, screens.Baphomet, screens.MVP, screens.GrowthGift, screens.Mall,
-		screens.GuildTown, screens.GuildShop, screens.GuildBargain, screens.GuildHunt:
+		screens.GuildTown, screens.GuildShop, screens.GuildBargain, screens.GuildHunt, screens.RuneArena:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
 	case screens.DailySweep:

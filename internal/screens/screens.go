@@ -75,6 +75,7 @@ const (
 	NewDay           ID = "new-day"
 	Refine           ID = "refine"
 	PartyInvite      ID = "party-invite"
+	RuneArena        ID = "rune-arena"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -239,6 +240,7 @@ const (
 	TRefineSure          = "refine_sure"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
+	TRuneArenaHeader     = "rune_arena_header"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -339,6 +341,7 @@ var rules = []rule{
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},
 	{id: PartyInvite, anchors: []string{TPartyInviteTitle}},
+	{id: RuneArena, anchors: []string{TRuneArenaHeader}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},
 	{id: CardPage, anchors: []string{TCardHeader, TNavBack}},

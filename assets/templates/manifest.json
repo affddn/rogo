@@ -1296,6 +1296,14 @@
     "note": "reward popup: 'Congratulations!' header"
   },
   {
+    "name": "rune_arena_header",
+    "x": 4,
+    "y": 18,
+    "w": 176,
+    "h": 42,
+    "note": "Rune Arena page header"
+  },
+  {
     "name": "skill_header",
     "x": 8,
     "y": 16,
