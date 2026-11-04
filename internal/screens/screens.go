@@ -62,6 +62,7 @@ const (
 	SummonLevelHint  ID = "summon-level-hint"
 	AchieveReward    ID = "achievement-reward"
 	LimitedQuest     ID = "limited-quest"
+	VersionOld       ID = "version-old"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -200,6 +201,7 @@ const (
 	TAchieveTitle        = "achieve_title"
 	TLimitedTitle        = "limited_title"
 	TRailLimited         = "rail_limited"
+	TVersionOldText      = "version_old_text"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -239,6 +241,9 @@ var rules = []rule{
 	// Shown over whatever was up, power-save lock included, when the account
 	// signs in on another device.
 	{id: Kicked, anchors: []string{TKickedText, TKickedConfirm}},
+	// A game update: Confirm restarts the game, which downloads it and
+	// returns to the title screen signed out.
+	{id: VersionOld, anchors: []string{TVersionOldText}},
 	{id: PowerSave, anchors: []string{TPowerSaveSwipe}},
 	// Guest logins get a bind-your-account nag over the title screen.
 	{id: GuestBind, anchors: []string{TGuestBindText, TGuestBindCancel}},

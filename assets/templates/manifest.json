@@ -1238,5 +1238,13 @@
     "w": 316,
     "h": 56,
     "note": "paid Value Pack popup title"
+  },
+  {
+    "name": "version_old_text",
+    "x": 80,
+    "y": 590,
+    "w": 560,
+    "h": 60,
+    "note": "Hint: current version too old, restart and update"
   }
 ]
