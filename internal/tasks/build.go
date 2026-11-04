@@ -45,7 +45,7 @@ const (
 	patkPerSpent = 16
 	patkPerSTR   = 132
 	baseCRIT     = 6.2
-	baseSkillCR  = 15.7
+	baseSkillCR  = 24.2 // with Katar Mastery 5/5: 33.2 shown at LUK 30
 	critPerLUK   = 0.3
 	critDamage   = 0.5 // extra over a normal hit
 
@@ -109,6 +109,16 @@ func spentOn(n int) int {
 }
 
 // damage is the model's damage per second, up to a constant factor.
+// Awakening tiers (Character > Awakening) switch on at stat thresholds.
+// The Assassin's are Shadow Assault on Skill CRIT and Killing Intent Rhythm
+// on STR (total, gear and base included: STR 23 at 20 allocated).
+const (
+	strFromGear   = 3
+	awakenSTR40   = 40 // +5% Skill DMG, +600 PATK
+	awakenSTR60   = 60 // Killing Intent Rhythm stacks 1% -> 1.5% (+5% at 10)
+	awakenSCRIT40 = 40 // +5% Skill DMG, +600 PATK
+)
+
 func damage(alloc [6]int) float64 {
 	spent := 0
 	for _, n := range alloc {
@@ -116,13 +126,27 @@ func damage(alloc [6]int) float64 {
 	}
 	patk := basePATK + patkPerSpent*float64(spent) + patkPerSTR*float64(alloc[statSTR])
 	crit := min((baseCRIT+critPerLUK*float64(alloc[statLUK]))/100, 1)
-	skillCrit := min((baseSkillCR+critPerLUK*float64(alloc[statLUK]))/100, 1)
+	skillCritPct := baseSkillCR + critPerLUK*float64(alloc[statLUK])
+	skillCrit := min(skillCritPct/100, 1)
+	skillDmg := 1.0
+	str := alloc[statSTR] + strFromGear
+	if str >= awakenSTR40 {
+		patk += 600
+		skillDmg += 0.05
+	}
+	if str >= awakenSTR60 {
+		skillDmg *= 1.15 / 1.10
+	}
+	if skillCritPct >= awakenSCRIT40 {
+		patk += 600
+		skillDmg += 0.05
+	}
 	f := attacksPerSecond(alloc[statAGI])
 	cdr := (0.5 + 0.5*float64(alloc[statDEX])) / 200
 	perSecond := f * (1 + critDamage*crit)
 	for _, s := range assassinSkills {
 		cast := s.hit*(1+critDamage*skillCrit) + skillCrit*s.critHit*(1+critDamage)
-		perSecond += skillTargets * cast / 100 / castPeriod(s.cooldown, f, cdr)
+		perSecond += skillDmg * skillTargets * cast / 100 / castPeriod(s.cooldown, f, cdr)
 	}
 	return patk * perSecond
 }
@@ -131,6 +155,62 @@ func damage(alloc [6]int) float64 {
 // attribute point among those the points can still pay for. Damage moves in
 // steps (attack timing), so each stat is judged over its next few points.
 func nextStat(alloc [6]int, points int) (int, bool) {
+	if s, ok := thresholdStat(alloc); ok && pointCost(alloc[s]) <= points {
+		return s, true
+	}
+	return greedyStat(alloc, points)
+}
+
+// planHorizon is how many attribute points ahead an Awakening threshold is
+// planned for (about ten levels).
+const planHorizon = 120
+
+// thresholdStat returns the stat to pour points into when reaching an
+// Awakening threshold within planHorizon points beats spending the same
+// points greedily. Greedy steps cannot see a bonus 15 points away.
+func thresholdStat(alloc [6]int) (int, bool) {
+	greedy := damage(spendGreedy(alloc, planHorizon))
+	best, bestDmg := -1, greedy
+	for _, goal := range []struct {
+		stat   int
+		target func([6]int) bool
+	}{
+		{statSTR, func(a [6]int) bool { return a[statSTR]+strFromGear >= awakenSTR40 }},
+		{statSTR, func(a [6]int) bool { return a[statSTR]+strFromGear >= awakenSTR60 }},
+		{statLUK, func(a [6]int) bool { return baseSkillCR+critPerLUK*float64(a[statLUK]) >= awakenSCRIT40 }},
+	} {
+		if goal.target(alloc) {
+			continue
+		}
+		a, left := alloc, planHorizon
+		for !goal.target(a) && pointCost(a[goal.stat]) <= left {
+			left -= pointCost(a[goal.stat])
+			a[goal.stat]++
+		}
+		if !goal.target(a) {
+			continue
+		}
+		if d := damage(spendGreedy(a, left)); d > bestDmg*1.005 {
+			best, bestDmg = goal.stat, d
+		}
+	}
+	return best, best >= 0
+}
+
+func spendGreedy(alloc [6]int, points int) [6]int {
+	for {
+		s, ok := greedyStat(alloc, points)
+		if !ok {
+			return alloc
+		}
+		points -= pointCost(alloc[s])
+		alloc[s]++
+	}
+}
+
+// greedyStat picks the stat whose next few points add the most damage per
+// attribute point.
+func greedyStat(alloc [6]int, points int) (int, bool) {
 	const lookahead = 3
 	now := damage(alloc)
 	best, bestValue := -1, 0.0

@@ -13,22 +13,51 @@ func spend(alloc [6]int, points int) ([6]int, int) {
 	}
 }
 
+// searchBest tries every STR/AGI/LUK split of total points, with the rest
+// in DEX.
+func searchBest(total int) [6]int {
+	var best [6]int
+	bd := 0.0
+	for st := 0; st <= 60; st++ {
+		for ag := 0; ag <= 70 && spentOn(st)+spentOn(ag) <= total; ag++ {
+			for lu := 0; lu <= 70; lu++ {
+				c := spentOn(st) + spentOn(ag) + spentOn(lu)
+				if c > total {
+					break
+				}
+				dx := 0
+				for c+spentOn(dx+1) <= total {
+					dx++
+				}
+				if a := [6]int{st, ag, 0, 0, dx, lu}; damage(a) > bd {
+					best, bd = a, damage(a)
+				}
+			}
+		}
+	}
+	return best
+}
+
 func TestNextStatNearTheSearchedOptimum(t *testing.T) {
-	// The exhaustive search's best split for 324 points.
-	best := [6]int{20, 40, 0, 0, 9, 26}
-	got, left := spend([6]int{}, 324)
-	if got[statVIT]+got[statINT] != 0 {
-		t.Errorf("points went to VIT or INT: %v", got)
+	for _, total := range []int{324, 400, 480} {
+		best := searchBest(total)
+		got, left := spend([6]int{}, total)
+		if got[statINT] != 0 || left > 1 {
+			t.Errorf("%d points -> %v (%d left)", total, got, left)
+		}
+		if r := damage(got) / damage(best); r < 0.99 {
+			t.Errorf("%d points -> %v, %.3f of the searched best %v", total, got, r, best)
+		}
+		// Reaching STR 40 (Awakening) pays at every total here.
+		if got[statSTR]+strFromGear < awakenSTR40 {
+			t.Errorf("%d points -> STR %d, want the STR 40 Awakening tier", total, got[statSTR]+strFromGear)
+		}
 	}
-	if r := damage(got) / damage(best); r < 0.99 || left > 1 {
-		t.Errorf("324 points -> %v (%d left), %.3f of the searched best", got, left, r)
-	}
-	t.Logf("324 points -> STR %d AGI %d DEX %d LUK %d", got[statSTR], got[statAGI], got[statDEX], got[statLUK])
 }
 
 func TestBuildBeatsTheGameRecommendation(t *testing.T) {
 	recommended := [6]int{22, 30, 0, 0, 0, 37} // the game's allocation at Base 37
-	if r := damage([6]int{20, 40, 0, 0, 9, 26}) / damage(recommended); r < 1.01 {
+	if r := damage(searchBest(324)) / damage(recommended); r < 1.01 {
 		t.Errorf("searched build only %.3f of the recommended one", r)
 	}
 }
