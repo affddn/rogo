@@ -80,6 +80,25 @@ func (b *Bot) Wait(ctx context.Context, timeout time.Duration, ids ...screens.ID
 	}
 }
 
+// TapWait taps p and waits for one of ids. The game drops a tap now and then
+// (during an elite's spawn effect, say), so when the screen is still from
+// after timeout it taps once more. A slow transition leaves from and is not
+// tapped twice.
+func (b *Bot) TapWait(ctx context.Context, from screens.ID, p image.Point, what string, timeout time.Duration, ids ...screens.ID) (screens.ID, image.Image, error) {
+	if err := b.Tap(ctx, p, what); err != nil {
+		return screens.Unknown, nil, err
+	}
+	id, frame, err := b.Wait(ctx, timeout, ids...)
+	if !errors.Is(err, ErrTimeout) || id != from {
+		return id, frame, err
+	}
+	b.Log.Warn("tap had no effect, tapping again", "what", what)
+	if err := b.Tap(ctx, p, what); err != nil {
+		return id, frame, err
+	}
+	return b.Wait(ctx, timeout, ids...)
+}
+
 // Tap taps a point and waits for the UI to settle. Taps on a deny-listed
 // button visible in the latest frame are refused.
 func (b *Bot) Tap(ctx context.Context, p image.Point, what string) error {

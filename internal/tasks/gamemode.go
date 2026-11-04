@@ -43,10 +43,7 @@ func openGameMode(ctx context.Context, b *bot.Bot, tile image.Point, want screen
 	if _, err := open(ctx, b, screens.TNavGameMode, screens.GameMode); err != nil {
 		return nil, err
 	}
-	if err := b.Tap(ctx, tile, string(want)); err != nil {
-		return nil, err
-	}
-	_, frame, err := b.Wait(ctx, 15*time.Second, want)
+	_, frame, err := b.TapWait(ctx, screens.GameMode, tile, string(want), 15*time.Second, want)
 	return frame, err
 }
 

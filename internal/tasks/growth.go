@@ -33,10 +33,7 @@ func open(ctx context.Context, b *bot.Bot, nav string, want ...screens.ID) (imag
 	if !ok {
 		return nil, fmt.Errorf("open: no position for nav %s", nav)
 	}
-	if err := b.Tap(ctx, p, nav); err != nil {
-		return nil, err
-	}
-	_, frame, err := b.Wait(ctx, 10*time.Second, want...)
+	_, frame, err := b.TapWait(ctx, screens.Main, p, nav, 10*time.Second, want...)
 	return frame, err
 }
 
@@ -217,10 +214,7 @@ func resonate(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) 
 	if !badged(frame, resonateBadge) {
 		return false, nil
 	}
-	if err := b.Tap(ctx, resonateButton, "enhance resonate"); err != nil {
-		return false, err
-	}
-	_, frame, err := b.Wait(ctx, 8*time.Second, screens.Resonate)
+	_, frame, err := b.TapWait(ctx, screens.Enhance, resonateButton, "enhance resonate", 8*time.Second, screens.Resonate)
 	if err != nil {
 		return false, err
 	}
