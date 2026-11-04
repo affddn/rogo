@@ -232,6 +232,9 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.Tap(ctx, image.Pt(664, 296), "close donation")
 	case screens.AchieveReward:
 		return true, b.Tap(ctx, image.Pt(664, 172), "close achievements")
+	case screens.PartyInvite:
+		// Pops over the dungeon page between runs; auto-match needs no party.
+		return true, b.Tap(ctx, image.Pt(665, 172), "close party invite")
 	case screens.LimitedQuest:
 		return true, b.Tap(ctx, image.Pt(648, 250), "close limited quest")
 	case screens.LoginEvent:

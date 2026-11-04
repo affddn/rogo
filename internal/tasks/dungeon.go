@@ -173,8 +173,9 @@ func startMatch(ctx context.Context, b *bot.Bot, frame image.Image) error {
 			return nil
 		}
 		m := assets.MustGet(screens.TDungeonAutoMatch).Find(frame, screens.Margin)
-		if m.Score >= screens.MinScore && m.Bright < 0.8 {
-			// A popup or transition is dimming the page; look again.
+		if m.Score < screens.MinScore || m.Bright < 0.8 {
+			// A popup (Party Invite after a run) or a transition covers or
+			// dims the page; look again.
 			if err := bot.Sleep(ctx, 1500*time.Millisecond); err != nil {
 				return err
 			}

@@ -1032,6 +1032,14 @@
     "note": "one-click upgrade dialog: title"
   },
   {
+    "name": "party_invite_title",
+    "x": 272,
+    "y": 154,
+    "w": 170,
+    "h": 40,
+    "note": "Party Invite popup title over the dungeon page"
+  },
+  {
     "name": "pass_claim_all",
     "x": 80,
     "y": 1100,
