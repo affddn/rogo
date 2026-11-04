@@ -138,7 +138,8 @@ func upgradeTile(frame image.Image) (image.Point, bool) {
 }
 
 // equipUpgrades equips every bag item the game marks as an upgrade. The
-// game auto-equips most drops but not, for example, a first accessory.
+// game auto-equips most drops but not accessories: a first one shows Equip,
+// a better one than worn shows Replace (enhancement levels carry over).
 func equipUpgrades(ctx context.Context, b *bot.Bot, frame image.Image) (int, error) {
 	n := 0
 	for n < 8 {
@@ -153,12 +154,16 @@ func equipUpgrades(ctx context.Context, b *bot.Bot, frame image.Image) (int, err
 		if err != nil {
 			return n, err
 		}
-		if !screens.Visible(f, screens.TItemEquip) {
-			b.Log.Warn("upgrade item popup has no Equip button")
+		button := screens.TItemEquip
+		if !screens.Visible(f, button) {
+			button = screens.TItemReplace
+		}
+		if !screens.Visible(f, button) {
+			b.Log.Warn("upgrade item popup has no Equip or Replace button", "shot", b.Save(f))
 			_, err := b.Dismiss(ctx, screens.Detect(f), f)
 			return n, err
 		}
-		if err := b.TapTemplate(ctx, f, screens.TItemEquip); err != nil {
+		if err := b.TapTemplate(ctx, f, button); err != nil {
 			return n, err
 		}
 		n++
@@ -259,13 +264,14 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 	}
-	if n, err := equipUpgrades(ctx, b, frame); err != nil {
+	n, err := equipUpgrades(ctx, b, frame)
+	levels += n
+	if err != nil {
 		return levels, err
-	} else if n > 0 {
-		levels += n
-		if _, frame, err = b.Look(ctx); err != nil {
-			return levels, err
-		}
+	}
+	// Closing an unexpected item popup can leave the page; come back to it.
+	if frame, err = open(ctx, b, screens.TNavEquipment, screens.Equipment); err != nil {
+		return levels, err
 	}
 	if ok, err := dismantle(ctx, b, frame); err != nil {
 		return levels, err

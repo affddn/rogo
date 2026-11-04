@@ -135,6 +135,7 @@ const (
 	TDungeonAccept       = "dungeon_accept"
 	TDungeonDecline      = "dungeon_decline"
 	TItemEquip           = "item_equip_btn"
+	TItemReplace         = "item_replace_btn"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
 	TEquipHeader         = "equip_header"

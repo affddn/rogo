@@ -72,7 +72,7 @@ func (b *Bot) Wait(ctx context.Context, timeout time.Duration, ids ...screens.ID
 			}
 		}
 		if time.Now().After(deadline) {
-			return id, frame, fmt.Errorf("%w %v (on %s, shot %s)", ErrTimeout, ids, id, b.save(frame))
+			return id, frame, fmt.Errorf("%w %v (on %s, shot %s)", ErrTimeout, ids, id, b.Save(frame))
 		}
 		if err := sleep(ctx, 500*time.Millisecond); err != nil {
 			return id, frame, err
@@ -103,7 +103,7 @@ func (b *Bot) TapWait(ctx context.Context, from screens.ID, p image.Point, what 
 // button visible in the latest frame are refused.
 func (b *Bot) Tap(ctx context.Context, p image.Point, what string) error {
 	if name := b.denied(p); name != "" {
-		b.Log.Error("refused tap on deny-listed button", "what", what, "button", name, "shot", b.save(b.last))
+		b.Log.Error("refused tap on deny-listed button", "what", what, "button", name, "shot", b.Save(b.last))
 		return fmt.Errorf("%w: %s", ErrDenied, name)
 	}
 	b.Log.Debug("tap", "what", what, "x", p.X, "y", p.Y)
@@ -135,7 +135,7 @@ func (b *Bot) denied(p image.Point) string {
 func (b *Bot) TapTemplate(ctx context.Context, frame image.Image, name string) error {
 	m := assets.MustGet(name).Find(frame, screens.Margin)
 	if !m.Visible(screens.MinScore) {
-		return fmt.Errorf("tap %s: not visible (score %.2f, bright %.2f, shot %s)", name, m.Score, m.Bright, b.save(frame))
+		return fmt.Errorf("tap %s: not visible (score %.2f, bright %.2f, shot %s)", name, m.Score, m.Bright, b.Save(frame))
 	}
 	return b.Tap(ctx, m.Center(), name)
 }
@@ -206,13 +206,13 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	// Guide arrows point at the control the game wants pressed next
 	// (tutorial steps, quest guidance); following them completes those.
 	if a, ok := screens.FindGuideArrow(frame); ok {
-		b.Log.Info("following guide arrow", "x", a.Target.X, "y", a.Target.Y, "shot", b.save(frame))
+		b.Log.Info("following guide arrow", "x", a.Target.X, "y", a.Target.Y, "shot", b.Save(frame))
 		return true, b.Tap(ctx, a.Target, "guide arrow")
 	}
 	// Tutorials without an arrow on this frame: skip them; the chores cover
 	// every feature.
 	if m := assets.MustGet(screens.TTutSkip).Find(frame, screens.Margin); m.Visible(screens.MinScore) {
-		b.Log.Info("skipping tutorial", "shot", b.save(frame))
+		b.Log.Info("skipping tutorial", "shot", b.Save(frame))
 		return true, b.Tap(ctx, m.Center(), "skip tutorial")
 	}
 	// The back arrow sits over page art (lava on Baphomet), so match its shape
@@ -231,7 +231,7 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 	// deny list still guards every tap.
 	for _, name := range []string{screens.TDialogOK, screens.THintOK} {
 		if screens.Visible(frame, name) {
-			b.Log.Info("following popup", "button", name, "shot", b.save(frame))
+			b.Log.Info("following popup", "button", name, "shot", b.Save(frame))
 			return true, b.TapTemplate(ctx, frame, name)
 		}
 	}
@@ -294,7 +294,7 @@ func (b *Bot) ToMain(ctx context.Context) error {
 			}
 			continue
 		}
-		path := b.save(frame)
+		path := b.Save(frame)
 		b.Log.Warn("unknown screen, pressing back", "shot", path)
 		if err := b.D.Back(ctx); err != nil {
 			return err
@@ -371,7 +371,8 @@ func (b *Bot) WaitBoot(ctx context.Context, timeout time.Duration) error {
 	return fmt.Errorf("game not on main screen after %v", timeout)
 }
 
-func (b *Bot) save(frame image.Image) string {
+// Save writes frame under Shots and returns its path, or "" if it cannot.
+func (b *Bot) Save(frame image.Image) string {
 	if frame == nil {
 		return ""
 	}

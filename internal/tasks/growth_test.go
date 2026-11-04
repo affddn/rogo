@@ -77,3 +77,17 @@ func TestReadyChest(t *testing.T) {
 		}
 	}
 }
+
+func TestReplaceButtonOnlyOnComparePopup(t *testing.T) {
+	for file, want := range map[string]bool{"item-replace.png": true, "eq-after-replace.png": false} {
+		f, err := os.Open("../../captures/" + file)
+		if err != nil {
+			t.Skipf("reference capture %s not present", file)
+		}
+		img, _ := png.Decode(f)
+		f.Close()
+		if got := screens.Visible(img, screens.TItemReplace); got != want {
+			t.Errorf("%s: Replace visible = %v, want %v", file, got, want)
+		}
+	}
+}

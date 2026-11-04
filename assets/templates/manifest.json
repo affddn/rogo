@@ -552,6 +552,14 @@
     "note": "item popup: Equip button"
   },
   {
+    "name": "item_replace_btn",
+    "x": 568,
+    "y": 580,
+    "w": 106,
+    "h": 32,
+    "note": "item comparison popup: Replace (bag item into an occupied slot)"
+  },
+  {
     "name": "jobchange_header",
     "x": 8,
     "y": 16,
