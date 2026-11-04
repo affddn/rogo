@@ -23,3 +23,25 @@ func TestEnhanceLevel(t *testing.T) {
 		t.Error("read a level off the main screen")
 	}
 }
+
+func TestAttributeAllocation(t *testing.T) {
+	cases := map[string]struct {
+		alloc  [6]int
+		points int
+	}{
+		"attr-old.png":   {[6]int{22, 30, 0, 0, 0, 37}, 3},
+		"attr-new.png":   {[6]int{18, 49, 0, 0, 2, 10}, 0},
+		"attr-reset.png": {[6]int{0, 0, 0, 0, 0, 0}, 324}, // "!" badge on the counter
+	}
+	for file, want := range cases {
+		t.Run(file, func(t *testing.T) {
+			img := load(t, file)
+			if got, ok := AttributeAllocation(img); !ok || got != want.alloc {
+				t.Errorf("allocation %v %v, want %v", got, ok, want.alloc)
+			}
+			if got, ok := AttributePoints(img); !ok || got != want.points {
+				t.Errorf("points %d %v, want %d", got, ok, want.points)
+			}
+		})
+	}
+}
