@@ -56,6 +56,9 @@ const (
 	ValuePack        ID = "value-pack"
 	MVP              ID = "mvp"
 	MVPSweep         ID = "mvp-sweep"
+	GrowthGift       ID = "growth-gift"
+	LoginEvent       ID = "login-event"
+	Mall             ID = "mall"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -176,13 +179,24 @@ const (
 	TMVPSweep            = "mvp_sweep"
 	TMVPSweepTitle       = "mvp_sweep_title"
 	TMVPSweepText        = "mvp_sweep_text"
+	TRailMall            = "rail_mall"
+	TRailGrowth          = "rail_growth"
+	TRailPulls           = "rail_pulls"
+	TClaimWord           = "claim_word"
+	TMallFreeWord        = "mall_free_word"
+	TBenefitsLabel       = "benefits_label"
+	TGrowthTitle         = "growth_title"
+	TPullsBanner         = "pulls_banner"
+	TMallTopUpTab        = "mall_topup_tab"
+	TMallAdFreeWord      = "mall_adfree_word"
+	TClaimAllWord        = "claimall_word"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
 // tap that lands on one of these while it is visible.
-var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete", "deny_pass_rebate"}
+var Deny = []string{"deny_go_unlock", "deny_accelerate", "deny_mail_delete", "deny_pass_rebate", "deny_rm_price"}
 
 // DenyAreas are screen regions refused outright while a screen is showing,
 // for paid buttons whose label changes (pass prices differ per tab).
@@ -236,6 +250,8 @@ var rules = []rule{
 	{id: InsertCard, anchors: []string{TInsertCardTitle, TInsertCardClose}},
 	{id: DungeonMatch, anchors: []string{TDungeonAccept, TDungeonDecline}},
 	{id: MVPSweep, anchors: []string{TMVPSweepTitle, TMVPSweepText}},
+	// The login event's popup sits over main.
+	{id: LoginEvent, anchors: []string{TPullsBanner}},
 	{id: CardDetails, anchors: []string{TCardDetailsTitle, TCardDetailsClose}},
 	{id: QuestPanel, anchors: []string{TQuestTitle, TQuestClose}},
 	{id: Mail, anchors: []string{TMailTitle, TMailClose}},
@@ -263,6 +279,7 @@ var rules = []rule{
 	{id: Realm, anchors: []string{TRealmHeader, TNavBack}},
 	{id: Baphomet, anchors: []string{TBaphTitle, TBaphChallenge}},
 	{id: MVP, anchors: []string{TMVPHeader, TMVPChallenge}},
+	{id: GrowthGift, anchors: []string{TGrowthTitle}},
 	{id: Dungeon, anchors: []string{TDungeonHeader},
 		anyOf: []string{TDungeonAutoMatch, TDungeonCancelMatch}, need: 1},
 }
@@ -300,7 +317,18 @@ func Detect(frame image.Image) ID {
 	if inCombat(frame) {
 		return InCombat
 	}
+	if inMall(frame) {
+		return Mall
+	}
 	return Unknown
+}
+
+// mallTabBar is the Mall's bottom tab bar. Every Mall page shows its Top Up
+// tab, but the bar scrolls sideways on the Check-in Bonus page.
+var mallTabBar = image.Rect(0, 1190, 720, 1280)
+
+func inMall(frame image.Image) bool {
+	return assets.MustGet(TMallTopUpTab).FindIn(frame, mallTabBar).Visible(MinScore)
 }
 
 // mainNav is the main screen's bottom nav. It is opaque enough to read 0.8x

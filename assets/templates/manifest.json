@@ -72,6 +72,14 @@
     "note": "baphomet challenge: title"
   },
   {
+    "name": "benefits_label",
+    "x": 150,
+    "y": 1098,
+    "w": 100,
+    "h": 48,
+    "note": "Special Pass: Daily Benefits label"
+  },
+  {
     "name": "card_activate",
     "x": 250,
     "y": 1086,
@@ -118,6 +126,22 @@
     "w": 172,
     "h": 50,
     "note": "character: Overview page header"
+  },
+  {
+    "name": "claim_word",
+    "x": 576,
+    "y": 414,
+    "w": 74,
+    "h": 28,
+    "note": "orange Claim button word (Growth Gift, check-in, login events)"
+  },
+  {
+    "name": "claimall_word",
+    "x": 524,
+    "y": 1104,
+    "w": 120,
+    "h": 40,
+    "note": "Mall Special Pass: Claim All button word"
   },
   {
     "name": "combat_ended",
@@ -198,6 +222,14 @@
     "w": 136,
     "h": 26,
     "note": "DENY: season pass 'Rebate 1000%' tag over the paid unlock"
+  },
+  {
+    "name": "deny_rm_price",
+    "x": 450,
+    "y": 788,
+    "w": 100,
+    "h": 32,
+    "note": "paid price button text 'RM 8.99'"
   },
   {
     "name": "dismantle_ok",
@@ -406,6 +438,14 @@
     "w": 170,
     "h": 46,
     "note": "game mode page header"
+  },
+  {
+    "name": "growth_title",
+    "x": 40,
+    "y": 52,
+    "w": 312,
+    "h": 66,
+    "note": "Growth Gift event page title"
   },
   {
     "name": "guestbind_cancel",
@@ -696,6 +736,30 @@
     "note": "main: System label"
   },
   {
+    "name": "mall_adfree_word",
+    "x": 552,
+    "y": 692,
+    "w": 96,
+    "h": 30,
+    "note": "Mall: Diamondx100 ad Free button (ad-free with the Lifetime Card)"
+  },
+  {
+    "name": "mall_free_word",
+    "x": 566,
+    "y": 492,
+    "w": 64,
+    "h": 28,
+    "note": "Mall: Diamondx30 Free button word"
+  },
+  {
+    "name": "mall_topup_tab",
+    "x": 228,
+    "y": 1226,
+    "w": 92,
+    "h": 34,
+    "note": "Mall bottom bar: Top Up tab (on every Mall page)"
+  },
+  {
     "name": "mvp_challenge",
     "x": 104,
     "y": 1124,
@@ -864,6 +928,14 @@
     "note": "power saving lock: 'Swipe right to unlock.'"
   },
   {
+    "name": "pulls_banner",
+    "x": 300,
+    "y": 312,
+    "w": 420,
+    "h": 56,
+    "note": "Free 4000 Pulls login event: get4000draws banner"
+  },
+  {
     "name": "qi_free_text",
     "x": 236,
     "y": 596,
@@ -910,6 +982,30 @@
     "w": 160,
     "h": 42,
     "note": "quick idle confirm: title"
+  },
+  {
+    "name": "rail_growth",
+    "x": 4,
+    "y": 522,
+    "w": 102,
+    "h": 26,
+    "note": "left rail: Growth Gift label"
+  },
+  {
+    "name": "rail_mall",
+    "x": 30,
+    "y": 303,
+    "w": 52,
+    "h": 22,
+    "note": "left rail: Mall label"
+  },
+  {
+    "name": "rail_pulls",
+    "x": 8,
+    "y": 638,
+    "w": 94,
+    "h": 24,
+    "note": "left rail: Free 4000 Pulls label"
   },
   {
     "name": "realm_challenge_btn",
