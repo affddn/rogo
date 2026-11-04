@@ -26,9 +26,11 @@ const pkg = "com.ggv.rogosea.aos"
 var serialGiven bool
 
 type command struct {
-	usage   string
-	run     func(ctx context.Context, d *device.Device, args []string) error
-	offline bool // works on saved screenshots; skip adb connect
+	usage string
+	run   func(ctx context.Context, d *device.Device, args []string) error
+	// offline skips the up-front adb connect: the command works on saved
+	// screenshots, or connects itself (run opens its tunnel first).
+	offline bool
 }
 
 var commands = map[string]command{
@@ -44,7 +46,7 @@ var commands = map[string]command{
 	"quests":  {"", cmdQuests, false},
 	"grow":    {"", cmdGrow, false},
 	"boot":    {"", cmdBoot, false},
-	"run":     {"", cmdRun, false},
+	"run":     {"", cmdRun, true},
 	"stage":   {"", cmdStage, false},
 	"gacha":   {"", cmdGacha, false},
 	"realm":   {"", cmdRealm, false},
