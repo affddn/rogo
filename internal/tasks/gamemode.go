@@ -169,11 +169,19 @@ func Baphomet(ctx context.Context, b *bot.Bot) (dodges int, err error) {
 	dodge := assets.MustGet(screens.TBaphDodge)
 	leave := assets.MustGet(screens.TCombatLeave)
 	deadline := time.Now().Add(90 * time.Second) // fights run 50 s
+	bad := 0
 	for time.Now().Before(deadline) {
 		band, err := b.D.Rows(ctx, 720, fightBand[0], fightBand[1])
 		if err != nil {
-			return dodges, err
+			// A tunnel hiccup garbles a capture now and then; the fight
+			// goes on, so keep watching.
+			if bad++; bad >= maxBadBands || ctx.Err() != nil {
+				return dodges, err
+			}
+			b.Log.Warn("fight capture failed", "err", err)
+			continue
 		}
+		bad = 0
 		if dodge.Find(band, 30).Visible(screens.MinScore) {
 			if err := b.D.Tap(ctx, dodgeButton.X, dodgeButton.Y); err != nil {
 				return dodges, err

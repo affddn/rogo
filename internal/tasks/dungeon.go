@@ -111,16 +111,25 @@ func (e matchErr) Error() string { return string(e) }
 const errNoMatchStart = matchErr("auto match did not start")
 
 // awaitAccept polls the popup rows and taps Accept the moment it shows.
+// maxBadBands is how many failed band captures in a row end a polling loop.
+const maxBadBands = 5
+
 // If matching stops without a popup (timer ran out), it is restarted.
 func awaitAccept(ctx context.Context, b *bot.Bot, limit time.Duration) bool {
 	accept := assets.MustGet(screens.TDungeonAccept)
 	deadline := time.Now().Add(limit)
 	checked := time.Now()
+	bad := 0
 	for time.Now().Before(deadline) {
 		band, err := b.D.Rows(ctx, 720, dungeonAcceptRY[0], dungeonAcceptRY[1])
 		if err != nil {
-			return false
+			if bad++; bad >= maxBadBands || ctx.Err() != nil {
+				return false
+			}
+			b.Log.Warn("match capture failed", "err", err)
+			continue
 		}
+		bad = 0
 		if accept.Find(band, 20).Score >= screens.MinScore {
 			if err := b.D.Tap(ctx, dungeonAccept.X, dungeonAccept.Y); err != nil {
 				return false
