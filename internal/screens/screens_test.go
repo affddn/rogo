@@ -55,6 +55,7 @@ func TestDetect(t *testing.T) {
 		"title-loggedout.png":             Title,
 		"realm-fight-2.png":               InCombat,
 		"value-pack.png":                  ValuePack,
+		"after-vp.png":                    Main, // Ant Cave: dark map behind the icons
 		"value-pack-2.png":                ValuePack,
 		"stage-r1.png":                    InCombat,
 		"stage-r10.png":                   InCombat, // pause button 1.57x as bright
@@ -183,4 +184,11 @@ func TestPowerFingerprint(t *testing.T) {
 		t.Error("power fingerprint unchanged across a power rise")
 	}
 	_ = a
+}
+
+func TestFeatureIconsOnDarkMap(t *testing.T) {
+	s := ReadMain(load(t, "after-vp.png")) // Ant Cave
+	if !s.System || !s.SeasonPass {
+		t.Errorf("system %v, season pass %v on the Ant Cave map; want both", s.System, s.SeasonPass)
+	}
 }

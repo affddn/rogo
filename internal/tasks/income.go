@@ -10,6 +10,9 @@ import (
 	"github.com/affddn/rogo/internal/screens"
 )
 
+// adventureIncome is the Adventure Income chest on the main screen.
+var adventureIncome = image.Pt(61, 1072)
+
 // Income opens Adventure Income, which claims the idle stash on open, and
 // spends the daily free Quick Idle ticket. A Quick Idle that costs diamonds is
 // never confirmed. ticketLeft reports whether a free ticket was still there
@@ -18,14 +21,8 @@ func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return false, err
 	}
-	_, frame, err := b.Look(ctx)
-	if err != nil {
-		return false, err
-	}
-	if err := b.TapTemplate(ctx, frame, screens.TMainAdventureIncome); err != nil {
-		return false, err
-	}
-	_, frame, err = b.Wait(ctx, 10*time.Second, screens.Income)
+	// The icon shows the map through it, so tap it by position.
+	_, frame, err := b.TapWait(ctx, screens.Main, adventureIncome, "adventure income", 10*time.Second, screens.Income)
 	if err != nil {
 		return false, err
 	}

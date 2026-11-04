@@ -251,11 +251,6 @@ var rules = []rule{
 	{id: Baphomet, anchors: []string{TBaphTitle, TBaphChallenge}},
 	{id: Dungeon, anchors: []string{TDungeonHeader},
 		anyOf: []string{TDungeonAutoMatch, TDungeonCancelMatch}, need: 1},
-	// The bottom nav dims under every modal, so it gates Main; the other
-	// anchors get covered by effects and auto-equip popups now and then. A
-	// new character has no quest or system icons yet.
-	{id: Main, anchors: []string{TNavCharacter},
-		anyOf: []string{TMainAdventureIncome, TMainStageChallenge, TMainQuest, TMainSystem, TMainSummonElite}, need: 2},
 }
 
 // Visible reports whether the named template is on screen and not dimmed.
@@ -285,10 +280,36 @@ func Detect(frame image.Image) ID {
 			return r.id
 		}
 	}
+	if onMain(frame) {
+		return Main
+	}
 	if inCombat(frame) {
 		return InCombat
 	}
 	return Unknown
+}
+
+// mainNav is the main screen's bottom nav. It is opaque enough to read 0.8x
+// to 1.05x as bright as the templates over any map (the Ant Cave is the
+// darkest yet) and dims to 0.2-0.3x under every modal. The icons above it
+// show the map through them and fail on dark maps, so they are not used.
+var mainNav = []string{TNavCharacter, TNavWeapon, TNavEquipment, TNavPet, TNavGameMode}
+
+func onMain(frame image.Image) bool {
+	for _, name := range mainNav {
+		m := assets.MustGet(name).Find(frame, Margin)
+		if m.Score < MinScore || m.Bright < 0.6 || m.Bright > 1.25 {
+			return false
+		}
+	}
+	return true
+}
+
+// Present reports whether an icon is on screen by shape alone, for main
+// screen icons whose see-through backgrounds take on the map's colours
+// (0.84+ on any map, under 0.5 where a new character lacks the feature).
+func Present(frame image.Image, name string) bool {
+	return assets.MustGet(name).Find(frame, Margin).Score >= 0.7
 }
 
 // inCombat spots a fight under way (realm, stage, boss) by its pause button.

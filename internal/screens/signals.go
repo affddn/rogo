@@ -148,8 +148,8 @@ func ReadMain(frame image.Image) Signals {
 		Stage: mask(frame, stageText, 1, func(c color.RGBA) bool {
 			return c.R > 225 && c.G > 225 && c.B > 210
 		}),
-		System:     Visible(frame, TMainSystem),
-		SeasonPass: Visible(frame, TMainSeasonPass),
+		System:     Present(frame, TMainSystem),
+		SeasonPass: Present(frame, TMainSeasonPass),
 	}
 	for b, p := range badgeAt {
 		r := image.Rectangle{Min: p.Sub(image.Pt(8, 8)), Max: p.Add(image.Pt(8, 8))}
