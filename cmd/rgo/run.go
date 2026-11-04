@@ -207,6 +207,16 @@ func actions() []*runner.Action {
 				st.Add("boss_dodges", n)
 				return out{Progress: true}, err
 			}},
+		// Free daily claims: login event, Growth Gift, Mall freebies, Kafra
+		// card rewards, check-in. Some come due during the day (Growth Gift
+		// tasks), so this runs every 3 hours.
+		{Name: "dailies", Priority: 64,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("dailies", now) >= 3*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Dailies(ctx, b)
+				st.Add("daily_claims", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   mvpRun},
@@ -392,6 +402,12 @@ func mvpRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 		st.Daily["mvp_done"] = true
 	}
 	return out{Progress: challenged || sweeps > 0}, err
+}
+
+func cmdDailies(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Dailies(ctx, newBot(d))
+	fmt.Println("claimed", n)
+	return err
 }
 
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {

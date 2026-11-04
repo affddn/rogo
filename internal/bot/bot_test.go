@@ -141,3 +141,22 @@ func TestTapRefusesValuePackPrice(t *testing.T) {
 		t.Fatalf("tap on close refused: %v", err)
 	}
 }
+
+func TestTapRefusesCardRenewalPrice(t *testing.T) {
+	f, err := os.Open("../../captures/daily/sp-owned.png")
+	if err != nil {
+		t.Skip("reference capture daily/sp-owned.png not present")
+	}
+	defer f.Close()
+	frame, err := png.Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := device.New("test")
+	d.DryRun = true
+	b := New(d, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	b.Shots, b.Settle, b.last = t.TempDir(), 0, frame
+	if err := b.Tap(context.Background(), image.Pt(497, 803), "monthly card price"); !errors.Is(err, ErrDenied) {
+		t.Fatalf("tap on RM 8.99: got %v, want ErrDenied", err)
+	}
+}
