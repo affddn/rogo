@@ -53,6 +53,7 @@ func TestDiamonds(t *testing.T) {
 		"dia/p-6644.png": 6644, "dia/p-3294.png": 3294, "dia/p-3295.png": 3295,
 		"main-after-qi.png": 6802, "build/05-attr.png": 6772, "skills/job15.png": 6803,
 		"shop/12-weapon-gacha-draw.png": 6699, "shop/25-growth-after.png": 6760,
+		"dia/p-1788.png": 1788,
 	}
 	for file, want := range cases {
 		t.Run(file, func(t *testing.T) {
