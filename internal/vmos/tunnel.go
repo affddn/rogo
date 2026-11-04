@@ -84,9 +84,10 @@ func (t *Tunnel) Update(a *ADB) error {
 
 // keepAlive pings the ssh server so NAT and the gateway don't drop an idle
 // session, and closes it when pings stop getting answers so the next adb
-// connection redials.
+// connection redials. The gateway stalls now and then; adb commands hang
+// until the session is dropped, so pings are frequent.
 func (t *Tunnel) keepAlive(c *ssh.Client) {
-	tick := time.NewTicker(30 * time.Second)
+	tick := time.NewTicker(10 * time.Second)
 	defer tick.Stop()
 	for range tick.C {
 		done := make(chan error, 1)
@@ -99,7 +100,7 @@ func (t *Tunnel) keepAlive(c *ssh.Client) {
 			if err == nil {
 				continue
 			}
-		case <-time.After(15 * time.Second):
+		case <-time.After(5 * time.Second):
 		}
 		t.Log.Warn("tunnel ssh keepalive failed, dropping session")
 		c.Close()
