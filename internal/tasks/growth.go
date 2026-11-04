@@ -45,37 +45,113 @@ var navAt = map[string]image.Point{
 	screens.TNavGameMode:  {643, 1215},
 }
 
-// Attributes spends free attribute points with the game's Recommended
-// Allocation, which follows the class's intended build.
+var (
+	// skillTab is the Skill tab in the Character page's bottom bar, and
+	// skillTabBadge the badge it shows while skill points are unspent.
+	skillTab      = image.Pt(453, 1235)
+	skillTabBadge = image.Pt(490, 1192)
+	// statPlusX is the column of the Attribute page's + buttons.
+	statPlusX = 651
+)
+
+var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
+
+// Attributes spends free attribute points where they add the most damage
+// (see build.go) instead of the game's Recommended Allocation, which the
+// model puts about 3% behind. Unspent skill points go to the Recommended
+// skill allocation; the one choice there (Potential Burst over Envenom, and
+// equipping it) was made by hand.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
 	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill)
 	if err != nil {
 		return false, err
 	}
-	if screens.Detect(frame) != screens.Attribute {
-		if err := b.Tap(ctx, attributeTab, "attribute tab"); err != nil {
+	skillsDone := false
+	if badged(frame, skillTabBadge) {
+		if id := screens.Detect(frame); id != screens.CharSkill {
+			if _, frame, err = b.TapWait(ctx, id, skillTab, "skill tab", 10*time.Second, screens.CharSkill); err != nil {
+				return false, err
+			}
+		}
+		if skillsDone, err = skills(ctx, b, frame); err != nil {
 			return false, err
 		}
-		if _, frame, err = b.Wait(ctx, 10*time.Second, screens.Attribute); err != nil {
+	}
+	if id := screens.Detect(frame); id != screens.Attribute {
+		if _, frame, err = b.TapWait(ctx, id, attributeTab, "attribute tab", 10*time.Second, screens.Attribute); err != nil {
 			return false, err
 		}
+	}
+	spent := 0
+	// The game drops a tap now and then; confirm, read the page again and
+	// spend what is left.
+	for pass := 0; pass < 3; pass++ {
+		// The counter first: a power-up banner can cover the stat rows
+		// right after a confirm, when nothing is left to spend anyway.
+		points, okPoints := screens.AttributePoints(frame)
+		if okPoints && points == 0 {
+			break
+		}
+		alloc, okAlloc := screens.AttributeAllocation(frame)
+		if !okAlloc || !okPoints {
+			b.Log.Warn("could not read the attribute page", "shot", b.Save(frame))
+			break
+		}
+		taps := 0
+		for {
+			s, ok := nextStat(alloc, points)
+			if !ok {
+				break
+			}
+			if err := b.Tap(ctx, image.Pt(statPlusX, screens.AttrRows[s]), "add "+statNames[s]); err != nil {
+				return skillsDone || spent > 0, err
+			}
+			points -= pointCost(alloc[s])
+			alloc[s]++
+			taps++
+		}
+		if taps == 0 {
+			break
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return skillsDone || spent > 0, err
+		}
+		if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
+			return skillsDone || spent > 0, err
+		}
+		spent += taps
+		b.Log.Info("attribute points allocated", "taps", taps,
+			"str", alloc[statSTR], "agi", alloc[statAGI], "dex", alloc[statDEX], "luk", alloc[statLUK])
+		if _, frame, err = b.Look(ctx); err != nil {
+			return true, err
+		}
+	}
+	return spent > 0 || skillsDone, b.ToMain(ctx)
+}
+
+// skills spends unspent skill points with the Recommended skill allocation.
+func skills(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
+	if !screens.Visible(frame, screens.TAttrRecommended) {
+		return false, nil
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TAttrRecommended); err != nil {
 		return false, err
 	}
-	_, frame, err = b.Look(ctx)
+	_, frame, err := b.Look(ctx)
 	if err != nil {
 		return false, err
 	}
-	spent := screens.Visible(frame, screens.TAttrConfirm)
-	if spent {
-		if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
-			return false, err
-		}
-		b.Log.Info("attribute points allocated")
+	// Points for skills that are still locked (Katar Mastery needs Job
+	// Lv.15) leave nothing to confirm.
+	if !screens.Visible(frame, screens.TAttrConfirm) {
+		return false, nil
 	}
-	return spent, b.ToMain(ctx)
+	if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
+		return false, err
+	}
+	b.Log.Info("skill points allocated")
+	return true, nil
 }
 
 // Enhance slots on the Enhance page: the item icon and its upgrade badge.

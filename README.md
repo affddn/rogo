@@ -18,7 +18,7 @@ digits) and runs the highest-priority action that is ready:
 | 88 | quest-panel | Quest badge (daily/weekly claims, activity chests) |
 | 87 | guide | a blinking yellow guide arrow on main: tap through the arrow chain |
 | 85 | summon-upgrade | Lv.N badge next to Summon Elite (stages, then free 30 min timer) |
-| 80 | attributes | Character badge **and** a level-up since last run |
+| 80 | attributes | Character badge **and** a level-up since last run: stat points by the damage model in `internal/tasks/build.go`, skill points by Recommended |
 | 75 | equipment | Equipment badge (cards, dismantle when bag > 20, enhance resonance, round-robin enhance) |
 | 70 | weapon | Weapon badge (gacha in max batches, then cultivation) |
 | 68 | pets | Pet badge (free-ticket pet gacha, activate/upgrade, auto formation) |
