@@ -1240,6 +1240,46 @@
     "note": "character: Skill page header"
   },
   {
+    "name": "skill_lbl_katar",
+    "x": 526,
+    "y": 440,
+    "w": 130,
+    "h": 22,
+    "note": "skill tree label: Katar Mastery"
+  },
+  {
+    "name": "skill_lbl_kir",
+    "x": 502,
+    "y": 662,
+    "w": 178,
+    "h": 22,
+    "note": "skill tree label: Killing Intent Rising"
+  },
+  {
+    "name": "skill_lbl_shadowless",
+    "x": 280,
+    "y": 840,
+    "w": 160,
+    "h": 22,
+    "note": "skill tree label: Shadowless Fang"
+  },
+  {
+    "name": "skill_lbl_stealthenh",
+    "x": 262,
+    "y": 220,
+    "w": 198,
+    "h": 22,
+    "note": "skill tree label: Stealth Enhancement"
+  },
+  {
+    "name": "skill_lbl_supersonic",
+    "x": 48,
+    "y": 440,
+    "w": 166,
+    "h": 22,
+    "note": "skill tree label: Supersonic Throw"
+  },
+  {
     "name": "stage_defeat",
     "x": 216,
     "y": 250,

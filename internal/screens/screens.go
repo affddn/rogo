@@ -224,6 +224,9 @@ const (
 	TGuildHuntSweep      = "guild_hunt_sweep"
 	TGuildBargainFree    = "guild_bargain_free"
 	TDailySweepTitle     = "daily_sweep_title"
+	TSkillStealthEnh     = "skill_lbl_stealthenh"
+	TSkillSupersonic     = "skill_lbl_supersonic"
+	TSkillKIR            = "skill_lbl_kir"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )

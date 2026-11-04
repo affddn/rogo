@@ -185,3 +185,29 @@ func TestGuildGates(t *testing.T) {
 		t.Error("hunt sweep liveness wrong")
 	}
 }
+
+func TestSkillPlusLive(t *testing.T) {
+	one, none := capture(t, "skills/one-point.png"), capture(t, "skills/clean.png")
+	for _, c := range []struct {
+		label   string
+		withOne bool
+	}{
+		{screens.TSkillStealthEnh, true},
+		{screens.TSkillSupersonic, true},
+		{screens.TSkillKIR, true},
+	} {
+		m := assets.MustGet(c.label).FindIn(one, skillTree)
+		if m.Score < screens.MinScore {
+			t.Fatalf("%s not found", c.label)
+		}
+		p := m.Center().Add(skillPlusFrom)
+		if plusLive(one, p) != c.withOne || plusLive(none, p) {
+			t.Errorf("%s: live with a point %v, with none %v", c.label, plusLive(one, p), plusLive(none, p))
+		}
+	}
+	// Katar Mastery is 5/5: never live.
+	m := assets.MustGet("skill_lbl_katar").FindIn(one, skillTree)
+	if plusLive(one, m.Center().Add(skillPlusFrom)) {
+		t.Error("maxed Katar Mastery read as live")
+	}
+}

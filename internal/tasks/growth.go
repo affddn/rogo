@@ -187,25 +187,35 @@ func awaken(ctx context.Context, b *bot.Bot) (int, error) {
 
 // skills spends unspent skill points with the Recommended skill allocation.
 func skills(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
+	// Our own order first (skilltree.go); whatever it cannot place (new
+	// skills it does not know yet) goes to the game's Recommended.
+	n, err := skillByPriority(ctx, b, 20)
+	if err != nil {
+		return n > 0, err
+	}
+	if _, frame, err = b.Look(ctx); err != nil {
+		return n > 0, err
+	}
+	if !badged(frame, skillTabBadge) {
+		return n > 0, nil
+	}
 	if !screens.Visible(frame, screens.TAttrRecommended) {
-		return false, nil
+		return n > 0, nil
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TAttrRecommended); err != nil {
-		return false, err
+		return n > 0, err
 	}
-	_, frame, err := b.Look(ctx)
-	if err != nil {
-		return false, err
+	if _, frame, err = b.Look(ctx); err != nil {
+		return n > 0, err
 	}
-	// Points for skills that are still locked (Katar Mastery needs Job
-	// Lv.15) leave nothing to confirm.
+	// Points for skills that are still locked leave nothing to confirm.
 	if !screens.Visible(frame, screens.TAttrConfirm) {
-		return false, nil
+		return n > 0, nil
 	}
 	if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
-		return false, err
+		return n > 0, err
 	}
-	b.Log.Info("skill points allocated")
+	b.Log.Info("skill points allocated by Recommended")
 	return true, nil
 }
 
