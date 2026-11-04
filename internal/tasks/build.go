@@ -1,5 +1,7 @@
 package tasks
 
+import "math"
+
 // The Assassin's stat build, from a damage model built on what the game
 // shows (Attribute page with a free reset at Base 37, and the skill
 // descriptions):
@@ -45,7 +47,7 @@ const (
 	patkPerSpent = 16
 	patkPerSTR   = 132
 	baseCRIT     = 6.2
-	baseSkillCR  = 24.2 // with Katar Mastery 5/5: 33.2 shown at LUK 30
+	baseSkillCR  = 25.0 // Katar Mastery 5/5 and gear: 32.5 shown at LUK 25
 	critPerLUK   = 0.3
 	critDamage   = 0.5 // extra over a normal hit
 
@@ -109,15 +111,63 @@ func spentOn(n int) int {
 }
 
 // damage is the model's damage per second, up to a constant factor.
-// Awakening tiers (Character > Awakening) switch on at stat thresholds.
-// The Assassin's are Shadow Assault on Skill CRIT and Killing Intent Rhythm
-// on STR (total, gear and base included: STR 23 at 20 allocated).
-const (
-	strFromGear   = 3
-	awakenSTR40   = 40 // +5% Skill DMG, +600 PATK
-	awakenSTR60   = 60 // Killing Intent Rhythm stacks 1% -> 1.5% (+5% at 10)
-	awakenSCRIT40 = 40 // +5% Skill DMG, +600 PATK
+// Awakening (Character > Awakening, read 5 Nov). Each build has two
+// abilities whose tiers switch on at stat thresholds (total stats, gear
+// included).
+//
+// Killing Intent Rhythm, on STR: every skill cast adds a stack of final
+// Skill DMG (10 s), 1% a stack up to 10; tiers raise the per-stack bonus
+// (60: 1.5%, 180: 2.5%), the cap (95: 20 stacks, 2 per cast), add +20%
+// final damage against normal monsters at full stacks (125), and add flat
+// Skill DMG and PATK (40, 80, 110, 140, 160, 200).
+//
+// Shadow Assault, on Skill CRIT: every 7 crits (5 from 30) give a stack;
+// 4 stacks cast 3 AoE hits of 300% (+100% at 30, +150% at 50; 5 hits from
+// 90); flat tiers at 20, 40, 60, 75.
+const strFromGear = 4 // STR 41 shown at 37 allocated
+
+type flatTier struct {
+	at   float64
+	dmg  float64 // Skill DMG Boost
+	patk float64
+}
+
+var (
+	strTiers = []flatTier{{40, 0.05, 600}, {80, 0.05, 1400}, {110, 0.05, 3800}, {140, 0.05, 5000}, {160, 0.05, 6000}, {200, 0.05, 8000}}
+	scTiers  = []flatTier{{20, 0.05, 300}, {40, 0.05, 600}, {60, 0.05, 900}, {75, 0.05, 1400}}
 )
+
+// rhythm is Killing Intent Rhythm's final Skill DMG multiplier at full
+// stacks (casts come every few seconds, well inside the 10 s window).
+func rhythm(str float64) float64 {
+	per, stacks := 0.01, 10.0
+	if str >= 60 {
+		per = 0.015
+	}
+	if str >= 95 {
+		stacks = 20
+	}
+	if str >= 180 {
+		per = 0.025
+	}
+	return 1 + per*stacks
+}
+
+// Survival. VIT gives +0.5% Max HP and +0.2% damage reduction a point; the
+// stage pushes the bot keeps losing (Maya at 5-12) are lost by dying with
+// the boss timer running. Damage dealt in such a fight scales with time
+// alive, so the objective weighs effective HP in at survivalWeight: half
+// the fights that matter are survival-bound, idle farming is not.
+const survivalWeight = 0.5
+
+func effectiveHP(vit int) float64 {
+	v := float64(vit)
+	return (1 + 0.005*v) / (1 - 0.002*v)
+}
+
+// Skill hits per cast that can crit (each feeds Shadow Assault), in
+// assassinSkills order.
+var skillHits = []float64{2, 2, 8, 2}
 
 func damage(alloc [6]int) float64 {
 	spent := 0
@@ -128,27 +178,52 @@ func damage(alloc [6]int) float64 {
 	crit := min((baseCRIT+critPerLUK*float64(alloc[statLUK]))/100, 1)
 	skillCritPct := baseSkillCR + critPerLUK*float64(alloc[statLUK])
 	skillCrit := min(skillCritPct/100, 1)
+	str := float64(alloc[statSTR] + strFromGear)
+
 	skillDmg := 1.0
-	str := alloc[statSTR] + strFromGear
-	if str >= awakenSTR40 {
-		patk += 600
-		skillDmg += 0.05
+	for _, t := range strTiers {
+		if str >= t.at {
+			skillDmg += t.dmg
+			patk += t.patk
+		}
 	}
-	if str >= awakenSTR60 {
-		skillDmg *= 1.15 / 1.10
+	for _, t := range scTiers {
+		if skillCritPct >= t.at {
+			skillDmg += t.dmg
+			patk += t.patk
+		}
 	}
-	if skillCritPct >= awakenSCRIT40 {
-		patk += 600
-		skillDmg += 0.05
-	}
+	skillDmg *= rhythm(str)
+
 	f := attacksPerSecond(alloc[statAGI])
 	cdr := (0.5 + 0.5*float64(alloc[statDEX])) / 200
 	perSecond := f * (1 + critDamage*crit)
-	for _, s := range assassinSkills {
+	critTriggers := f * crit
+	for i, s := range assassinSkills {
+		period := castPeriod(s.cooldown, f, cdr)
 		cast := s.hit*(1+critDamage*skillCrit) + skillCrit*s.critHit*(1+critDamage)
-		perSecond += skillDmg * skillTargets * cast / 100 / castPeriod(s.cooldown, f, cdr)
+		perSecond += skillDmg * skillTargets * cast / 100 / period
+		critTriggers += skillHits[i] * skillTargets * skillCrit / period
 	}
-	return patk * perSecond
+	// Shadow Assault: casts per second from crit triggers, 3 AoE hits.
+	perStack, coeff, hits := 7.0, 3.0, 3.0
+	if skillCritPct >= 30 {
+		perStack, coeff = 5, coeff+1
+	}
+	if skillCritPct >= 50 {
+		coeff += 1.5
+	}
+	if skillCritPct >= 90 {
+		hits = 5
+	}
+	perSecond += skillDmg * skillTargets * hits * coeff * critTriggers / (perStack * 4)
+
+	// +20% final damage against normal monsters at full stacks, which is
+	// most of what the bot fights.
+	if str >= 125 {
+		perSecond *= 1.15
+	}
+	return patk * perSecond * math.Pow(effectiveHP(alloc[statVIT]), survivalWeight)
 }
 
 // nextStat picks the stat whose next point adds the most damage per
@@ -161,9 +236,17 @@ func nextStat(alloc [6]int, points int) (int, bool) {
 	return greedyStat(alloc, points)
 }
 
+func strAt(v int) func([6]int) bool {
+	return func(a [6]int) bool { return a[statSTR]+strFromGear >= v }
+}
+
+func scAt(v float64) func([6]int) bool {
+	return func(a [6]int) bool { return baseSkillCR+critPerLUK*float64(a[statLUK]) >= v }
+}
+
 // planHorizon is how many attribute points ahead an Awakening threshold is
 // planned for (about ten levels).
-const planHorizon = 120
+const planHorizon = 200
 
 // thresholdStat returns the stat to pour points into when reaching an
 // Awakening threshold within planHorizon points beats spending the same
@@ -175,9 +258,9 @@ func thresholdStat(alloc [6]int) (int, bool) {
 		stat   int
 		target func([6]int) bool
 	}{
-		{statSTR, func(a [6]int) bool { return a[statSTR]+strFromGear >= awakenSTR40 }},
-		{statSTR, func(a [6]int) bool { return a[statSTR]+strFromGear >= awakenSTR60 }},
-		{statLUK, func(a [6]int) bool { return baseSkillCR+critPerLUK*float64(a[statLUK]) >= awakenSCRIT40 }},
+		{statSTR, strAt(40)}, {statSTR, strAt(60)}, {statSTR, strAt(80)}, {statSTR, strAt(95)},
+		{statSTR, strAt(110)}, {statSTR, strAt(125)},
+		{statLUK, scAt(40)}, {statLUK, scAt(50)}, {statLUK, scAt(60)}, {statLUK, scAt(75)},
 	} {
 		if goal.target(alloc) {
 			continue

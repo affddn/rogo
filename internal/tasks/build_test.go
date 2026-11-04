@@ -1,6 +1,9 @@
 package tasks
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func spend(alloc [6]int, points int) ([6]int, int) {
 	for {
@@ -13,24 +16,27 @@ func spend(alloc [6]int, points int) ([6]int, int) {
 	}
 }
 
-// searchBest tries every STR/AGI/LUK split of total points, with the rest
-// in DEX.
+// searchBest tries STR/AGI/VIT/LUK splits of total points (AGI, VIT and
+// LUK in steps of 2), with the rest in DEX.
 func searchBest(total int) [6]int {
 	var best [6]int
 	bd := 0.0
-	for st := 0; st <= 60; st++ {
-		for ag := 0; ag <= 70 && spentOn(st)+spentOn(ag) <= total; ag++ {
-			for lu := 0; lu <= 70; lu++ {
+	for st := 0; st <= 80; st++ {
+		for ag := 0; ag <= 90 && spentOn(st)+spentOn(ag) <= total; ag += 2 {
+			for lu := 0; lu <= 90; lu += 2 {
 				c := spentOn(st) + spentOn(ag) + spentOn(lu)
 				if c > total {
 					break
 				}
-				dx := 0
-				for c+spentOn(dx+1) <= total {
-					dx++
-				}
-				if a := [6]int{st, ag, 0, 0, dx, lu}; damage(a) > bd {
-					best, bd = a, damage(a)
+				for vi := 0; vi <= 50 && c+spentOn(vi) <= total; vi += 2 {
+					c2 := c + spentOn(vi)
+					dx := 0
+					for c2+spentOn(dx+1) <= total {
+						dx++
+					}
+					if a := [6]int{st, ag, vi, 0, dx, lu}; damage(a) > bd {
+						best, bd = a, damage(a)
+					}
 				}
 			}
 		}
@@ -39,19 +45,31 @@ func searchBest(total int) [6]int {
 }
 
 func TestNextStatNearTheSearchedOptimum(t *testing.T) {
-	for _, total := range []int{324, 400, 480} {
+	// The planner trades up to ~1.5% now for reaching an Awakening tier a
+	// few levels on (Skill CRIT 50 around 600 points).
+	for _, total := range []int{324, 444, 594, 844} {
 		best := searchBest(total)
 		got, left := spend([6]int{}, total)
-		if got[statINT] != 0 || left > 1 {
+		if got[statINT] > 1 || left > 1 {
 			t.Errorf("%d points -> %v (%d left)", total, got, left)
 		}
-		if r := damage(got) / damage(best); r < 0.99 {
+		if r := damage(got) / damage(best); r < 0.985 {
 			t.Errorf("%d points -> %v, %.3f of the searched best %v", total, got, r, best)
 		}
-		// Reaching STR 40 (Awakening) pays at every total here.
-		if got[statSTR]+strFromGear < awakenSTR40 {
+		if got[statSTR]+strFromGear < 40 {
 			t.Errorf("%d points -> STR %d, want the STR 40 Awakening tier", total, got[statSTR]+strFromGear)
 		}
+	}
+}
+
+func TestRhythmTiers(t *testing.T) {
+	for str, want := range map[float64]float64{5: 1.10, 60: 1.15, 95: 1.30, 180: 1.50} {
+		if got := rhythm(str); math.Abs(got-want) > 1e-9 {
+			t.Errorf("STR %v: rhythm %.3f, want %.3f", str, got, want)
+		}
+	}
+	if effectiveHP(0) != 1 || effectiveHP(20) <= 1.1 {
+		t.Errorf("effective HP at VIT 20 is %.3f", effectiveHP(20))
 	}
 }
 

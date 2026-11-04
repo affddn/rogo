@@ -205,6 +205,12 @@ func TestSkillPlusLive(t *testing.T) {
 			t.Errorf("%s: live with a point %v, with none %v", c.label, plusLive(one, p), plusLive(none, p))
 		}
 	}
+	// The same check further down the tree, with one point free.
+	two := capture(t, "skills/one-point-2.png")
+	m2 := assets.MustGet(screens.TSkillStealthEnh).FindIn(two, skillTree)
+	if p := m2.Center().Add(skillPlusFrom); p != image.Pt(422, 666) || !plusLive(two, p) {
+		t.Errorf("Stealth Enhancement + at %v live %v, want (422,666) live", p, plusLive(two, p))
+	}
 	// Katar Mastery is 5/5: never live.
 	m := assets.MustGet("skill_lbl_katar").FindIn(one, skillTree)
 	if plusLive(one, m.Center().Add(skillPlusFrom)) {

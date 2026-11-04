@@ -28,7 +28,7 @@ var skillPriority = []string{
 
 var (
 	skillTree     = image.Rect(0, 140, 720, 900)
-	skillPlusFrom = image.Pt(61, -51) // the + button from its skill's label
+	skillPlusFrom = image.Pt(61, -28) // the + button's centre from its skill's label
 	skillScrollUp = [2]image.Point{{360, 330}, {360, 820}}
 )
 
@@ -38,6 +38,12 @@ var (
 // (all maxed or not on screen), leaving the caller to fall back to the
 // game's Recommended allocation.
 func skillByPriority(ctx context.Context, b *bot.Bot, points int) (int, error) {
+	// The counter is the same box as the Attribute page's points.
+	if _, frame, err := b.Look(ctx); err == nil {
+		if n, ok := screens.AttributePoints(frame); ok {
+			points = min(points, n)
+		}
+	}
 	spent := 0
 	for _, label := range skillPriority {
 		if spent >= points {
@@ -109,9 +115,9 @@ func findSkillPlus(ctx context.Context, b *bot.Bot, label string) (image.Point, 
 }
 
 // plusLive reports whether a skill's + button can be tapped: its face is
-// cream (~232) then, grey (~170) when the skill is maxed or no points are
-// left. The strip sampled is below the + sign.
+// cream (~245) then, grey (~181) when the skill is maxed or no points are
+// left. The patch sampled is the face's top-left, clear of the + sign.
 func plusLive(frame image.Image, p image.Point) bool {
-	r, g, bl := meanRGB(frame, image.Rect(p.X-12, p.Y+10, p.X+12, p.Y+18))
-	return (r+g+bl)/3 > 200
+	r, g, bl := meanRGB(frame, image.Rect(p.X-12, p.Y-12, p.X-8, p.Y-8))
+	return (r+g+bl)/3 > 215
 }
