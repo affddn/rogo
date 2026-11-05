@@ -984,6 +984,22 @@
     "note": "MVP sweep dialog title"
   },
   {
+    "name": "mvp_tab_angeling",
+    "x": 140,
+    "y": 144,
+    "w": 92,
+    "h": 28,
+    "note": "MVP boss tab label: Angeling"
+  },
+  {
+    "name": "mvp_tab_gtb",
+    "x": 290,
+    "y": 144,
+    "w": 176,
+    "h": 28,
+    "note": "MVP boss tab label: Golden Thief Bug"
+  },
+  {
     "name": "nav_back",
     "x": 4,
     "y": 1192,

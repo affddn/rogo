@@ -264,3 +264,19 @@ func TestArenaTierRewardsClaimable(t *testing.T) {
 		t.Errorf("found %d Claim buttons, want 2", len(ms))
 	}
 }
+
+func TestMVPBossTabs(t *testing.T) {
+	both := capture(t, "mvp2/gtb.png")
+	for _, boss := range mvpBosses {
+		if _, ok := mvpTab(both, boss); !ok {
+			t.Errorf("%s: badged tab not found", boss)
+		}
+	}
+	early := capture(t, "mvp.png") // Golden Thief Bug still locked
+	if _, ok := mvpTab(early, screens.TMVPTabAngeling); !ok {
+		t.Error("Angeling tab not found")
+	}
+	if _, ok := mvpTab(early, screens.TMVPTabGTB); ok {
+		t.Error("locked Golden Thief Bug tab taken as workable")
+	}
+}

@@ -244,6 +244,8 @@ const (
 	TRuneArenaHeader     = "rune_arena_header"
 	TArenaOpponents      = "arena_opponents_title"
 	TArenaTierRewards    = "arena_tier_rewards_title"
+	TMVPTabAngeling      = "mvp_tab_angeling"
+	TMVPTabGTB           = "mvp_tab_gtb"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
