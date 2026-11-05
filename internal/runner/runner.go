@@ -35,6 +35,9 @@ type Action struct {
 	Run   func(ctx context.Context, b *bot.Bot, st *state.State) (Outcome, error)
 	// Snooze is how long a run without progress mutes the action.
 	Snooze time.Duration
+	// Wakes names actions to unmute when this one makes progress: a muted
+	// quest may be doable after a new quest or more power, for one.
+	Wakes []string
 }
 
 type Runner struct {
@@ -217,16 +220,26 @@ func (r *Runner) Run(ctx context.Context) error {
 			continue
 		}
 		streak, st.Fails[a.Name] = 0, 0
-		if out.Progress {
-			st.LastWin[a.Name] = time.Now()
-		} else if a.Snooze > 0 {
-			st.Snooze[a.Name] = time.Now().Add(a.Snooze)
-		}
-		if out.Growth {
-			st.Growth++
-		}
+		r.settle(a, out, time.Now())
 		log.Info("action done", "action", a.Name, "progress", out.Progress, "took", time.Since(start).Round(time.Second))
 		r.save()
+	}
+}
+
+// settle books a finished run: a win (unmuting what it wakes), or a snooze
+// when nothing moved.
+func (r *Runner) settle(a *Action, out Outcome, now time.Time) {
+	st := r.State
+	if out.Progress {
+		st.LastWin[a.Name] = now
+		for _, w := range a.Wakes {
+			delete(st.Snooze, w)
+		}
+	} else if a.Snooze > 0 {
+		st.Snooze[a.Name] = now.Add(a.Snooze)
+	}
+	if out.Growth {
+		st.Growth++
 	}
 }
 

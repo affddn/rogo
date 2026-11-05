@@ -43,6 +43,10 @@ func unlocked(b screens.Badge, ready func(sig, *st, time.Time) bool) func(sig, *
 	return func(s sig, st *st, now time.Time) bool { return s.Unlocked(b) && ready(s, st, now) }
 }
 
+// wakeQuest unmutes quest-go: a quest whose objective could not be done
+// waits 15 minutes, but a new quest or growth may unblock it sooner.
+var wakeQuest = []string{"quest-go"}
+
 // actions is the state machine's playbook. Badges and the quest tracker are
 // the game telling us something is ready; timers cover what it does not flag.
 func actions() []*runner.Action {
@@ -52,7 +56,7 @@ func actions() []*runner.Action {
 				on, err := tasks.AutoSummon(ctx, b)
 				return out{Progress: on}, err
 			}},
-		{Name: "quests", Priority: 90, Snooze: 5 * time.Minute,
+		{Name: "quests", Wakes: wakeQuest, Priority: 90, Snooze: 5 * time.Minute,
 			Ready: func(s sig, _ *st, _ time.Time) bool { return s.QuestDone },
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.MainQuest(ctx, b)
@@ -87,17 +91,19 @@ func actions() []*runner.Action {
 				st.Snooze["guide"] = time.Now().Add(15 * time.Minute)
 				return out{Progress: n > 0}, err
 			}},
-		{Name: "job-change", Priority: 86, Snooze: time.Hour, Ready: badge(screens.BadgeJobChange),
+		{Name: "job-change", Wakes: wakeQuest, Priority: 86, Snooze: time.Hour, Ready: badge(screens.BadgeJobChange),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.JobChange(ctx, b)
 				st.Add("job_tasks_claimed", n)
 				return out{Progress: n > 0}, err
 			}},
 		// Unfinished main quest: let the tracker take us to its objective
-		// and do it. Quests pay most of the growth, so one that moved goes
-		// straight on to the next; one that could not be done (no tickets
-		// left, nothing to do there yet) waits 15 minutes.
-		{Name: "quest-go", Priority: 84,
+		// and do it. Quests pay most of the growth, so this comes right
+		// after claiming them and one that moved goes straight on to the
+		// next; one that could not be done (no tickets left, nothing to do
+		// there yet) waits 15 minutes, or less if a new quest or growth
+		// comes first (wakeQuest).
+		{Name: "quest-go", Priority: 89,
 			Ready: func(s sig, st *st, _ time.Time) bool {
 				// A stage quest's objective is the stage fight; hold it while
 				// the stage is stuck, like the stage action does.
@@ -115,7 +121,7 @@ func actions() []*runner.Action {
 				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
 				return out{}, err
 			}},
-		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
+		{Name: "summon-upgrade", Wakes: wakeQuest, Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SummonUpgrade(ctx, b)
 				st.Add("summon_upgrade_stages", n)
@@ -123,7 +129,7 @@ func actions() []*runner.Action {
 			}},
 		// Points only arrive on level-up, and the Character badge also lights
 		// for cosmetics, so wait for the level text to change.
-		{Name: "attributes", Priority: 80, Snooze: 10 * time.Minute,
+		{Name: "attributes", Wakes: wakeQuest, Priority: 80, Snooze: 10 * time.Minute,
 			Ready: func(s sig, st *st, _ time.Time) bool {
 				return s.Has(screens.BadgeCharacter) && screens.LevelChanged(s.Level, st.Level)
 			},
@@ -138,13 +144,13 @@ func actions() []*runner.Action {
 				}
 				return out{Progress: spent, Growth: spent}, err
 			}},
-		{Name: "equipment", Priority: 75, Snooze: 30 * time.Minute, Ready: badge(screens.BadgeEquipment),
+		{Name: "equipment", Wakes: wakeQuest, Priority: 75, Snooze: 30 * time.Minute, Ready: badge(screens.BadgeEquipment),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.Equipment(ctx, b)
 				st.Add("enhance_levels", n)
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
-		{Name: "weapon", Priority: 70, Snooze: 2 * time.Hour, Ready: badge(screens.BadgeWeapon),
+		{Name: "weapon", Wakes: wakeQuest, Priority: 70, Snooze: 2 * time.Hour, Ready: badge(screens.BadgeWeapon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.WeaponGacha(ctx, b)
 				st.Add("gacha_batches", n)
@@ -158,7 +164,7 @@ func actions() []*runner.Action {
 			}},
 		// Diamonds above the reserve go to weapon draws, then the new
 		// weapons get cultivated.
-		{Name: "diamond-draws", Priority: 69,
+		{Name: "diamond-draws", Wakes: wakeQuest, Priority: 69,
 			Ready: func(_ sig, s *st, now time.Time) bool {
 				// Pet draws come first until the Draw Level opens the
 				// second Blessing slot.
@@ -174,7 +180,7 @@ func actions() []*runner.Action {
 				st.Add("cultivate_steps", c)
 				return out{Progress: true, Growth: c > 0}, err
 			}},
-		{Name: "pets", Priority: 68, Snooze: time.Hour,
+		{Name: "pets", Wakes: wakeQuest, Priority: 68, Snooze: time.Hour,
 			Ready: func(s sig, st *st, now time.Time) bool {
 				return s.Has(screens.BadgePet) || (petDrawsDue(st) && st.Since("pets", now) >= 3*time.Hour)
 			},
@@ -250,7 +256,7 @@ func actions() []*runner.Action {
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   mvpRun},
-		{Name: "dungeon", Priority: 62, Snooze: time.Hour,
+		{Name: "dungeon", Wakes: wakeQuest, Priority: 62, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := dungeonRuns(ctx, b, st)
@@ -270,7 +276,7 @@ func actions() []*runner.Action {
 		// Stage: retry as soon as combat power has moved since the last
 		// defeat (our upgrades, or auto-equipped drops), with a back-off of
 		// 5, 10, 20, 40 min while runs clear nothing; at most 45 min apart.
-		{Name: "stage", Priority: 50,
+		{Name: "stage", Wakes: wakeQuest, Priority: 50,
 			Ready: func(s sig, st *st, now time.Time) bool {
 				wait := min(5*time.Minute<<min(st.StageMisses, 3), 45*time.Minute)
 				since := st.Since("stage", now)

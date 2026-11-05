@@ -128,3 +128,20 @@ func TestLinkFailedBacksOffAndCounts(t *testing.T) {
 		t.Fatalf("link fails %d, want 2", st.LinkFails)
 	}
 }
+
+func TestProgressWakesMutedActions(t *testing.T) {
+	st, _ := state.Load(filepath.Join(t.TempDir(), "s.json"))
+	now := time.Now()
+	r := New(nil, st)
+	st.Snooze["quest-go"] = now.Add(15 * time.Minute)
+	claim := &Action{Name: "quests", Snooze: 5 * time.Minute, Wakes: []string{"quest-go"}}
+
+	r.settle(claim, Outcome{}, now)
+	if !st.Snoozed("quest-go", now) {
+		t.Fatal("a run without progress woke quest-go")
+	}
+	r.settle(claim, Outcome{Progress: true}, now)
+	if st.Snoozed("quest-go", now) {
+		t.Fatal("a claimed quest left quest-go muted")
+	}
+}
