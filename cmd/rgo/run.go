@@ -261,6 +261,16 @@ func actions() []*runner.Action {
 				st.Add("shop_lots", n)
 				return out{Progress: n > 0}, err
 			}},
+		// The top three of each ranking tab pay 20 diamonds a like, daily.
+		{Name: "ranking", Priority: 64,
+			Ready: func(_ sig, s *st, _ time.Time) bool { return !s.Daily["ranking_likes"] },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.RankingLikes(ctx, b)
+				if err == nil {
+					st.Daily["ranking_likes"] = true
+				}
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "arena", Priority: 63,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, s *st, now time.Time) bool { return s.Since("arena", now) >= 3*time.Hour }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -508,6 +518,12 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdRanking(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.RankingLikes(ctx, newBot(d))
+	fmt.Println("likes", n)
 	return err
 }
 

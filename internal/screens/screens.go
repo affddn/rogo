@@ -83,6 +83,8 @@ const (
 	ShopBuy          ID = "shop-buy"
 	YieldBonus       ID = "yield-bonus"
 	YieldUse         ID = "yield-use"
+	GuildLoot        ID = "guild-loot"
+	Ranking          ID = "ranking"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -263,6 +265,9 @@ const (
 	TYieldTitle          = "yield_title"
 	TYieldConfirm        = "yield_confirm"
 	TYieldExtended       = "yield_extended"
+	TGuildLootTitle      = "guild_loot_title"
+	TGuildLootOpenAll    = "guild_loot_open_all"
+	TRankingHeader       = "ranking_header"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -372,7 +377,9 @@ var rules = []rule{
 	{id: GuildShop, anchors: []string{TGuildShopTitle}},
 	{id: Shop, anchors: []string{TShopTitle}},
 	{id: GuildBargain, anchors: []string{TGuildBargainTitle}},
+	{id: GuildLoot, anchors: []string{TGuildLootTitle}},
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
+	{id: Ranking, anchors: []string{TRankingHeader}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},

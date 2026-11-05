@@ -230,5 +230,38 @@ func guildHunt(ctx context.Context, b *bot.Bot) (int, error) {
 			return n, err
 		}
 	}
+	if badged(frame, guildLootDot) {
+		l, err := guildLoot(ctx, b)
+		n += l
+		if err != nil {
+			return n, err
+		}
+	}
 	return n, nil
+}
+
+// Guild Hunt's Loot: chests guildmates' hunts bring back for everyone.
+var (
+	guildLootBtn = image.Pt(662, 345)
+	guildLootDot = image.Pt(690, 316)
+)
+
+// guildLoot opens every loot chest waiting (Open All).
+func guildLoot(ctx context.Context, b *bot.Bot) (int, error) {
+	_, frame, err := b.TapWait(ctx, screens.GuildHunt, guildLootBtn, "guild loot", 8*time.Second, screens.GuildLoot)
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	if screens.Visible(frame, screens.TGuildLootOpenAll) {
+		if err := b.TapTemplate(ctx, frame, screens.TGuildLootOpenAll); err != nil {
+			return 0, err
+		}
+		n = 1
+		b.Log.Info("guild loot opened")
+		if err := closePopups(ctx, b, screens.GuildLoot); err != nil {
+			return n, err
+		}
+	}
+	return n, closePopups(ctx, b, screens.GuildHunt)
 }

@@ -624,6 +624,22 @@
     "note": "Guild Hunt page title"
   },
   {
+    "name": "guild_loot_open_all",
+    "x": 256,
+    "y": 932,
+    "w": 208,
+    "h": 56,
+    "note": "Guild Loot: Open All button"
+  },
+  {
+    "name": "guild_loot_title",
+    "x": 285,
+    "y": 280,
+    "w": 150,
+    "h": 38,
+    "note": "Guild Hunt \u003e Loot popup title"
+  },
+  {
     "name": "guild_shop_title",
     "x": 4,
     "y": 20,
@@ -1310,6 +1326,14 @@
     "w": 180,
     "h": 50,
     "note": "Card page: One-Click Raise Star Level button"
+  },
+  {
+    "name": "ranking_header",
+    "x": 25,
+    "y": 503,
+    "w": 105,
+    "h": 30,
+    "note": "Ranking page: 'Ranking' column header (all tabs)"
   },
   {
     "name": "realm_challenge_btn",
