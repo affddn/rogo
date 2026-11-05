@@ -34,9 +34,8 @@ var (
 
 // skillByPriority spends unspent skill points on the highest-priority skill
 // that still takes one, finding each by its label as the tree scrolls, and
-// confirms. It reports false when none of skillPriority could take a point
-// (all maxed or not on screen), leaving the caller to fall back to the
-// game's Recommended allocation.
+// confirms. It reports how many points it placed; none when no skill in
+// skillPriority could take one (all maxed or not on screen).
 func skillByPriority(ctx context.Context, b *bot.Bot, points int) (int, error) {
 	// The counter is the same box as the Attribute page's points.
 	if _, frame, err := b.Look(ctx); err == nil {

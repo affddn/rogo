@@ -59,9 +59,9 @@ var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
 
 // Attributes spends free attribute points where they add the most damage
 // (see build.go) instead of the game's Recommended Allocation, which the
-// model puts about 3% behind. Unspent skill points go to the Recommended
-// skill allocation; the one choice there (Potential Burst over Envenom, and
-// equipping it) was made by hand.
+// model puts about 3% behind. Unspent skill points go by our own skill
+// order (skilltree.go); the one choice there (Potential Burst over Envenom,
+// and equipping it) was made by hand.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
 	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill, screens.Awakening)
@@ -185,10 +185,11 @@ func awaken(ctx context.Context, b *bot.Bot) (int, error) {
 	return n, nil
 }
 
-// skills spends unspent skill points with the Recommended skill allocation.
+// skills spends unspent skill points in our own order (skilltree.go). The
+// game's Recommended Allocation is never used: it resets every skill to its
+// own plan. Points no skill in our order takes (all maxed, or new skills
+// after a job change) stay unspent until the order learns those skills.
 func skills(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
-	// Our own order first (skilltree.go); whatever it cannot place (new
-	// skills it does not know yet) goes to the game's Recommended.
 	n, err := skillByPriority(ctx, b, 20)
 	if err != nil {
 		return n > 0, err
@@ -196,27 +197,10 @@ func skills(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
 	if _, frame, err = b.Look(ctx); err != nil {
 		return n > 0, err
 	}
-	if !badged(frame, skillTabBadge) {
-		return n > 0, nil
+	if badged(frame, skillTabBadge) {
+		b.Log.Warn("skill points left that no skill in our order takes", "shot", b.Save(frame))
 	}
-	if !screens.Visible(frame, screens.TAttrRecommended) {
-		return n > 0, nil
-	}
-	if err := b.TapTemplate(ctx, frame, screens.TAttrRecommended); err != nil {
-		return n > 0, err
-	}
-	if _, frame, err = b.Look(ctx); err != nil {
-		return n > 0, err
-	}
-	// Points for skills that are still locked leave nothing to confirm.
-	if !screens.Visible(frame, screens.TAttrConfirm) {
-		return n > 0, nil
-	}
-	if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
-		return n > 0, err
-	}
-	b.Log.Info("skill points allocated by Recommended")
-	return true, nil
+	return n > 0, nil
 }
 
 // Enhance slots on the Enhance page: the item icon and its upgrade badge.
