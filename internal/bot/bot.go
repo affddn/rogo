@@ -227,6 +227,10 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		screens.Shop:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.YieldUse:
+		return true, b.Tap(ctx, image.Pt(203, 830), "cancel yield item")
+	case screens.YieldBonus:
+		return true, b.Tap(ctx, image.Pt(665, 297), "close yield bonus")
 	case screens.ShopBuy:
 		// Tap outside the dialog, on the shopkeeper banner.
 		return true, b.Tap(ctx, image.Pt(600, 200), "close buy dialog")

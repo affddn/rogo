@@ -3,6 +3,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"image"
 	"time"
 
@@ -39,6 +40,12 @@ func Income(ctx context.Context, b *bot.Bot) (ticketLeft bool, err error) {
 	}
 	ticketLeft = freeQuickIdle(frame)
 
+	if n, err := yieldBonus(ctx, b); err != nil {
+		return ticketLeft, err
+	} else if n > 0 {
+		b.Log.Info("yield bonus items used", "lots", n)
+	}
+
 	if err := b.Tap(ctx, bot.IncomeClose, "close income"); err != nil {
 		return ticketLeft, err
 	}
@@ -73,4 +80,66 @@ func quickIdle(ctx context.Context, b *bot.Bot, frame image.Image) error {
 	b.Log.Info("quick idle used")
 	// One tap does not always close the reward on a slow link.
 	return closePopups(ctx, b, screens.Income)
+}
+
+// Income's Yield Bonus panel uses EXP Boost Books and Drop Rate Boost Candy:
+// 10 minutes each of +50% idle EXP or resources. Durations add up, so every
+// one owned is used at once. Its Use Item tab is badged while any is owned.
+var (
+	yieldBonusButton = image.Pt(206, 1047)
+	yieldUseTab      = image.Pt(513, 378)
+	yieldUseBadge    = image.Pt(650, 363)
+	yieldUseRows     = []int{496, 636}
+	yieldUseX        = 581
+	yieldSliderY     = 675
+	yieldClose       = image.Pt(665, 297)
+)
+
+func yieldBonus(ctx context.Context, b *bot.Bot) (used int, err error) {
+	if _, _, err := b.TapWait(ctx, screens.Income, yieldBonusButton, "yield bonus", 8*time.Second, screens.YieldBonus); err != nil {
+		return 0, err
+	}
+	if err := b.Tap(ctx, yieldUseTab, "use item tab"); err != nil {
+		return 0, err
+	}
+	_, frame, err := b.Look(ctx)
+	if err != nil {
+		return 0, err
+	}
+	for _, y := range yieldUseRows {
+		if !badged(frame, yieldUseBadge) {
+			break
+		}
+		if err := b.Tap(ctx, image.Pt(yieldUseX, y), "use yield item"); err != nil {
+			return used, err
+		}
+		// With none owned, Use does nothing.
+		id, _, err := b.Wait(ctx, 3*time.Second, screens.YieldUse)
+		if id == screens.YieldBonus && errors.Is(err, bot.ErrTimeout) {
+			continue
+		}
+		if err != nil {
+			return used, err
+		}
+		// Slide to the most owned.
+		if err := b.D.Swipe(ctx, 217, yieldSliderY, 560, yieldSliderY, 400*time.Millisecond); err != nil {
+			return used, err
+		}
+		_, dialog, err := b.Look(ctx)
+		if err != nil {
+			return used, err
+		}
+		if err := b.TapTemplate(ctx, dialog, screens.TYieldConfirm); err != nil {
+			return used, err
+		}
+		used++
+		if err := closePopups(ctx, b, screens.YieldBonus); err != nil {
+			return used, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return used, err
+		}
+	}
+	_, _, err = b.TapWait(ctx, screens.YieldBonus, yieldClose, "close yield bonus", 8*time.Second, screens.Income)
+	return used, err
 }

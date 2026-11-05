@@ -43,12 +43,14 @@ type shopTab struct {
 }
 
 // shopTabs lists what each tab's coins go to: refine meteorites and Star
-// Powder are scarce and gate refining and enchanting, metal feeds enhancing.
+// Powder are scarce and gate refining and enchanting, metal feeds enhancing,
+// and what is left buys EXP Boost Books and Drop Rate Boost Candy (used from
+// Income > Yield Bonus).
 var shopTabs = []shopTab{
-	{"baphomet", image.Pt(350, 1240), []string{screens.TShopMeteorite, screens.TShopMetal200}},
+	{"baphomet", image.Pt(350, 1240), []string{screens.TShopMeteorite, screens.TShopMetal200, screens.TShopExpBook5}},
 	{"dungeon", image.Pt(455, 1240), []string{screens.TShopMetal20}},
 	{"rune arena", image.Pt(556, 1240), []string{screens.TShopStarPowder, screens.TShopMetal200}},
-	{"guild", image.Pt(660, 1240), []string{screens.TShopMetal100}},
+	{"guild", image.Pt(660, 1240), []string{screens.TShopMetal100, screens.TShopExpBook3, screens.TShopCandy3}},
 }
 
 // Shop buys every wanted item the coins cover, tab by tab.

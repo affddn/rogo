@@ -81,6 +81,8 @@ const (
 	ArenaTierRewards ID = "arena-tier-rewards"
 	Shop             ID = "shop"
 	ShopBuy          ID = "shop-buy"
+	YieldBonus       ID = "yield-bonus"
+	YieldUse         ID = "yield-use"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -255,6 +257,12 @@ const (
 	TShopMetal200        = "shop_metal_200"
 	TShopMeteorite       = "shop_meteorite"
 	TShopStarPowder      = "shop_star_powder"
+	TShopExpBook3        = "shop_exp_book_3"
+	TShopExpBook5        = "shop_exp_book_5"
+	TShopCandy3          = "shop_candy_3"
+	TYieldTitle          = "yield_title"
+	TYieldConfirm        = "yield_confirm"
+	TYieldExtended       = "yield_extended"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -352,6 +360,8 @@ var rules = []rule{
 	{id: SummonLevelHint, anchors: []string{TSummonLevelHint}},
 	// The close X sits over the map and dims on dark ones; Yield Bonus is
 	// on the dialog's own panel.
+	{id: YieldUse, anchors: []string{TYieldExtended, TYieldConfirm}},
+	{id: YieldBonus, anchors: []string{TYieldTitle}},
 	{id: Income, anchors: []string{TIncomeTitle, TIncomeYieldBonus}},
 	{id: Attribute, anchors: []string{TAttrHeader, TNavBack}},
 	{id: CharOverview, anchors: []string{TCharOverview, TNavBack}},

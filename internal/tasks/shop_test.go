@@ -69,3 +69,35 @@ func TestShopBuyDialogReads(t *testing.T) {
 		t.Errorf("guild coin icon read as a diamond (%.2f)", r)
 	}
 }
+
+func TestYieldBonusScreens(t *testing.T) {
+	for file, want := range map[string]screens.ID{
+		"shop/yield-dialog.png": screens.YieldUse,
+		"shop/yield-items.png":  screens.YieldBonus,
+		"shop/yield-none.png":   screens.YieldBonus,
+	} {
+		if got := screens.Detect(capture(t, file)); got != want {
+			t.Errorf("%s: detected %s, want %s", file, got, want)
+		}
+	}
+	// Two candies owned badge the Use Item tab; nothing owned leaves it bare.
+	if !badged(capture(t, "shop/yield-items.png"), yieldUseBadge) {
+		t.Error("Use Item tab badge missed with candies owned")
+	}
+	if badged(capture(t, "shop/yield-none.png"), yieldUseBadge) {
+		t.Error("Use Item tab read as badged with nothing owned")
+	}
+}
+
+func TestShopBoostItems(t *testing.T) {
+	// 856 guild coins: EXP Boost Book x3 and Drop Rate Boost Candy x3 at 48.
+	top := capture(t, "shop/guild-top.png")
+	for _, name := range []string{screens.TShopExpBook3, screens.TShopCandy3} {
+		if _, ok := shopNext(top, []string{name}); !ok {
+			t.Errorf("guild shop: %s not offered", name)
+		}
+	}
+	if _, ok := shopNext(capture(t, "shop/baph-bottom.png"), []string{screens.TShopExpBook5}); !ok {
+		t.Error("baphomet shop: EXP Boost Book x5 not offered")
+	}
+}
