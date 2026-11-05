@@ -8,6 +8,7 @@ import (
 	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/bot"
 	"github.com/affddn/rogo/internal/screens"
+	"github.com/affddn/rogo/internal/vision"
 )
 
 var (
@@ -24,11 +25,26 @@ var (
 	// Card; badged while unused.
 	petAdButton = image.Pt(93, 1052)
 	petAdBadge  = image.Pt(127, 1019)
+	// Draw 1 Time spends one Pet Gacha Token: the token icon and a green
+	// count ("2/1") under it. Without tokens the cost turns to 10 diamonds,
+	// whose count is green too, so the icon decides.
+	petDrawSingle = image.Pt(282, 1052)
+	petSingleCost = image.Rect(225, 1115, 300, 1140)
+	petSingleIcon = image.Rect(185, 1100, 240, 1150)
 )
 
-// Pets draws pet gacha with free tickets only (the multi-draw button must
-// show the ticket icon; once tickets run out it switches to diamonds, which
-// are deny-listed), then activates, upgrades and auto-deploys pets.
+// petTokenDraw reports whether Draw 1 Time would spend a Pet Gacha Token.
+func petTokenDraw(frame image.Image) bool {
+	return assets.MustGet(screens.TPetTokenCost).FindIn(frame, petSingleIcon).Score >= 0.9 &&
+		vision.Ratio(frame, petSingleCost, vision.IsGreenText) > 0.03
+}
+
+// Pets draws pet gacha with free tickets only (the ad draw, Pet Gacha Tokens
+// one at a time, and the multi-draw button while it shows the ticket icon;
+// once tickets run out it switches to diamonds, which are deny-listed), then
+// activates, upgrades and auto-deploys pets. Draws also raise the Draw
+// Level, which unlocks the Blessing (Guardian) slots: level 2 the first,
+// level 3 the second.
 func Pets(ctx context.Context, b *bot.Bot) (steps int, err error) {
 	frame, err := open(ctx, b, screens.TNavPet, screens.PetGacha, screens.PetCultivate)
 	if err != nil {
@@ -48,6 +64,21 @@ func Pets(ctx context.Context, b *bot.Bot) (steps int, err error) {
 		}
 		steps++
 		b.Log.Info("free pet ad draw taken")
+		if err := bot.Sleep(ctx, 3*time.Second); err != nil {
+			return steps, err
+		}
+		if err := closePopups(ctx, b, screens.PetGacha); err != nil {
+			return steps, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return steps, err
+		}
+	}
+	for draws := 0; draws < 10 && petTokenDraw(frame); draws++ {
+		if err := b.Tap(ctx, petDrawSingle, "pet draw once"); err != nil {
+			return steps, err
+		}
+		steps++
 		if err := bot.Sleep(ctx, 3*time.Second); err != nil {
 			return steps, err
 		}

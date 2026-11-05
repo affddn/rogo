@@ -292,3 +292,13 @@ func TestAttributeTotals(t *testing.T) {
 		t.Errorf("Total Allocated read %v, want %v", alloc, want)
 	}
 }
+
+func TestPetTokenDraw(t *testing.T) {
+	if !petTokenDraw(capture(t, "pets-gacha-tokens.png")) {
+		t.Error("2 Pet Gacha Tokens not seen")
+	}
+	// No tokens: Draw 1 Time costs 10 diamonds, also with a green count.
+	if petTokenDraw(capture(t, "pets-gacha-notokens.png")) {
+		t.Error("a 10-diamond draw taken for a token draw")
+	}
+}

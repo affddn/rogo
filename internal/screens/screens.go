@@ -246,6 +246,7 @@ const (
 	TArenaTierRewards    = "arena_tier_rewards_title"
 	TMVPTabAngeling      = "mvp_tab_angeling"
 	TMVPTabGTB           = "mvp_tab_gtb"
+	TPetTokenCost        = "pet_token_cost"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )

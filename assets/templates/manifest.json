@@ -1104,6 +1104,14 @@
     "note": "pet cultivation page header"
   },
   {
+    "name": "pet_token_cost",
+    "x": 197,
+    "y": 1112,
+    "w": 30,
+    "h": 30,
+    "note": "Pet Gacha: Pet Gacha Token icon under Draw 1 Time"
+  },
+  {
     "name": "petgacha_cost_ticket",
     "x": 304,
     "y": 762,
