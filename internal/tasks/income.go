@@ -162,7 +162,7 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 	if err != nil {
 		return 0, 0, err
 	}
-	spent := 0
+	spent, free := 0, 0
 	for bought < max {
 		lv, ok := screens.IncomeJobLevel(frame)
 		if !ok {
@@ -173,8 +173,10 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 		if job >= target {
 			break
 		}
-		if freeQuickIdle(frame) {
-			// A free one or a Quick Idle Ticket first.
+		if freeQuickIdle(frame) && free < 5 {
+			// A free one or a Quick Idle Ticket first (capped: a confirm
+			// that turns out not free is cancelled without an error).
+			free++
 			if err := quickIdle(ctx, b, frame); err != nil {
 				return bought, job, err
 			}
