@@ -236,8 +236,9 @@ var enhanceSlots = [...]struct{ icon, badge image.Point }{
 	{image.Pt(653, 497), image.Pt(704, 449)}, // accessory right
 }
 
-// setItems is how many of enhanceSlots, the first ones, count toward Enhance
-// Resonance; the two accessories do not.
+// setItems is how many of enhanceSlots, the first ones, are the armour set;
+// the rest are accessories. Enhance Resonance counts all eight ("8 items
+// enhanced to Level 85"), read 5 Nov.
 const setItems = 6
 
 // enhanceLevels caches each slot's level as read on the Enhance page (0: not
@@ -611,8 +612,9 @@ func enhance(ctx context.Context, b *bot.Bot) (levels int, err error) {
 
 // lowestBadged picks the badged slot with the lowest known level (unread
 // ones first, so they get read), accessories included: a low level costs
-// far less than a high one, and every level counts toward the job change's
-// total enhancement task. On a tie a set item goes first, for resonance.
+// far less than a high one, Enhance Resonance waits on the lowest of all
+// eight, and every level counts toward the job change's total enhancement
+// task.
 func lowestBadged(frame image.Image) (int, bool) {
 	best := -1
 	for i := range enhanceSlots {
