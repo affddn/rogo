@@ -3,7 +3,6 @@ package tasks
 import (
 	"context"
 	"image"
-	"time"
 
 	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/bot"
@@ -25,13 +24,7 @@ var (
 
 // Backpack uses every badged item once.
 func Backpack(ctx context.Context, b *bot.Bot) (used int, err error) {
-	if err := b.ToMain(ctx); err != nil {
-		return 0, err
-	}
-	if err := b.Tap(ctx, systemMenuBtn, "system menu"); err != nil {
-		return 0, err
-	}
-	_, frame, err := b.TapWait(ctx, screens.Main, backpackEntry, "backpack", 8*time.Second, screens.Backpack)
+	_, frame, err := openSystemEntry(ctx, b, backpackEntry, "backpack", screens.Backpack)
 	if err != nil {
 		return 0, err
 	}

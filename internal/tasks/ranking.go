@@ -27,13 +27,7 @@ var (
 
 // RankingLikes likes every badged top-three player on every badged tab.
 func RankingLikes(ctx context.Context, b *bot.Bot) (likes int, err error) {
-	if err := b.ToMain(ctx); err != nil {
-		return 0, err
-	}
-	if err := b.Tap(ctx, systemMenuBtn, "system menu"); err != nil {
-		return 0, err
-	}
-	_, frame, err := b.TapWait(ctx, screens.Main, rankingEntry, "ranking", 8*time.Second, screens.Ranking)
+	_, frame, err := openSystemEntry(ctx, b, rankingEntry, "ranking", screens.Ranking)
 	if err != nil {
 		return 0, err
 	}

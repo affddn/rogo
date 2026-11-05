@@ -304,16 +304,7 @@ func shapeSeen(frame image.Image, name string) bool {
 
 // Mail claims all mail rewards. Delete All is deny-listed.
 func Mail(ctx context.Context, b *bot.Bot) error {
-	if err := b.ToMain(ctx); err != nil {
-		return err
-	}
-	if err := b.Tap(ctx, image.Pt(671, 180), "system menu"); err != nil {
-		return err
-	}
-	if err := b.Tap(ctx, image.Pt(388, 160), "mail"); err != nil {
-		return err
-	}
-	_, frame, err := b.Wait(ctx, 8*time.Second, screens.Mail)
+	_, frame, err := openSystemEntry(ctx, b, image.Pt(388, 160), "mail", screens.Mail)
 	if err != nil {
 		return err
 	}

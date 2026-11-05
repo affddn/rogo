@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"image"
 	"image/color"
 	"math"
@@ -53,18 +54,37 @@ var shopTabs = []shopTab{
 	{"guild", image.Pt(660, 1240), []string{screens.TShopMetal100, screens.TShopExpBook3, screens.TShopCandy3}},
 }
 
+// openSystemEntry opens one of the System menu's pages from main. The menu
+// tap is dropped now and then, and the entry's tap then lands on the map,
+// so the pair is tried up to three times.
+func openSystemEntry(ctx context.Context, b *bot.Bot, entry image.Point, what string, want ...screens.ID) (screens.ID, image.Image, error) {
+	var (
+		id    screens.ID
+		frame image.Image
+		err   error
+	)
+	for try := 0; try < 3; try++ {
+		if err := b.ToMain(ctx); err != nil {
+			return id, frame, err
+		}
+		if err := b.Tap(ctx, systemMenuBtn, "system menu"); err != nil {
+			return id, frame, err
+		}
+		if err := b.Tap(ctx, entry, what); err != nil {
+			return id, frame, err
+		}
+		id, frame, err = b.Wait(ctx, 8*time.Second, want...)
+		if !errors.Is(err, bot.ErrTimeout) {
+			return id, frame, err
+		}
+		b.Log.Warn("system menu entry did not open, trying again", "what", what, "try", try+1)
+	}
+	return id, frame, err
+}
+
 // Shop buys every wanted item the coins cover, tab by tab.
 func Shop(ctx context.Context, b *bot.Bot) (bought int, err error) {
-	if err := b.ToMain(ctx); err != nil {
-		return 0, err
-	}
-	if err := b.Tap(ctx, systemMenuBtn, "system menu"); err != nil {
-		return 0, err
-	}
-	if err := b.Tap(ctx, shopEntry, "shop"); err != nil {
-		return 0, err
-	}
-	if _, _, err := b.Wait(ctx, 8*time.Second, screens.Shop, screens.GuildShop); err != nil {
+	if _, _, err := openSystemEntry(ctx, b, shopEntry, "shop", screens.Shop, screens.GuildShop); err != nil {
 		return 0, err
 	}
 	for _, tab := range shopTabs {
