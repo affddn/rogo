@@ -170,7 +170,20 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 			break
 		}
 		job = lv
-		if job >= target || vision.Ratio(frame, incomeDiamonds, vision.IsGreenText) < 0.03 {
+		if job >= target {
+			break
+		}
+		if freeQuickIdle(frame) {
+			// A free one or a Quick Idle Ticket first.
+			if err := quickIdle(ctx, b, frame); err != nil {
+				return bought, job, err
+			}
+			if _, frame, err = b.Wait(ctx, 10*time.Second, screens.Income); err != nil {
+				return bought, job, err
+			}
+			continue
+		}
+		if vision.Ratio(frame, incomeDiamonds, vision.IsGreenText) < 0.03 {
 			break
 		}
 		_, confirm, err := b.TapWait(ctx, screens.Income, quickIdleButton, "quick idle", 10*time.Second, screens.QuickIdleConfirm)
