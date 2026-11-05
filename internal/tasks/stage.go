@@ -75,6 +75,9 @@ func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 		if id == screens.StageDefeat || id == screens.Main {
 			break
 		}
+		if id != screens.InCombat && id != screens.Unknown && id != screens.Loading {
+			break // some other page: not a stage fight; ToMain takes over
+		}
 		if screens.Visible(frame, screens.TTutSkip) {
 			b.Log.Info("skipping tutorial between stages")
 			if err := b.TapTemplate(ctx, frame, screens.TTutSkip); err != nil {

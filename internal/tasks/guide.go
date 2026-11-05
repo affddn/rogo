@@ -21,6 +21,9 @@ func FollowGuide(ctx context.Context, b *bot.Bot, skip func(image.Point) bool) (
 		if err != nil {
 			return steps, landed, err
 		}
+		if id == screens.InCombat || id == screens.Loading {
+			break // a fight started: hand it over without another look
+		}
 		a, ok := screens.FindGuideArrow(frame)
 		if !ok {
 			// The arrow blinks; give it one more look before stopping.
