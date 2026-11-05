@@ -94,7 +94,9 @@ func actions() []*runner.Action {
 				return out{Progress: n > 0}, err
 			}},
 		// Unfinished main quest: let the tracker take us to its objective
-		// and do it. Snoozed after each try; some objectives need time.
+		// and do it. Quests pay most of the growth, so one that moved goes
+		// straight on to the next; one that could not be done (no tickets
+		// left, nothing to do there yet) waits 15 minutes.
 		{Name: "quest-go", Priority: 84,
 			Ready: func(s sig, st *st, _ time.Time) bool {
 				// A stage quest's objective is the stage fight; hold it while
@@ -102,13 +104,16 @@ func actions() []*runner.Action {
 				return !s.QuestDone && !(s.StageQuest && stageStuck(st))
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
 				landed, err := tasks.QuestGo(ctx, b)
-				if err != nil {
-					return out{}, err
+				if err == nil {
+					st.Add("quest_go", 1)
+					var o out
+					if o, err = runFrom(ctx, b, st, landed); err == nil && o.Progress {
+						return o, nil
+					}
 				}
-				st.Add("quest_go", 1)
-				return runFrom(ctx, b, st, landed)
+				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
+				return out{}, err
 			}},
 		{Name: "summon-upgrade", Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
