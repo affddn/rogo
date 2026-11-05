@@ -169,8 +169,8 @@ func shopBuy(ctx context.Context, b *bot.Bot, price image.Point) (int, error) {
 	if id == screens.Reward {
 		return 1, closePopups(ctx, b, screens.Shop, screens.GuildShop)
 	}
-	if vision.Ratio(frame, shopCostIcon, isDiamondPink) > 0.1 {
-		b.Log.Warn("shop item costs diamonds, not buying", "shot", b.Save(frame))
+	if vision.Ratio(frame, shopCostIcon, isDiamondPink) > 0.1 || paidInStars(frame) {
+		b.Log.Warn("shop item costs diamonds or stars, not buying", "shot", b.Save(frame))
 		return 0, closePopups(ctx, b, screens.Shop, screens.GuildShop)
 	}
 	if !shopCostCovered(frame) {
@@ -206,6 +206,12 @@ func shopBuy(ctx context.Context, b *bot.Bot, price image.Point) (int, error) {
 		return 0, err
 	}
 	return 1, closePopups(ctx, b, screens.Shop, screens.GuildShop)
+}
+
+// paidInStars spots the star icon on the cost line; stars are bought with
+// money and never spent (the pink test above misses them).
+func paidInStars(frame image.Image) bool {
+	return assets.MustGet(screens.TTroveStarCost).FindIn(frame, shopCostIcon.Inset(-12)).Score >= 0.8
 }
 
 func shopCostCovered(frame image.Image) bool {

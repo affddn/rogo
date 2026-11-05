@@ -192,3 +192,38 @@ func TestPruneShots(t *testing.T) {
 		t.Errorf("left %v", names)
 	}
 }
+
+// Once the trove's tickets are gone both draws cost stars; on 5 Nov a
+// green star count let five Draw 1 Time taps through (750 stars).
+func TestTapRefusesStarPricedTroveDraws(t *testing.T) {
+	load := func(name string) image.Image {
+		f, err := os.Open("../../captures/claims/" + name)
+		if err != nil {
+			t.Skipf("reference capture %s not present", name)
+		}
+		defer f.Close()
+		frame, err := png.Decode(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return frame
+	}
+	d := device.New("test")
+	d.DryRun = true
+	b := New(d, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	b.Shots, b.Settle = t.TempDir(), 0
+
+	b.last = load("trove-no-tickets.png")
+	for _, p := range []image.Point{{316, 1196}, {566, 1208}} {
+		if err := b.Tap(context.Background(), p, "trove draw"); !errors.Is(err, ErrDenied) {
+			t.Errorf("tap at %v with no tickets: got %v, want ErrDenied", p, err)
+		}
+	}
+	b.last = load("trove.png")
+	if err := b.Tap(context.Background(), image.Pt(316, 1196), "trove draw"); err != nil {
+		t.Errorf("ticket draw refused: %v", err)
+	}
+	if err := b.Tap(context.Background(), image.Pt(566, 1208), "draw 5x"); !errors.Is(err, ErrDenied) {
+		t.Errorf("Draw 5x with tickets: got %v, want ErrDenied", err)
+	}
+}

@@ -271,6 +271,24 @@ func actions() []*runner.Action {
 				n, err := tasks.Backpack(ctx, b)
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
+		// Left-rail events: Login Rewards (daily, card tickets among them)
+		// and the Arcane Card Trove, drawn once per ticket.
+		{Name: "login-rewards", Priority: 64,
+			Ready: func(_ sig, s *st, _ time.Time) bool { return !s.Daily["login_rewards"] },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.LoginRewards(ctx, b)
+				if err == nil {
+					st.Daily["login_rewards"] = true
+				}
+				return out{Progress: n > 0}, err
+			}},
+		{Name: "card-trove", Priority: 63,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("card-trove", now) >= 4*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.CardTrove(ctx, b)
+				st.Add("trove_draws", n)
+				return out{Progress: n > 0, Growth: n > 0}, err
+			}},
 		// The top three of each ranking tab pay 20 diamonds a like, daily.
 		{Name: "ranking", Priority: 64,
 			Ready: func(_ sig, s *st, _ time.Time) bool { return !s.Daily["ranking_likes"] },
@@ -528,6 +546,18 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdTrove(ctx context.Context, d *device.Device, _ []string) error {
+	b := newBot(d)
+	l, err := tasks.LoginRewards(ctx, b)
+	fmt.Println("login rewards", l)
+	if err != nil {
+		return err
+	}
+	n, err := tasks.CardTrove(ctx, b)
+	fmt.Println("trove draws", n)
 	return err
 }
 

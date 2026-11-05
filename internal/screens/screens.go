@@ -86,6 +86,9 @@ const (
 	GuildLoot        ID = "guild-loot"
 	Ranking          ID = "ranking"
 	Backpack         ID = "backpack"
+	CardTrove        ID = "card-trove"
+	CardTroveStars   ID = "card-trove-stars"
+	LoginRewards     ID = "login-rewards"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -271,6 +274,15 @@ const (
 	TRankingHeader       = "ranking_header"
 	TBackpackTitle       = "backpack_title"
 	TBackpackUse         = "backpack_use"
+	TRailTrove           = "rail_trove"
+	TRailLogin           = "rail_login"
+	TTroveTitle          = "trove_title"
+	TTroveDraw1          = "trove_draw1"
+	TTroveStarCost       = "trove_star_cost"
+	TTroveTicketCost     = "trove_ticket_cost"
+	TLoginRewardsTitle   = "login_rewards_title"
+	TLoginIncomplete     = "login_incomplete"
+	TLoginClaimed        = "login_claimed"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -295,6 +307,9 @@ var DenyAreas = map[ID][]image.Rectangle{
 	SeasonPass: {image.Rect(410, 1060, 660, 1170)},
 	// The pack's price button ("RM 8.99"); the back key does not close it.
 	ValuePack: {image.Rect(240, 915, 480, 1000)},
+	// Draw 5x costs stars; so does Draw 1 Time once the tickets are gone.
+	CardTrove:      {image.Rect(455, 1160, 690, 1255)},
+	CardTroveStars: {image.Rect(200, 1160, 690, 1255)},
 }
 
 // MinScore is the NCC score treated as a hit. Templates are cut from the same
@@ -384,6 +399,10 @@ var rules = []rule{
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Ranking, anchors: []string{TRankingHeader}},
 	{id: Backpack, anchors: []string{TBackpackTitle}},
+	// Tickets gone: both draws cost stars (deny-listed below).
+	{id: CardTroveStars, anchors: []string{TTroveTitle, TTroveStarCost}},
+	{id: CardTrove, anchors: []string{TTroveTitle, TTroveDraw1}},
+	{id: LoginRewards, anchors: []string{TLoginRewardsTitle}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},

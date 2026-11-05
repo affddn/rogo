@@ -68,6 +68,9 @@ func TestShopBuyDialogReads(t *testing.T) {
 	if r := vision.Ratio(one, shopCostIcon, isDiamondPink); r > 0.1 {
 		t.Errorf("guild coin icon read as a diamond (%.2f)", r)
 	}
+	if paidInStars(one) || paidInStars(four) {
+		t.Error("guild coin icon read as a star")
+	}
 }
 
 func TestYieldBonusScreens(t *testing.T) {

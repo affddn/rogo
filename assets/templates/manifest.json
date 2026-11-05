@@ -856,12 +856,36 @@
     "note": "loading screen: 'Loading...'"
   },
   {
+    "name": "login_claimed",
+    "x": 515,
+    "y": 445,
+    "w": 95,
+    "h": 75,
+    "note": "Login Rewards: Claimed stamp"
+  },
+  {
     "name": "login_google",
     "x": 180,
     "y": 598,
     "w": 300,
     "h": 46,
     "note": "Login dialog Google Login button (Google logo + label)"
+  },
+  {
+    "name": "login_incomplete",
+    "x": 476,
+    "y": 598,
+    "w": 170,
+    "h": 26,
+    "note": "Login Rewards: a day not reached yet"
+  },
+  {
+    "name": "login_rewards_title",
+    "x": 360,
+    "y": 228,
+    "w": 180,
+    "h": 62,
+    "note": "Login Rewards popup: 'Login' title"
   },
   {
     "name": "login_title",
@@ -1320,6 +1344,14 @@
     "note": "left rail: Limited Quest label"
   },
   {
+    "name": "rail_login",
+    "x": 16,
+    "y": 638,
+    "w": 80,
+    "h": 40,
+    "note": "left rail: Login Rewards label (two lines)"
+  },
+  {
     "name": "rail_mall",
     "x": 30,
     "y": 303,
@@ -1334,6 +1366,14 @@
     "w": 94,
     "h": 24,
     "note": "left rail: Free 4000 Pulls label"
+  },
+  {
+    "name": "rail_trove",
+    "x": 110,
+    "y": 192,
+    "w": 96,
+    "h": 42,
+    "note": "left rail: Arcane Card Trove label (two lines)"
   },
   {
     "name": "raise_star_word",
@@ -1654,6 +1694,38 @@
     "w": 198,
     "h": 46,
     "note": "title screen: Start Game"
+  },
+  {
+    "name": "trove_draw1",
+    "x": 212,
+    "y": 1176,
+    "w": 212,
+    "h": 40,
+    "note": "Arcane Card Trove: Draw 1 Time label"
+  },
+  {
+    "name": "trove_star_cost",
+    "x": 228,
+    "y": 1208,
+    "w": 34,
+    "h": 36,
+    "note": "Arcane Card Trove: star icon on Draw 1 Time (tickets gone; draws cost stars)"
+  },
+  {
+    "name": "trove_ticket_cost",
+    "x": 228,
+    "y": 1208,
+    "w": 34,
+    "h": 36,
+    "note": "Arcane Card Trove: card ticket icon on Draw 1 Time"
+  },
+  {
+    "name": "trove_title",
+    "x": 35,
+    "y": 95,
+    "w": 490,
+    "h": 58,
+    "note": "Arcane Card Trove page title"
   },
   {
     "name": "tut_bubble",
