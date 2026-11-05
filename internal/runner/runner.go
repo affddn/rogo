@@ -86,7 +86,9 @@ func (r *Runner) Run(ctx context.Context) error {
 	var idleSince time.Time // start of a pause or kick hold
 	for {
 		if r.paused() || time.Now().Before(r.holdUntil) {
-			if r.paused() {
+			if r.paused() && !wasPaused {
+				// Tools wait for this line before touching the phone.
+				log.Info("paused")
 				wasPaused = true
 			}
 			if idleSince.IsZero() {
@@ -104,6 +106,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		if wasPaused {
 			// Resuming hands the account back to the bot, hold or not.
 			wasPaused, r.resumed, r.holdUntil = false, time.Now(), time.Time{}
+			log.Info("resumed")
 		}
 		now := time.Now()
 		if st.Rollover(now) {
