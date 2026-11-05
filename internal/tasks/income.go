@@ -9,6 +9,7 @@ import (
 
 	"github.com/affddn/rogo/internal/bot"
 	"github.com/affddn/rogo/internal/screens"
+	"github.com/affddn/rogo/internal/vision"
 )
 
 // adventureIncome is the Adventure Income chest on the main screen.
@@ -142,4 +143,66 @@ func yieldBonus(ctx context.Context, b *bot.Bot) (used int, err error) {
 	}
 	_, _, err = b.TapWait(ctx, screens.YieldBonus, yieldClose, "close yield bonus", 8*time.Second, screens.Income)
 	return used, err
+}
+
+// incomeDiamonds is the cost line under Quick Idle ("1335/100"): green
+// while the diamonds cover the next one.
+var incomeDiamonds = image.Rect(488, 984, 580, 1008)
+
+// PaidQuickIdles buys Quick Idles (one hour of adventure income, mostly
+// Base and Job EXP) while the Job level is under target, the diamonds cover
+// one and the price is at most maxPrice; at most max a run. The price
+// starts at 100 and rises 50 a purchase. job is the last level read, 0
+// when unread.
+func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) (bought, job int, err error) {
+	if err := b.ToMain(ctx); err != nil {
+		return 0, 0, err
+	}
+	_, frame, err := b.TapWait(ctx, screens.Main, adventureIncome, "adventure income", 10*time.Second, screens.Income)
+	if err != nil {
+		return 0, 0, err
+	}
+	for bought < max {
+		lv, ok := screens.IncomeJobLevel(frame)
+		if !ok {
+			b.Log.Warn("could not read the job level", "shot", b.Save(frame))
+			break
+		}
+		job = lv
+		if job >= target || vision.Ratio(frame, incomeDiamonds, vision.IsGreenText) < 0.03 {
+			break
+		}
+		_, confirm, err := b.TapWait(ctx, screens.Income, quickIdleButton, "quick idle", 10*time.Second, screens.QuickIdleConfirm)
+		if err != nil {
+			return bought, job, err
+		}
+		if price, ok := screens.QuickIdlePrice(confirm); !ok || price > maxPrice {
+			b.Log.Info("quick idle price over the cap, cancelling", "price", price, "read", ok, "cap", maxPrice)
+			if err := b.TapTemplate(ctx, confirm, screens.TDialogCancel); err != nil {
+				return bought, job, err
+			}
+			break
+		}
+		if err := b.TapTemplate(ctx, confirm, screens.TDialogOK); err != nil {
+			return bought, job, err
+		}
+		if _, _, err := b.Wait(ctx, 10*time.Second, screens.Reward); err != nil {
+			return bought, job, err
+		}
+		bought++
+		if err := closePopups(ctx, b, screens.Income); err != nil {
+			return bought, job, err
+		}
+		if _, frame, err = b.Wait(ctx, 10*time.Second, screens.Income); err != nil {
+			return bought, job, err
+		}
+	}
+	if bought > 0 {
+		b.Log.Info("paid quick idles", "count", bought, "diamonds", 100*bought, "job", job)
+	}
+	if err := b.Tap(ctx, bot.IncomeClose, "close income"); err != nil {
+		return bought, job, err
+	}
+	_, _, err = b.Wait(ctx, 10*time.Second, screens.Main)
+	return bought, job, err
 }

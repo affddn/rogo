@@ -43,6 +43,17 @@ func unlocked(b screens.Badge, ready func(sig, *st, time.Time) bool) func(sig, *
 	return func(s sig, st *st, now time.Time) bool { return s.Unlocked(b) && ready(s, st, now) }
 }
 
+// jobTarget is the Job level Assassin Cross needs.
+const jobTarget = 30
+
+// quickIdleMaxPrice caps a paid Quick Idle: 100, then 150, ... in a day.
+// An hour of income returns about 75 diamonds of its own.
+const quickIdleMaxPrice = 100
+
+// jobEXPDue holds diamonds for Quick Idles until Job 30 has been seen once
+// (the level restarts after the job change).
+func jobEXPDue(s *st) bool { return s.Counters["job_target_reached"] == 0 }
+
 // wakeQuest unmutes quest-go: a quest whose objective could not be done
 // waits 15 minutes, but a new quest or growth may unblock it sooner.
 var wakeQuest = []string{"quest-go"}
@@ -121,6 +132,21 @@ func actions() []*runner.Action {
 				st.Snooze["quest-go"] = time.Now().Add(15 * time.Minute)
 				return out{}, err
 			}},
+		// Job 30 is the last level gate for Assassin Cross: diamonds buy
+		// Quick Idles (100 for an hour of income) until it is reached, as
+		// they arrive. Owner's call, 5 Nov.
+		{Name: "job-exp", Wakes: wakeQuest, Priority: 86,
+			Ready: func(_ sig, s *st, now time.Time) bool {
+				return jobEXPDue(s) && s.Since("job-exp", now) >= time.Hour
+			},
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, job, err := tasks.PaidQuickIdles(ctx, b, jobTarget, quickIdleMaxPrice, 20)
+				st.Add("paid_quick_idles", n)
+				if job >= jobTarget {
+					st.Counters["job_target_reached"] = 1
+				}
+				return out{Progress: n > 0, Growth: n > 0}, err
+			}},
 		{Name: "summon-upgrade", Wakes: wakeQuest, Priority: 85, Snooze: time.Hour, Ready: badge(screens.BadgeSummon),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.SummonUpgrade(ctx, b)
@@ -171,8 +197,8 @@ func actions() []*runner.Action {
 		{Name: "diamond-draws", Wakes: wakeQuest, Priority: 69,
 			Ready: func(_ sig, s *st, now time.Time) bool {
 				// Pet draws come first until the Draw Level opens the
-				// second Blessing slot.
-				return !petDrawsDue(s) && s.Since("diamond-draws", now) >= 3*time.Hour
+				// second Blessing slot, then Quick Idles until Job 30.
+				return !petDrawsDue(s) && !jobEXPDue(s) && s.Since("diamond-draws", now) >= 3*time.Hour
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				spent, err := tasks.DiamondDraws(ctx, b, diamondReserve)
@@ -546,6 +572,12 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdQuickIdle(ctx context.Context, d *device.Device, args []string) error {
+	n, job, err := tasks.PaidQuickIdles(ctx, newBot(d), jobTarget, quickIdleMaxPrice, 1)
+	fmt.Println("paid quick idles", n, "job", job)
 	return err
 }
 

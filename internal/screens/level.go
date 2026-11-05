@@ -451,3 +451,18 @@ var powerRefs = []digitRef{
 	{10, ".......###....####...#####..###.##.###..#####...#####...#####...##..##..##...##.##...#####....##"},
 	{10, ".......#.#....####...#####..###.##.###..#####...#####...#####...##..##..##...##.##...#####....##"},
 }
+
+// incomeJob is the current Job level on the Adventure Income dialog: the
+// green two digits after "LV." right of the arrow.
+var incomeJob = image.Rect(618, 540, 648, 566)
+
+// IncomeJobLevel reads it; single-digit levels do not read (they sit
+// further left), which only matters for a new character.
+func IncomeJobLevel(frame image.Image) (int, bool) { return readNumber(frame, incomeJob) }
+
+// quickIdlePrice is the diamond price in the paid Quick Idle confirm
+// ("spend Diamond x 150 to gain 1 hour"); it rises with each purchase.
+var quickIdlePrice = image.Rect(522, 566, 562, 594)
+
+// QuickIdlePrice reads it (two or three digits).
+func QuickIdlePrice(frame image.Image) (int, bool) { return readNumber(frame, quickIdlePrice) }
