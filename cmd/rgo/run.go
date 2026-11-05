@@ -127,11 +127,15 @@ func actions() []*runner.Action {
 				st.Add("summon_upgrade_stages", n)
 				return out{Progress: n > 0}, err
 			}},
-		// Points only arrive on level-up, and the Character badge also lights
-		// for cosmetics, so wait for the level text to change.
+		// Points mostly arrive on level-up, and the Character badge also
+		// lights for cosmetics, so wait for the level text to change.
 		{Name: "attributes", Wakes: wakeQuest, Priority: 80, Snooze: 10 * time.Minute,
-			Ready: func(s sig, st *st, _ time.Time) bool {
-				return s.Has(screens.BadgeCharacter) && screens.LevelChanged(s.Level, st.Level)
+			Ready: func(s sig, st *st, now time.Time) bool {
+				// Also every few hours under the badge: points can come back
+				// without a level-up (a stat reset), or be left by a run cut
+				// short.
+				return s.Has(screens.BadgeCharacter) &&
+					(screens.LevelChanged(s.Level, st.Level) || st.Since("attributes", now) >= 3*time.Hour)
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				seen := st.Seen
@@ -384,6 +388,15 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		return mvpRun(ctx, b, st)
 	case screens.Dungeon:
 		n, err := dungeonRuns(ctx, b, st)
+		if err == nil && n == 0 && st.Daily["dungeon_done"] {
+			// The quest wants a dungeon joined and today's attempts are
+			// spent; an assist counts.
+			ok, err := tasks.DungeonAssist(ctx, b)
+			if ok {
+				st.Add("dungeon_assists", 1)
+			}
+			return out{Progress: ok}, err
+		}
 		return out{Progress: n > 0, Growth: n > 0}, err
 	case screens.RuneArena, screens.ArenaOpponents, screens.ArenaTierRewards:
 		return arenaRun(ctx, b, st)

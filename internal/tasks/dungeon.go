@@ -50,6 +50,18 @@ func dungeonLevel(power int) int {
 // into Cancel Match with a timer), Accept as soon as the party popup shows,
 // then wait for the run to finish and the page to come back.
 func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
+	return dungeon(ctx, b, n, false)
+}
+
+// DungeonAssist joins one run once today's attempts are spent: Auto Match
+// stays live at 0/3 and joins as an assist (5 a day), which counts for
+// "Join Dungeon" quests.
+func DungeonAssist(ctx context.Context, b *bot.Bot) (bool, error) {
+	runs, err := dungeon(ctx, b, 1, true)
+	return runs > 0, err
+}
+
+func dungeon(ctx context.Context, b *bot.Bot, n int, assist bool) (runs int, err error) {
 	power := 0
 	if err := b.ToMain(ctx); err != nil {
 		return 0, err
@@ -91,7 +103,7 @@ func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
 		}
 	}
 	for runs < n {
-		if screens.Visible(frame, screens.TDungeonZeroLeft) {
+		if !assist && screens.Visible(frame, screens.TDungeonZeroLeft) {
 			b.Log.Info("dungeon attempts used up")
 			return runs, ErrNoAttempts
 		}
@@ -112,7 +124,7 @@ func Dungeon(ctx context.Context, b *bot.Bot, n int) (runs int, err error) {
 			break
 		}
 		runs++
-		b.Log.Info("dungeon run done", "runs", runs)
+		b.Log.Info("dungeon run done", "runs", runs, "assist", assist)
 		if _, frame, err = b.Look(ctx); err != nil {
 			return runs, err
 		}
