@@ -16,6 +16,22 @@
     "note": "Achievement Reward popup title (dungeon and other modes)"
   },
   {
+    "name": "arena_opponents_title",
+    "x": 236,
+    "y": 280,
+    "w": 244,
+    "h": 38,
+    "note": "Rune Arena: 'Select Opponent' popup title"
+  },
+  {
+    "name": "arena_tier_rewards_title",
+    "x": 262,
+    "y": 252,
+    "w": 196,
+    "h": 42,
+    "note": "Rune Arena: 'Tier Rewards' popup title"
+  },
+  {
     "name": "attr_confirm",
     "x": 634,
     "y": 1088,

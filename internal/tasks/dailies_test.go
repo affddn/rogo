@@ -226,3 +226,33 @@ func TestRefineOnlyWhenSure(t *testing.T) {
 		t.Error("95% success read as 100%")
 	}
 }
+
+func TestArenaPicksTheWeakerOpponent(t *testing.T) {
+	row, ok := weakerOpponent(capture(t, "arena/opponents.png"))
+	if !ok || row != 2 {
+		t.Errorf("picked row %d (found %v), want the green 1155.5K row 2", row, ok)
+	}
+}
+
+func TestArenaBadges(t *testing.T) {
+	page := capture(t, "arena/page.png")
+	if !badged(page, arenaChallengeBadge) || badged(page, arenaRewardBadge) {
+		t.Error("fresh page: want the Challenge badge only")
+	}
+	after := capture(t, "arena/page-badged.png")
+	if !badged(after, arenaRewardBadge) || !badged(after, arenaTierBadge) {
+		t.Error("after a win: Reward and tier badges not seen")
+	}
+	empty := capture(t, "arena/page-empty.png")
+	if badged(empty, arenaChallengeBadge) || badged(empty, arenaRewardBadge) || badged(empty, arenaTierBadge) {
+		t.Error("no tickets, rewards claimed: want no badges")
+	}
+}
+
+func TestArenaTierRewardsClaimable(t *testing.T) {
+	frame := capture(t, "arena/tier-rewards.png")
+	ms := assets.MustGet(screens.TClaimWord).FindAll(frame, tierRewardsList, screens.MinScore, 40)
+	if len(ms) != 2 {
+		t.Errorf("found %d Claim buttons, want 2", len(ms))
+	}
+}

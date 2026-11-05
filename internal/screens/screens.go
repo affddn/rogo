@@ -76,6 +76,8 @@ const (
 	Refine           ID = "refine"
 	PartyInvite      ID = "party-invite"
 	RuneArena        ID = "rune-arena"
+	ArenaOpponents   ID = "arena-opponents"
+	ArenaTierRewards ID = "arena-tier-rewards"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -241,6 +243,8 @@ const (
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
+	TArenaOpponents      = "arena_opponents_title"
+	TArenaTierRewards    = "arena_tier_rewards_title"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
@@ -341,6 +345,8 @@ var rules = []rule{
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},
 	{id: PartyInvite, anchors: []string{TPartyInviteTitle}},
+	{id: ArenaOpponents, anchors: []string{TArenaOpponents}},
+	{id: ArenaTierRewards, anchors: []string{TArenaTierRewards}},
 	{id: RuneArena, anchors: []string{TRuneArenaHeader}},
 	{id: WeaponGacha, anchors: []string{TGachaHeader, TNavBack}},
 	{id: WeaponCultivate, anchors: []string{TCultHeader, TNavBack}},

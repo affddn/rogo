@@ -234,6 +234,11 @@ func actions() []*runner.Action {
 				st.Add("guild_steps", n)
 				return out{Progress: n > 0}, err
 			}},
+		{Name: "arena", Priority: 63,
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, s *st, now time.Time) bool { return s.Since("arena", now) >= 3*time.Hour }),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				return arenaRun(ctx, b, st)
+			}},
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   mvpRun},
@@ -316,6 +321,17 @@ func stageStuck(st *st) bool {
 		float64(st.Power) < 1.05*float64(st.PowerLost)
 }
 
+// arenaRun spends Rune Arena tickets and claims tier rewards. It is not yet
+// known when tickets refill, so it checks every three hours; a check with
+// no tickets and nothing to claim costs about a minute.
+func arenaRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+	fights, claimed, err := tasks.Arena(ctx, b)
+	st.Add("arena_fights", fights)
+	st.Add("arena_tier_rewards", claimed)
+	st.LastRun["arena"] = time.Now()
+	return out{Progress: fights+claimed > 0}, err
+}
+
 // dungeonRuns spends dungeon attempts until the game greys out Auto Match;
 // that, not a local count, ends dungeons for the game day.
 func dungeonRuns(ctx context.Context, b *bot.Bot, st *st) (int, error) {
@@ -346,6 +362,8 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 	case screens.Dungeon:
 		n, err := dungeonRuns(ctx, b, st)
 		return out{Progress: n > 0, Growth: n > 0}, err
+	case screens.RuneArena, screens.ArenaOpponents, screens.ArenaTierRewards:
+		return arenaRun(ctx, b, st)
 	case screens.Realm:
 		done := map[string]bool{}
 		for _, t := range tasks.RealmTabs {
@@ -455,6 +473,12 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdArena(ctx context.Context, d *device.Device, _ []string) error {
+	fights, claimed, err := tasks.Arena(ctx, newBot(d))
+	fmt.Println("fights", fights, "tier rewards", claimed)
 	return err
 }
 
