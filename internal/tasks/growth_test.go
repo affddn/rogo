@@ -139,3 +139,17 @@ func TestEnhanceToNeedsAllLevelsAffordable(t *testing.T) {
 		}
 	}
 }
+
+func TestBadgedCardOpenedOnce(t *testing.T) {
+	// Termite's badge is for a star raise (3/3 copies), not an activation.
+	f := capture(t, "card/star-badge.png")
+	opened := map[image.Point]bool{}
+	c, ok := nextBadgedCard(f, opened)
+	if !ok || c != cardCorners[0] {
+		t.Fatalf("first badged card %v (%v); want Termite's corner %v", c, ok, cardCorners[0])
+	}
+	opened[c] = true
+	if c, ok := nextBadgedCard(f, opened); ok {
+		t.Errorf("badged card %v offered again after Termite was opened", c)
+	}
+}

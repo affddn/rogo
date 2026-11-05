@@ -32,6 +32,10 @@ var (
 // to the album bonus (PATK/MATK/HP). Inserting cards into gear slots needs
 // effect text reading and is tracked separately.
 func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
+	// A badge also marks a card whose star level can be raised; its details
+	// have no Activate button and the badge stays until One-Click Raise Star
+	// Level below, so each badged card is opened once.
+	opened := map[image.Point]bool{}
 	for tries := 0; tries < 12; tries++ {
 		id, frame, err := b.Look(ctx)
 		if err != nil {
@@ -43,18 +47,12 @@ func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
 			}
 			continue
 		}
-		var tile image.Point
-		found := false
-		for _, c := range cardCorners {
-			if badged(frame, c) {
-				tile, found = c.Add(cardTileFromCorner), true
-				break
-			}
-		}
+		corner, found := nextBadgedCard(frame, opened)
 		if !found {
 			break
 		}
-		if err := b.Tap(ctx, tile, "card"); err != nil {
+		opened[corner] = true
+		if err := b.Tap(ctx, corner.Add(cardTileFromCorner), "card"); err != nil {
 			return activated, err
 		}
 		_, frame, err = b.Wait(ctx, 8*time.Second, screens.CardDetails)
@@ -96,4 +94,15 @@ func cards(ctx context.Context, b *bot.Bot) (activated int, err error) {
 	}
 	n, err := insertCards(ctx, b)
 	return activated + n, err
+}
+
+// nextBadgedCard returns the badge corner of the first badged card not
+// opened yet.
+func nextBadgedCard(frame image.Image, opened map[image.Point]bool) (image.Point, bool) {
+	for _, c := range cardCorners {
+		if !opened[c] && badged(frame, c) {
+			return c, true
+		}
+	}
+	return image.Point{}, false
 }
