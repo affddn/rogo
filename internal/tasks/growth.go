@@ -442,13 +442,14 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	if err := b.TapTemplate(ctx, frame, screens.TEquipUpgrade); err != nil {
 		return 0, err
 	}
-	// The page reopens on the tab used last, Refine once refining has run.
-	id, _, err := b.Wait(ctx, 10*time.Second, screens.Enhance, screens.Refine)
+	// The page reopens on the tab used last: Refine once refining has run,
+	// Enchantment once its tutorial has.
+	id, _, err := b.Wait(ctx, 10*time.Second, screens.Enhance, screens.Refine, screens.Enchant)
 	if err != nil {
 		return 0, err
 	}
-	if id == screens.Refine {
-		if _, _, err := b.TapWait(ctx, screens.Refine, enhanceTab, "enhance tab", 8*time.Second, screens.Enhance); err != nil {
+	if id != screens.Enhance {
+		if _, _, err := b.TapWait(ctx, id, enhanceTab, "enhance tab", 8*time.Second, screens.Enhance); err != nil {
 			return 0, err
 		}
 	}

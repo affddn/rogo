@@ -416,6 +416,14 @@
     "note": "dungeon page header"
   },
   {
+    "name": "enchant_header",
+    "x": 4,
+    "y": 20,
+    "w": 210,
+    "h": 40,
+    "note": "Enchantment page header"
+  },
+  {
     "name": "enhance_btn",
     "x": 78,
     "y": 1090,

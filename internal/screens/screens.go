@@ -74,6 +74,7 @@ const (
 	Loading          ID = "loading"
 	NewDay           ID = "new-day"
 	Refine           ID = "refine"
+	Enchant          ID = "enchant"
 	PartyInvite      ID = "party-invite"
 	RuneArena        ID = "rune-arena"
 	ArenaOpponents   ID = "arena-opponents"
@@ -239,6 +240,7 @@ const (
 	TNewDayText          = "new_day_text"
 	TMonstersRemaining   = "monsters_remaining"
 	TRefineHeader        = "refine_header"
+	TEnchantHeader       = "enchant_header"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -348,6 +350,7 @@ var rules = []rule{
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},
+	{id: Enchant, anchors: []string{TEnchantHeader, TNavBack}},
 	{id: PartyInvite, anchors: []string{TPartyInviteTitle}},
 	{id: ArenaOpponents, anchors: []string{TArenaOpponents}},
 	{id: ArenaTierRewards, anchors: []string{TArenaTierRewards}},
