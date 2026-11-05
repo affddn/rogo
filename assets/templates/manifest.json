@@ -1272,14 +1272,6 @@
     "note": "Refine page header"
   },
   {
-    "name": "refine_sure",
-    "x": 486,
-    "y": 878,
-    "w": 200,
-    "h": 24,
-    "note": "Refine: '(Success Rate: 100%)'"
-  },
-  {
     "name": "resonate_activate",
     "x": 254,
     "y": 1064,

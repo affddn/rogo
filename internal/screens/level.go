@@ -255,6 +255,17 @@ func AttributeAllocation(frame image.Image) (alloc [6]int, ok bool) {
 // AttributePoints reads the unspent Attribute Points.
 func AttributePoints(frame image.Image) (int, bool) { return readNumber(frame, attrPoints) }
 
+// refineRate holds the digits of "(Success Rate: 95%)" on the Refine page.
+// The text is right-aligned, so the digits always end just left of the
+// "%", and the colon before them stays outside.
+var refineRate = image.Rect(623, 876, 654, 904)
+
+// RefineRate reads the selected item's refine success rate in percent.
+func RefineRate(frame image.Image) (int, bool) {
+	n, ok := readNumber(frame, refineRate)
+	return n, ok && n <= 100
+}
+
 // diamondBar is the diamond count in the top bar, right of the gem icon.
 var diamondBar = image.Rect(610, 20, 712, 50)
 

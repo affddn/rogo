@@ -8,6 +8,7 @@ import (
 
 	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/screens"
+	"github.com/affddn/rogo/internal/vision"
 )
 
 func capture(t *testing.T, file string) image.Image {
@@ -218,12 +219,19 @@ func TestSkillPlusLive(t *testing.T) {
 	}
 }
 
-func TestRefineOnlyWhenSure(t *testing.T) {
-	if !screens.Visible(capture(t, "refine/page.png"), screens.TRefineSure) {
-		t.Error("100% success not seen for +1")
+func TestRefineMaterialCount(t *testing.T) {
+	for name, want := range map[string]bool{"refine/page.png": true, "refine/success.png": true, "refine/no-meteorites.png": false} {
+		if got := vision.Ratio(capture(t, name), refineMaterial, vision.IsGreenText) > 0.03; got != want {
+			t.Errorf("%s: enough meteorites %v, want %v", name, got, want)
+		}
 	}
-	if screens.Visible(capture(t, "refine/after1.png"), screens.TRefineSure) {
-		t.Error("95% success read as 100%")
+}
+
+func TestRefineRate(t *testing.T) {
+	for name, want := range map[string]int{"refine/page.png": 100, "refine/after1.png": 95} {
+		if got, ok := screens.RefineRate(capture(t, name)); !ok || got != want {
+			t.Errorf("%s: read %d (%v), want %d", name, got, ok, want)
+		}
 	}
 }
 

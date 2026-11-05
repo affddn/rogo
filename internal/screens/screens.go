@@ -239,7 +239,6 @@ const (
 	TNewDayText          = "new_day_text"
 	TMonstersRemaining   = "monsters_remaining"
 	TRefineHeader        = "refine_header"
-	TRefineSure          = "refine_sure"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
