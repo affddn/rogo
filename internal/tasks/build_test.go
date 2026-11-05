@@ -56,8 +56,8 @@ func TestNextStatNearTheSearchedOptimum(t *testing.T) {
 		if r := damage(got) / damage(best); r < 0.985 {
 			t.Errorf("%d points -> %v, %.3f of the searched best %v", total, got, r, best)
 		}
-		if got[statSTR]+strFromGear < 40 {
-			t.Errorf("%d points -> STR %d, want the STR 40 Awakening tier", total, got[statSTR]+strFromGear)
+		if got[statSTR]+statBonus[statSTR] < 40 {
+			t.Errorf("%d points -> STR %d, want the STR 40 Awakening tier", total, got[statSTR]+statBonus[statSTR])
 		}
 	}
 }

@@ -99,6 +99,7 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			b.Log.Warn("could not read the attribute page", "shot", b.Save(frame))
 			break
 		}
+		readBonuses(b, frame, alloc)
 		taps := 0
 		for {
 			s, ok := nextStat(alloc, points)
@@ -183,6 +184,26 @@ func awaken(ctx context.Context, b *bot.Bot) (int, error) {
 		b.Log.Info("awakening tiers activated", "count", n)
 	}
 	return n, nil
+}
+
+// readBonuses updates statBonus from the Attribute page, so Awakening
+// thresholds (on total stats) are planned with today's pets and cards.
+func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int) {
+	total, ok := screens.AttributeTotals(frame)
+	if !ok {
+		return
+	}
+	var bonus [6]int
+	for i := range total {
+		if bonus[i] = total[i] - alloc[i]; bonus[i] < 0 {
+			return // a misread
+		}
+	}
+	if bonus != statBonus {
+		statBonus = bonus
+		b.Log.Info("stat bonuses", "str", bonus[statSTR], "agi", bonus[statAGI], "vit", bonus[statVIT],
+			"int", bonus[statINT], "dex", bonus[statDEX], "luk", bonus[statLUK])
+	}
 }
 
 // skills spends unspent skill points in our own order (skilltree.go). The

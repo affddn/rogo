@@ -280,3 +280,15 @@ func TestMVPBossTabs(t *testing.T) {
 		t.Error("locked Golden Thief Bug tab taken as workable")
 	}
 }
+
+func TestAttributeTotals(t *testing.T) {
+	frame := capture(t, "attr-new.png")
+	total, ok := screens.AttributeTotals(frame)
+	if want := [6]int{20, 51, 2, 3, 3, 14}; !ok || total != want {
+		t.Errorf("All column read %v (%v), want %v", total, ok, want)
+	}
+	alloc, _ := screens.AttributeAllocation(frame)
+	if want := [6]int{18, 49, 0, 0, 2, 10}; alloc != want {
+		t.Errorf("Total Allocated read %v, want %v", alloc, want)
+	}
+}

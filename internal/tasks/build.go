@@ -46,10 +46,11 @@ const (
 	basePATK     = 40300 // with no points allocated
 	patkPerSpent = 16
 	patkPerSTR   = 132
-	baseCRIT     = 6.2
-	baseSkillCR  = 25.0 // Katar Mastery 5/5 and gear: 32.5 shown at LUK 25
-	critPerLUK   = 0.3
-	critDamage   = 0.5 // extra over a normal hit
+	// CRIT and Skill CRIT from total LUK (bonuses included).
+	baseCRIT    = 5.0  // 9.2 shown at LUK 14 (10 allocated)
+	baseSkillCR = 23.5 // Katar Mastery 5/5: 37.0 shown at LUK 45 (40 allocated)
+	critPerLUK  = 0.3
+	critDamage  = 0.5 // extra over a normal hit
 
 	// rapidCombo is the share of every current cooldown a normal attack
 	// removes.
@@ -124,7 +125,11 @@ func spentOn(n int) int {
 // Shadow Assault, on Skill CRIT: every 7 crits (5 from 30) give a stack;
 // 4 stacks cast 3 AoE hits of 300% (+100% at 30, +150% at 50; 5 hits from
 // 90); flat tiers at 20, 40, 60, 75.
-const strFromGear = 4 // STR 41 shown at 37 allocated
+//
+// statBonus is what pets, cards and gear add to each stat on top of the
+// allocated points: the Attribute page's All column less Total Allocated,
+// read by Attributes before it plans. The defaults are the 5 Nov reading.
+var statBonus = [6]int{statSTR: 4, statAGI: 6, statVIT: 2, statDEX: 1, statLUK: 5}
 
 type flatTier struct {
 	at   float64
@@ -175,10 +180,11 @@ func damage(alloc [6]int) float64 {
 		spent += spentOn(n)
 	}
 	patk := basePATK + patkPerSpent*float64(spent) + patkPerSTR*float64(alloc[statSTR])
-	crit := min((baseCRIT+critPerLUK*float64(alloc[statLUK]))/100, 1)
-	skillCritPct := baseSkillCR + critPerLUK*float64(alloc[statLUK])
+	luk := float64(alloc[statLUK] + statBonus[statLUK])
+	crit := min((baseCRIT+critPerLUK*luk)/100, 1)
+	skillCritPct := baseSkillCR + critPerLUK*luk
 	skillCrit := min(skillCritPct/100, 1)
-	str := float64(alloc[statSTR] + strFromGear)
+	str := float64(alloc[statSTR] + statBonus[statSTR])
 
 	skillDmg := 1.0
 	for _, t := range strTiers {
@@ -237,11 +243,11 @@ func nextStat(alloc [6]int, points int) (int, bool) {
 }
 
 func strAt(v int) func([6]int) bool {
-	return func(a [6]int) bool { return a[statSTR]+strFromGear >= v }
+	return func(a [6]int) bool { return a[statSTR]+statBonus[statSTR] >= v }
 }
 
 func scAt(v float64) func([6]int) bool {
-	return func(a [6]int) bool { return baseSkillCR+critPerLUK*float64(a[statLUK]) >= v }
+	return func(a [6]int) bool { return baseSkillCR+critPerLUK*float64(a[statLUK]+statBonus[statLUK]) >= v }
 }
 
 // planHorizon is how many attribute points ahead an Awakening threshold is

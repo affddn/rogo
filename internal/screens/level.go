@@ -236,6 +236,7 @@ var digitRefs = []digitRef{
 // LUK, and the unspent Attribute Points.
 var (
 	AttrRows      = [6]int{673, 742, 811, 880, 949, 1018}
+	attrAll       = func(y int) image.Rectangle { return image.Rect(112, y-15, 192, y+15) }
 	attrAllocated = func(y int) image.Rectangle { return image.Rect(222, y-15, 292, y+15) }
 	attrPoints    = image.Rect(140, 1107, 197, 1134) // below and left of the "!" badge
 )
@@ -250,6 +251,19 @@ func AttributeAllocation(frame image.Image) (alloc [6]int, ok bool) {
 		alloc[i] = n
 	}
 	return alloc, true
+}
+
+// AttributeTotals reads each stat's All column: allocated points plus what
+// pets, cards and gear add.
+func AttributeTotals(frame image.Image) (total [6]int, ok bool) {
+	for i, y := range AttrRows {
+		n, ok := readNumber(frame, attrAll(y))
+		if !ok {
+			return total, false
+		}
+		total[i] = n
+	}
+	return total, true
 }
 
 // AttributePoints reads the unspent Attribute Points.
