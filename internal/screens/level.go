@@ -157,7 +157,7 @@ func glyphMask(ink func(x, y int) bool, g image.Rectangle) string {
 // guessed. Leaving each reference out, a true digit is within 13 cells of
 // another of its own, and an unseen shape can come within 2 of another digit.
 func classifyDigit(m string, refs []digitRef) (int, bool) {
-	var dist [11]int // digits, and 10 for a suffix such as "K"
+	var dist [12]int // digits, then suffixes: 10 "K", 11 half an "M"
 	for d := range dist {
 		dist[d] = len(m)
 	}
@@ -351,7 +351,8 @@ var barDigitRefs = []digitRef{
 var powerDigits = image.Rect(180, 64, 292, 94)
 
 // powerFont is the power's cream digits on the brown pill. Reference 10 is
-// the "K" suffix; a decimal point is a run no wider than powerDotW.
+// the "K" suffix and 11 either half of the "M" suffix, which the font draws
+// as two runs; a decimal point is a run no wider than powerDotW.
 var powerFont = font{
 	ink:       func(c color.RGBA) bool { return c.R > 225 && c.G > 215 && c.B > 170 },
 	refs:      powerRefs,
@@ -360,8 +361,8 @@ var powerFont = font{
 
 const powerDotW = 3
 
-// Power reads combat power, in points ("2085.6K" is 2085600), from an
-// undimmed main screen.
+// Power reads combat power, in points ("2085.6K" is 2085600, "11.8M" is
+// 11800000), from an undimmed main screen.
 func Power(frame image.Image) (int, bool) {
 	boxes := powerFont.runs(frame, powerDigits)
 	if len(boxes) < 3 {
@@ -381,14 +382,26 @@ func Power(frame image.Image) (int, bool) {
 		if !ok {
 			return 0, false
 		}
-		if d == 10 { // K, the last glyph
-			if i != len(boxes)-1 {
+		switch d {
+		case 10: // K, the last glyph
+			if i != len(boxes)-1 || decimals > 1 {
 				return 0, false
 			}
 			for ; decimals < 1; decimals++ {
 				tenths *= 10
 			}
-			return tenths * 100, decimals == 1
+			return tenths * 100, true
+		case 11: // M, the last two glyphs
+			if i != len(boxes)-2 || decimals > 1 {
+				return 0, false
+			}
+			if m, ok := classifyDigit(glyphMask(ink, boxes[i+1]), powerFont.refs); !ok || m != 11 {
+				return 0, false
+			}
+			for ; decimals < 1; decimals++ {
+				tenths *= 10
+			}
+			return tenths * 100_000, true
 		}
 		tenths = tenths*10 + d
 		if dot {
@@ -398,9 +411,14 @@ func Power(frame image.Image) (int, bool) {
 	return 0, false
 }
 
-// powerRefs are the power font's shapes (10 is "K"), from power readings
-// between 474.6K and 2085.6K on 3 and 4 Nov.
+// powerRefs are the power font's shapes (10 is "K", 11 the halves of "M"),
+// from power readings between 474.6K and 2085.6K on 3 and 4 Nov, and 10M and
+// 11.8M on 5 Nov.
 var powerRefs = []digitRef{
+	{11, "....#......###....####....#####...#####..######..###..##.###..#####...#####....###.....###.....#"},
+	{11, "...#......###....#####...#####...#####...######..##..##.###...#####...####....####.....###.....#"},
+	{11, ".....#......###....####....#####...#####..######..##..##.##...#####...####.....###.....###.....#"},
+	{11, "....#......###.....####...#####...#####..#######.##..###.##..######..#####....###.....###......#"},
 	{0, "...###....####...##########...#####...####.....###.....###.....###....#####...##.##...##..#####."},
 	{1, "..#####.################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},
 	{1, "..###...################.....###.....###.....###.....###.....###.....###.....###.....###.....###"},

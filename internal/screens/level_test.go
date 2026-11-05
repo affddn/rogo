@@ -75,6 +75,8 @@ func TestPower(t *testing.T) {
 		"main3.png": 474600, "unknown/20261103-182537.076.png": 534600, "shop/00-main.png": 1814100,
 		"idle-now.png": 1876500, "main-after-qi.png": 1966500, "daily/after-buy.png": 2085600,
 		"auto-done.png": 2085600, "value-pack.png": 0, // dimmed under a modal
+		"power/9839.4K.png": 9839400, "power/10M.png": 10_000_000,
+		"power/11.8M.png": 11_800_000, "power/11.8M-b.png": 11_800_000,
 	}
 	for file, want := range cases {
 		t.Run(file, func(t *testing.T) {
