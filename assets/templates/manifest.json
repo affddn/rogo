@@ -416,12 +416,36 @@
     "note": "dungeon page header"
   },
   {
+    "name": "enchant_button",
+    "x": 254,
+    "y": 1092,
+    "w": 206,
+    "h": 50,
+    "note": "enchant: Enchantment button"
+  },
+  {
+    "name": "enchant_empty",
+    "x": 124,
+    "y": 820,
+    "w": 472,
+    "h": 28,
+    "note": "enchant: 'After enchantment, you will gain enchantment attributes.' on a piece not enchanted yet"
+  },
+  {
     "name": "enchant_header",
     "x": 4,
     "y": 20,
     "w": 210,
     "h": 40,
     "note": "Enchantment page header"
+  },
+  {
+    "name": "enchant_normal_chip",
+    "x": 44,
+    "y": 744,
+    "w": 86,
+    "h": 28,
+    "note": "enchant: grey 'Normal' quality chip on an attribute line"
   },
   {
     "name": "enhance_btn",

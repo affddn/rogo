@@ -476,6 +476,13 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 	}
+	if id, _, err := b.Look(ctx); err == nil && (id == screens.Enhance || id == screens.Refine) {
+		e, err := enchantGear(ctx, b, id)
+		levels += e
+		if err != nil {
+			return levels, err
+		}
+	}
 	return levels, b.ToMain(ctx)
 }
 
