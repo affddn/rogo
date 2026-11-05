@@ -208,6 +208,62 @@
     "note": "Mall Special Pass: Claim All button word"
   },
   {
+    "name": "colgear_activate",
+    "x": 258,
+    "y": 1092,
+    "w": 208,
+    "h": 52,
+    "note": "Collection Equipment Details: Activate button"
+  },
+  {
+    "name": "colgear_can_activate",
+    "x": 86,
+    "y": 356,
+    "w": 118,
+    "h": 28,
+    "note": "Collection Gear archive: 'Can Activate' label"
+  },
+  {
+    "name": "colgear_set_tab",
+    "x": 540,
+    "y": 1124,
+    "w": 76,
+    "h": 32,
+    "note": "Collection Gear: 'Set' sub-tab label (unselected)"
+  },
+  {
+    "name": "colgear_title",
+    "x": 18,
+    "y": 24,
+    "w": 150,
+    "h": 32,
+    "note": "Collection Gear page title"
+  },
+  {
+    "name": "colwish_ok",
+    "x": 88,
+    "y": 1192,
+    "w": 215,
+    "h": 58,
+    "note": "Collection Wish result: OK"
+  },
+  {
+    "name": "colwish_ticket",
+    "x": 552,
+    "y": 1121,
+    "w": 28,
+    "h": 30,
+    "note": "Collection Wish: ticket icon on a Wish price"
+  },
+  {
+    "name": "colwish_title",
+    "x": 18,
+    "y": 24,
+    "w": 150,
+    "h": 32,
+    "note": "Collection Wish page title"
+  },
+  {
     "name": "combat_ended",
     "x": 206,
     "y": 360,
@@ -1336,6 +1392,14 @@
     "note": "quick idle confirm: title"
   },
   {
+    "name": "rail_collection_wish",
+    "x": 626,
+    "y": 488,
+    "w": 90,
+    "h": 44,
+    "note": "right rail: Collection Wish label (two lines)"
+  },
+  {
     "name": "rail_growth",
     "x": 4,
     "y": 522,
@@ -1702,6 +1766,30 @@
     "w": 198,
     "h": 46,
     "note": "title screen: Start Game"
+  },
+  {
+    "name": "tower_cleared_none",
+    "x": 322,
+    "y": 461,
+    "w": 92,
+    "h": 28,
+    "note": "Endless Tower result: 'Floor 0' in 'Cleared Floor 0 this time'"
+  },
+  {
+    "name": "tower_sweep_free",
+    "x": 258,
+    "y": 822,
+    "w": 206,
+    "h": 52,
+    "note": "Endless Tower Daily Sweep: Free button"
+  },
+  {
+    "name": "tower_title",
+    "x": 18,
+    "y": 24,
+    "w": 150,
+    "h": 32,
+    "note": "Endless Tower page title"
   },
   {
     "name": "trove_draw1",

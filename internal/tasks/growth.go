@@ -414,9 +414,19 @@ func badged(frame image.Image, p image.Point) bool {
 // the bag passes 20, then enhances gear (see enhance).
 func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	// Equipment opens on whichever tab is badged; Card first if it is.
-	frame, err := open(ctx, b, screens.TNavEquipment, screens.Equipment, screens.CardPage)
+	frame, err := open(ctx, b, screens.TNavEquipment, screens.Equipment, screens.CardPage, screens.CollectionGear)
 	if err != nil {
 		return 0, err
+	}
+	if screens.Detect(frame) == screens.CollectionGear {
+		n, err := collectionGear(ctx, b, screens.CollectionGear)
+		levels += n
+		if err != nil {
+			return levels, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return levels, err
+		}
 	}
 	if screens.Detect(frame) == screens.CardPage {
 		n, err := cards(ctx, b)
@@ -428,6 +438,16 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 		if _, frame, err = b.Wait(ctx, 8*time.Second, screens.Equipment); err != nil {
+			return levels, err
+		}
+	}
+	if badged(frame, colGearTabBadge) {
+		n, err := collectionGear(ctx, b, screens.Equipment)
+		levels += n
+		if err != nil {
+			return levels, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
 			return levels, err
 		}
 	}

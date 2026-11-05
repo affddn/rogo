@@ -224,9 +224,12 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		return true, b.TapTemplate(ctx, frame, screens.TDungeonAccept)
 	case screens.Dungeon, screens.Baphomet, screens.MVP, screens.GrowthGift, screens.Mall,
 		screens.GuildTown, screens.GuildShop, screens.GuildBargain, screens.GuildHunt, screens.RuneArena,
-		screens.Shop, screens.Ranking, screens.CardTrove, screens.CardTroveStars:
+		screens.Shop, screens.Ranking, screens.CardTrove, screens.CardTroveStars,
+		screens.CollectionWish, screens.CollectionGear, screens.EndlessTower:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
+	case screens.WishResult:
+		return true, b.TapTemplate(ctx, frame, screens.TColWishOK)
 	case screens.LoginRewards:
 		return true, b.Tap(ctx, image.Pt(662, 155), "close login rewards")
 	case screens.GuildLoot, screens.Backpack:

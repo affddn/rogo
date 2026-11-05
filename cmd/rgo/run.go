@@ -327,6 +327,43 @@ func actions() []*runner.Action {
 				}
 				return out{Progress: n > 0}, err
 			}},
+		// Endless Tower: the free daily sweep, then Challenge attempts while
+		// they climb; one that clears nothing ends the climb for the day.
+		{Name: "tower", Wakes: wakeQuest, Priority: 62,
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, s *st, now time.Time) bool {
+				return !s.Daily["tower_swept"] || (!s.Daily["tower_stuck"] && s.Since("tower", now) >= 3*time.Hour)
+			}),
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				var o out
+				for range 4 {
+					res, err := tasks.EndlessTower(ctx, b, !st.Daily["tower_stuck"])
+					if err != nil {
+						return o, err
+					}
+					st.Daily["tower_swept"] = true
+					o.Progress = o.Progress || res.Swept || res.Climbed
+					if !res.Challenged {
+						break
+					}
+					st.Add("tower_challenges", 1)
+					if !res.Climbed {
+						st.Daily["tower_stuck"] = true
+						break
+					}
+					o.Growth = true
+				}
+				return o, nil
+			}},
+		// Collection Wish: tickets (tower sweep and floors) and the daily
+		// ad wish draw Collection Equipment shards; the equipment pass then
+		// activates what they complete.
+		{Name: "collection-wish", Priority: 66,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("collection-wish", now) >= 3*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.CollectionWish(ctx, b)
+				st.Add("collection_wishes", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "arena", Priority: 63,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, s *st, now time.Time) bool { return s.Since("arena", now) >= 3*time.Hour }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -587,6 +624,18 @@ func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 func cmdQuickIdle(ctx context.Context, d *device.Device, args []string) error {
 	n, job, err := tasks.PaidQuickIdles(ctx, newBot(d), jobTarget, quickIdleMaxPrice, 1)
 	fmt.Println("paid quick idles", n, "job", job)
+	return err
+}
+
+func cmdWish(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.CollectionWish(ctx, newBot(d))
+	fmt.Println("wishes", n)
+	return err
+}
+
+func cmdTower(ctx context.Context, d *device.Device, args []string) error {
+	res, err := tasks.EndlessTower(ctx, newBot(d), len(args) > 0 && args[0] == "challenge")
+	fmt.Printf("%+v\n", res)
 	return err
 }
 

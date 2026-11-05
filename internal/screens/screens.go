@@ -88,6 +88,10 @@ const (
 	Backpack         ID = "backpack"
 	CardTrove        ID = "card-trove"
 	CardTroveStars   ID = "card-trove-stars"
+	CollectionWish   ID = "collection-wish"
+	WishResult       ID = "wish-result"
+	CollectionGear   ID = "collection-gear"
+	EndlessTower     ID = "endless-tower"
 	LoginRewards     ID = "login-rewards"
 )
 
@@ -281,6 +285,17 @@ const (
 	TTroveStarCost       = "trove_star_cost"
 	TTroveTicketCost     = "trove_ticket_cost"
 	TQuickIdleDiamondX   = "quick_idle_diamond_x"
+	TRailCollectionWish  = "rail_collection_wish"
+	TColWishTitle        = "colwish_title"
+	TColWishTicket       = "colwish_ticket"
+	TColWishOK           = "colwish_ok"
+	TColGearTitle        = "colgear_title"
+	TColGearCanActivate  = "colgear_can_activate"
+	TColGearActivate     = "colgear_activate"
+	TColGearSetTab       = "colgear_set_tab"
+	TTowerTitle          = "tower_title"
+	TTowerSweepFree      = "tower_sweep_free"
+	TTowerClearedNone    = "tower_cleared_none"
 	TLoginRewardsTitle   = "login_rewards_title"
 	TLoginIncomplete     = "login_incomplete"
 	TLoginClaimed        = "login_claimed"
@@ -400,6 +415,11 @@ var rules = []rule{
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Ranking, anchors: []string{TRankingHeader}},
 	{id: Backpack, anchors: []string{TBackpackTitle}},
+	{id: WishResult, anchors: []string{TColWishOK}},
+	// The two titles share "Collection "; a second anchor tells them apart.
+	{id: CollectionWish, anchors: []string{TColWishTitle, TColWishTicket}},
+	{id: CollectionGear, anchors: []string{TColGearTitle, TColGearSetTab}},
+	{id: EndlessTower, anchors: []string{TTowerTitle}},
 	// Tickets gone: both draws cost stars (deny-listed below).
 	{id: CardTroveStars, anchors: []string{TTroveTitle, TTroveStarCost}},
 	{id: CardTrove, anchors: []string{TTroveTitle, TTroveDraw1}},
@@ -502,6 +522,10 @@ func onMain(frame image.Image) bool {
 // come and go with events and unlocks and the rail reflows into two columns,
 // so its icons are searched for across the whole rail.
 var LeftRail = image.Rect(0, 120, 230, 720)
+
+// RightRail is the main screen's right column of feature icons (System,
+// Quest, Job Change Quest, Collection Wish, ...), searched by label.
+var RightRail = image.Rect(590, 120, 720, 720)
 
 // SeasonPassIcon finds the Season Pass icon on the main screen's left rail
 // (by shape: the map shows through it).
