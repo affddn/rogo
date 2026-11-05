@@ -367,6 +367,14 @@ func dismantle(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error)
 // next level is affordable.
 var enhanceCost = image.Rect(160, 1054, 205, 1078)
 
+// "Enhance to Level N" beside it takes the item to the next multiple of 5
+// in one tap; N changes, so it is found by position, and its own "have"
+// count is green when all those levels are affordable.
+var (
+	enhanceToButton = image.Pt(535, 1120)
+	enhanceToCost   = image.Rect(515, 1054, 560, 1078)
+)
+
 // Enhance Resonate: every 5 levels, once all six items reach the next tier,
 // its badge lights up and Activate grants a set-wide stat bonus.
 var (
@@ -596,6 +604,22 @@ func enhance(ctx context.Context, b *bot.Bot) (levels int, err error) {
 		}
 		if firstRead {
 			continue // pick again knowing this slot's level
+		}
+		if vision.Ratio(frame, enhanceToCost, vision.IsGreenText) >= 0.05 {
+			// Up to five levels for one tap and one look instead of five.
+			from := enhanceLevels[i]
+			if err := b.Tap(ctx, enhanceToButton, "enhance to next tier"); err != nil {
+				return levels, err
+			}
+			if err := closePopups(ctx, b, screens.Enhance); err != nil {
+				return levels, err
+			}
+			to := (from/5 + 1) * 5
+			if from != unreadLevel {
+				levels += to - from
+			}
+			enhanceLevels[i] = to // read again on the next pass
+			continue
 		}
 		if vision.Ratio(frame, enhanceCost, vision.IsGreenText) < 0.05 {
 			b.Log.Info("enhance materials exhausted")

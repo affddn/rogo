@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/affddn/rogo/internal/screens"
+	"github.com/affddn/rogo/internal/vision"
 )
 
 func TestBagOver20(t *testing.T) {
@@ -123,5 +124,18 @@ func TestLowestBadgedLevelsTheLowestSlot(t *testing.T) {
 	enhanceLevels = [len(enhanceSlots)]int{62, 58, 57, 56, 56, unreadLevel, 70, 70}
 	if i, _ := lowestBadged(img); i != 3 {
 		t.Fatalf("picked slot %d, want cape (3, tied with gloves) before an unreadable slot", i)
+	}
+}
+
+func TestEnhanceToNeedsAllLevelsAffordable(t *testing.T) {
+	// 34 metal: one level (18 or 20) yes, the run to the next tier no.
+	for _, name := range []string{"enh-ring.png", "enh-pendant.png"} {
+		f := capture(t, name)
+		if vision.Ratio(f, enhanceCost, vision.IsGreenText) < 0.05 {
+			t.Errorf("%s: the single level reads unaffordable", name)
+		}
+		if vision.Ratio(f, enhanceToCost, vision.IsGreenText) >= 0.05 {
+			t.Errorf("%s: Enhance to Level N reads affordable with 34 metal", name)
+		}
 	}
 }
