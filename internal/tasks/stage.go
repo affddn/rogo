@@ -5,6 +5,7 @@ import (
 	"image"
 	"time"
 
+	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/bot"
 	"github.com/affddn/rogo/internal/screens"
 )
@@ -30,13 +31,44 @@ func Stage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 }
 
 // WaitStage waits out a running stage challenge chain, leaves the defeat
-// screen and returns to main. A new character's tutorial dialogues pop up
+// screen and returns to main. Boss stages prompt Dodge before their big
+// skills (dodging also gives Final DMG Boost); the bottom band is watched
+// for it between full looks. A new character's tutorial dialogues pop up
 // between stages and pause the chain until skipped.
 func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 	start := time.Now()
 	var id screens.ID
 	var frame image.Image
+	dodge := assets.MustGet(screens.TBaphDodge)
+	leave := assets.MustGet(screens.TStageLeave)
+	dodges := 0
+	// A full screenshot takes seconds on the cloud link, a band well under
+	// one, and the Dodge prompt is brief: watch the band, and look at the
+	// whole screen only when the defeat's Leave shows there or every 10 s
+	// (main after a won chain, tutorials).
+	looked := time.Now()
 	for time.Since(start) < stageRun {
+		band, err := b.D.Rows(ctx, 720, fightBand[0], fightBand[1])
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+		if err == nil && dodge.Find(band, 30).Visible(screens.MinScore) {
+			if err := b.D.Tap(ctx, dodgeButton.X, dodgeButton.Y); err != nil {
+				return false, err
+			}
+			dodges++
+			b.Log.Info("boss skill dodged", "count", dodges)
+			// The prompt fades out over ~1 s; don't tap it twice.
+			if err := bot.Sleep(ctx, 1500*time.Millisecond); err != nil {
+				return false, err
+			}
+			continue
+		}
+		ended := err == nil && leave.Find(band, 30).Visible(screens.MinScore)
+		if !ended && time.Since(looked) < 10*time.Second {
+			continue
+		}
+		looked = time.Now()
 		if id, frame, err = b.Look(ctx); err != nil {
 			return false, err
 		}
@@ -50,9 +82,6 @@ func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 			}
 			continue
 		}
-		if err := bot.Sleep(ctx, 500*time.Millisecond); err != nil {
-			return false, err
-		}
 	}
 	lost = id == screens.StageDefeat
 	if lost {
@@ -60,6 +89,6 @@ func WaitStage(ctx context.Context, b *bot.Bot) (lost bool, err error) {
 			return lost, err
 		}
 	}
-	b.Log.Info("stage challenge over", "lost", lost, "took", time.Since(start).Round(time.Second))
+	b.Log.Info("stage challenge over", "lost", lost, "dodges", dodges, "took", time.Since(start).Round(time.Second))
 	return lost, b.ToMain(ctx)
 }

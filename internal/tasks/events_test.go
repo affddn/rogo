@@ -77,3 +77,23 @@ func TestLoginRewards(t *testing.T) {
 		t.Errorf("claimable row at y=%d", y)
 	}
 }
+
+func TestStageDodgePrompt(t *testing.T) {
+	dodge := assets.MustGet(screens.TBaphDodge)
+	band := func(f string) image.Image {
+		img := capture(t, f)
+		return img.(interface {
+			SubImage(image.Rectangle) image.Image
+		}).SubImage(image.Rect(0, fightBand[0], 720, fightBand[1]))
+	}
+	// 7-12, Mistress: the prompt shows before Hurricane Impact.
+	if !dodge.Find(band("claims/stage-dodge.png"), 30).Visible(screens.MinScore) {
+		t.Error("stage Dodge prompt missed")
+	}
+	if dodge.Find(band("claims/stage-nododge.png"), 30).Visible(screens.MinScore) {
+		t.Error("Dodge seen with no prompt")
+	}
+	if dodge.Find(band("claims/main-rail.png"), 30).Visible(screens.MinScore) {
+		t.Error("Dodge seen on the main screen")
+	}
+}
