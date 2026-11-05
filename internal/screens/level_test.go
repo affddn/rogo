@@ -34,7 +34,8 @@ func TestAttributeAllocation(t *testing.T) {
 	}{
 		"attr-old.png":   {[6]int{22, 30, 0, 0, 0, 37}, 3},
 		"attr-new.png":   {[6]int{18, 49, 0, 0, 2, 10}, 0},
-		"attr-reset.png": {[6]int{0, 0, 0, 0, 0, 0}, 324}, // "!" badge on the counter
+		"attr-reset.png": {[6]int{0, 0, 0, 0, 0, 0}, 324},    // "!" badge on the counter
+		"attr-int0.png":  {[6]int{28, 37, 25, 0, 10, 49}, 8}, // STR "28" after a rebuild
 	}
 	for file, want := range cases {
 		t.Run(file, func(t *testing.T) {
