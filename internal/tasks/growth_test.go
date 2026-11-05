@@ -92,7 +92,7 @@ func TestReplaceButtonOnlyOnComparePopup(t *testing.T) {
 	}
 }
 
-func TestLowestBadgedAimsForResonance(t *testing.T) {
+func TestLowestBadgedLevelsTheLowestSlot(t *testing.T) {
 	f, err := os.Open("../../captures/enh-now.png") // all eight slots badged
 	if err != nil {
 		t.Skip("reference capture enh-now.png not present")
@@ -103,16 +103,24 @@ func TestLowestBadgedAimsForResonance(t *testing.T) {
 	defer func() { enhanceLevels = saved }()
 
 	// armor belt pants cape gloves boots | pendant ring
-	enhanceLevels = [len(enhanceSlots)]int{62, 58, 57, 56, 56, 55, 11, 11}
-	if i, ok := lowestBadged(img); !ok || i != 5 {
-		t.Fatalf("picked slot %d %v, want boots (5), the lowest set item", i, ok)
+	enhanceLevels = [len(enhanceSlots)]int{91, 90, 90, 90, 90, 90, 60, 56}
+	if i, ok := lowestBadged(img); !ok || i != 7 {
+		t.Fatalf("picked slot %d %v, want the ring (7), the lowest slot", i, ok)
+	}
+	enhanceLevels = [len(enhanceSlots)]int{62, 58, 57, 56, 56, 55, 70, 70}
+	if i, _ := lowestBadged(img); i != 5 {
+		t.Fatalf("picked slot %d, want boots (5), the lowest slot", i)
+	}
+	enhanceLevels = [len(enhanceSlots)]int{90, 90, 90, 90, 90, 90, 90, 90}
+	if i, _ := lowestBadged(img); i != 0 {
+		t.Fatalf("picked slot %d, want a set item (0) on a tie", i)
 	}
 	enhanceLevels[5] = 0 // unread levels go first so they get read
 	enhanceLevels[2] = 0
 	if i, _ := lowestBadged(img); i != 2 {
-		t.Fatalf("picked slot %d, want the first unread set item (2)", i)
+		t.Fatalf("picked slot %d, want the first unread slot (2)", i)
 	}
-	enhanceLevels = [len(enhanceSlots)]int{62, 58, 57, 56, 56, unreadLevel, 11, 11}
+	enhanceLevels = [len(enhanceSlots)]int{62, 58, 57, 56, 56, unreadLevel, 70, 70}
 	if i, _ := lowestBadged(img); i != 3 {
 		t.Fatalf("picked slot %d, want cape (3, tied with gloves) before an unreadable slot", i)
 	}

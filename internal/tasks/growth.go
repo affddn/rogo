@@ -550,11 +550,11 @@ func refineGear(ctx context.Context, b *bot.Bot) (tries int, err error) {
 	return tries, nil
 }
 
-// enhance spends materials one level at a time on the lowest-level badged set
-// item, so all six reach the next Enhance Resonance tier (every 5 levels)
-// together and the tier is activated as soon as it unlocks. Accessories get
-// levels only when no set item can. It stops when nothing is badged or the
-// next level is unaffordable.
+// enhance spends materials one level at a time on the lowest-level badged
+// slot (see lowestBadged), so the six set items reach the next Enhance
+// Resonance tier (every 5 levels) together and the tier is activated as soon
+// as it unlocks. It stops when nothing is badged or the next level is
+// unaffordable.
 func enhance(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	selected := -1
 	for step := 0; step < 50; step++ {
@@ -609,21 +609,16 @@ func enhance(ctx context.Context, b *bot.Bot) (levels int, err error) {
 	return levels, nil
 }
 
-// lowestBadged picks the badged set item with the lowest known level (unread
-// ones first, so they get read), else the lowest badged accessory.
+// lowestBadged picks the badged slot with the lowest known level (unread
+// ones first, so they get read), accessories included: a low level costs
+// far less than a high one, and every level counts toward the job change's
+// total enhancement task. On a tie a set item goes first, for resonance.
 func lowestBadged(frame image.Image) (int, bool) {
-	pick := func(from, to int) int {
-		best := -1
-		for i := from; i < to; i++ {
-			if badged(frame, enhanceSlots[i].badge) && (best < 0 || enhanceLevels[i] < enhanceLevels[best]) {
-				best = i
-			}
+	best := -1
+	for i := range enhanceSlots {
+		if badged(frame, enhanceSlots[i].badge) && (best < 0 || enhanceLevels[i] < enhanceLevels[best]) {
+			best = i
 		}
-		return best
 	}
-	if i := pick(0, setItems); i >= 0 {
-		return i, true
-	}
-	i := pick(setItems, len(enhanceSlots))
-	return i, i >= 0
+	return best, best >= 0
 }
