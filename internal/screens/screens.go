@@ -280,6 +280,7 @@ const (
 	TTroveDraw1          = "trove_draw1"
 	TTroveStarCost       = "trove_star_cost"
 	TTroveTicketCost     = "trove_ticket_cost"
+	TQuickIdleDiamondX   = "quick_idle_diamond_x"
 	TLoginRewardsTitle   = "login_rewards_title"
 	TLoginIncomplete     = "login_incomplete"
 	TLoginClaimed        = "login_claimed"

@@ -1312,6 +1312,14 @@
     "note": "quest panel: title"
   },
   {
+    "name": "quick_idle_diamond_x",
+    "x": 408,
+    "y": 566,
+    "w": 112,
+    "h": 30,
+    "note": "paid Quick Idle confirm: 'Diamond x' before the price"
+  },
+  {
     "name": "quickidle_ticket_cost",
     "x": 236,
     "y": 564,

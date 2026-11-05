@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"github.com/affddn/rogo/assets"
 	"image"
 	"image/color"
 	"strings"
@@ -460,9 +461,38 @@ var incomeJob = image.Rect(618, 540, 648, 566)
 // further left), which only matters for a new character.
 func IncomeJobLevel(frame image.Image) (int, bool) { return readNumber(frame, incomeJob) }
 
-// quickIdlePrice is the diamond price in the paid Quick Idle confirm
-// ("spend Diamond x 150 to gain 1 hour"); it rises with each purchase.
-var quickIdlePrice = image.Rect(522, 566, 562, 594)
+// quickIdleLine is the paid Quick Idle confirm's first text line ("Are you
+// sure you want to spend Diamond x 150 to gain"). It reflows as the price
+// grows, so the price is read after the "Diamond x" anchor.
+var quickIdleLine = image.Rect(300, 556, 720, 606)
 
-// QuickIdlePrice reads it (two or three digits).
-func QuickIdlePrice(frame image.Image) (int, bool) { return readNumber(frame, quickIdlePrice) }
+// QuickIdlePrice reads the diamond price: the first group of glyphs after
+// "Diamond x", up to the word gap. A group that runs into the edge of the
+// read box does not read, so a longer price can never pass as a shorter one.
+func QuickIdlePrice(frame image.Image) (int, bool) {
+	m := assets.MustGet(TQuickIdleDiamondX).FindIn(frame, quickIdleLine)
+	if m.Score < 0.9 {
+		return 0, false
+	}
+	x0 := m.At.X + m.Size.X + 1
+	r := image.Rect(x0, m.At.Y, min(x0+70, quickIdleLine.Max.X), m.At.Y+m.Size.Y)
+	runs := panelFont.runs(frame, r)
+	if len(runs) == 0 {
+		return 0, false
+	}
+	n := 0
+	for i, g := range runs {
+		if i > 0 && g.Min.X-runs[i-1].Max.X > 5 {
+			break // the word gap before "to"
+		}
+		if g.Max.X >= r.Max.X || i >= panelFont.maxDigits {
+			return 0, false
+		}
+		d, ok := classifyDigit(glyphMask(panelFont.inkAt(frame), g), panelFont.refs)
+		if !ok {
+			return 0, false
+		}
+		n = n*10 + d
+	}
+	return n, true
+}

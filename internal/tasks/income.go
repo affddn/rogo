@@ -162,6 +162,7 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 	if err != nil {
 		return 0, 0, err
 	}
+	spent := 0
 	for bought < max {
 		lv, ok := screens.IncomeJobLevel(frame)
 		if !ok {
@@ -176,8 +177,13 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 		if err != nil {
 			return bought, job, err
 		}
-		if price, ok := screens.QuickIdlePrice(confirm); !ok || price > maxPrice {
-			b.Log.Info("quick idle price over the cap, cancelling", "price", price, "read", ok, "cap", maxPrice)
+		price, ok := screens.QuickIdlePrice(confirm)
+		if !ok || price > maxPrice {
+			if ok {
+				b.Log.Info("quick idle price over the cap, cancelling", "price", price, "cap", maxPrice)
+			} else {
+				b.Log.Warn("could not read the quick idle price, cancelling", "shot", b.Save(confirm))
+			}
 			if err := b.TapTemplate(ctx, confirm, screens.TDialogCancel); err != nil {
 				return bought, job, err
 			}
@@ -190,6 +196,7 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 			return bought, job, err
 		}
 		bought++
+		spent += price
 		if err := closePopups(ctx, b, screens.Income); err != nil {
 			return bought, job, err
 		}
@@ -198,7 +205,7 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 		}
 	}
 	if bought > 0 {
-		b.Log.Info("paid quick idles", "count", bought, "diamonds", 100*bought, "job", job)
+		b.Log.Info("paid quick idles", "count", bought, "diamonds", spent, "job", job)
 	}
 	if err := b.Tap(ctx, bot.IncomeClose, "close income"); err != nil {
 		return bought, job, err
