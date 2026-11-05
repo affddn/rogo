@@ -102,6 +102,7 @@ func dungeon(ctx context.Context, b *bot.Bot, n int, assist bool) (runs int, err
 			return 0, err
 		}
 	}
+	failed := 0
 	for runs < n {
 		if !assist && screens.Visible(frame, screens.TDungeonZeroLeft) {
 			b.Log.Info("dungeon attempts used up")
@@ -120,8 +121,27 @@ func dungeon(ctx context.Context, b *bot.Bot, n int, assist bool) (runs int, err
 			break
 		}
 		if !awaitRun(ctx, b) {
-			b.Log.Warn("dungeon run did not return to the dungeon page")
-			break
+			// Someone declined and the game dropped the party without
+			// queueing again; match afresh a few times.
+			if failed++; failed >= 3 {
+				b.Log.Warn("dungeon run did not return to the dungeon page")
+				break
+			}
+			b.Log.Info("dungeon party fell through, matching again", "tries", failed)
+			id, f, err := b.Look(ctx)
+			if err != nil {
+				return runs, err
+			}
+			if id != screens.Dungeon {
+				if err := closePopups(ctx, b, screens.Dungeon); err != nil {
+					return runs, err
+				}
+				if _, f, err = b.Look(ctx); err != nil {
+					return runs, err
+				}
+			}
+			frame = f
+			continue
 		}
 		runs++
 		b.Log.Info("dungeon run done", "runs", runs, "assist", assist)
