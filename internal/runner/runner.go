@@ -104,8 +104,12 @@ func (r *Runner) Run(ctx context.Context) error {
 			idleSince = time.Time{}
 		}
 		if wasPaused {
-			// Resuming hands the account back to the bot, hold or not.
+			// Resuming hands the account back to the bot, hold or not. The
+			// owner may have bought materials or tickets while it was
+			// paused, so actions muted by a run that found nothing to do
+			// are checked again straight away.
 			wasPaused, r.resumed, r.holdUntil = false, time.Now(), time.Time{}
+			clear(st.Snooze)
 			log.Info("resumed")
 		}
 		now := time.Now()
