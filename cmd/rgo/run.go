@@ -499,6 +499,22 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 	case screens.QuestPanel:
 		n, err := tasks.QuestPanel(ctx, b)
 		return out{Progress: n > 0}, err
+	case screens.Loading:
+		// A fight (a stage, most often) is loading; dispatch on what it
+		// opens into, so a stage gets the dodge watch and its result.
+		for range 10 {
+			if err := bot.Sleep(ctx, 1500*time.Millisecond); err != nil {
+				return out{}, err
+			}
+			id, _, err := b.Look(ctx)
+			if err != nil {
+				return out{}, err
+			}
+			if id != screens.Loading {
+				return runFrom(ctx, b, st, id)
+			}
+		}
+		return out{}, b.ToMain(ctx)
 	case screens.Unknown, screens.InCombat:
 		// Stage quests start the stage battle straight from the tracker.
 		lost, err := tasks.WaitStage(ctx, b)
