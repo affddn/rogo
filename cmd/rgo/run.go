@@ -46,9 +46,10 @@ func unlocked(b screens.Badge, ready func(sig, *st, time.Time) bool) func(sig, *
 // jobTarget is the Job level Assassin Cross needs.
 const jobTarget = 30
 
-// quickIdleMaxPrice caps a paid Quick Idle: 100, then 150, ... in a day,
-// so 300 buys five (1000 diamonds). An hour of income returns about 75
-// diamonds of its own. Owner raised it from 100, 5 Nov.
+// quickIdleMaxPrice caps a paid Quick Idle: 100, then 150, then 200. The
+// game greys the button out after those three a day, so the cap of 300
+// (owner's call, 5 Nov) only matters if the limit changes. An hour of
+// income returns about 75 diamonds of its own.
 const quickIdleMaxPrice = 300
 
 // jobEXPDue holds diamonds for Quick Idles until Job 30 has been seen once
