@@ -85,6 +85,7 @@ const (
 	YieldUse         ID = "yield-use"
 	GuildLoot        ID = "guild-loot"
 	Ranking          ID = "ranking"
+	Backpack         ID = "backpack"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -268,6 +269,8 @@ const (
 	TGuildLootTitle      = "guild_loot_title"
 	TGuildLootOpenAll    = "guild_loot_open_all"
 	TRankingHeader       = "ranking_header"
+	TBackpackTitle       = "backpack_title"
+	TBackpackUse         = "backpack_use"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -380,6 +383,7 @@ var rules = []rule{
 	{id: GuildLoot, anchors: []string{TGuildLootTitle}},
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Ranking, anchors: []string{TRankingHeader}},
+	{id: Backpack, anchors: []string{TBackpackTitle}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},
 	{id: Enhance, anchors: []string{TEnhanceHeader, TNavBack}},
 	{id: Refine, anchors: []string{TRefineHeader, TNavBack}},

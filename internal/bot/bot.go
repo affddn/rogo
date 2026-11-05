@@ -227,8 +227,8 @@ func (b *Bot) Dismiss(ctx context.Context, id screens.ID, frame image.Image) (bo
 		screens.Shop, screens.Ranking:
 		// Its back arrow is drawn differently from other pages'.
 		return true, b.Tap(ctx, image.Pt(40, 1225), "back")
-	case screens.GuildLoot:
-		return true, b.Tap(ctx, image.Pt(665, 297), "close guild loot")
+	case screens.GuildLoot, screens.Backpack:
+		return true, b.Tap(ctx, image.Pt(665, 297), "close popup")
 	case screens.YieldUse:
 		return true, b.Tap(ctx, image.Pt(203, 830), "cancel yield item")
 	case screens.YieldBonus:

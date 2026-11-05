@@ -4,6 +4,7 @@ import (
 	"image"
 	"testing"
 
+	"github.com/affddn/rogo/assets"
 	"github.com/affddn/rogo/internal/screens"
 )
 
@@ -43,5 +44,24 @@ func TestGuildLoot(t *testing.T) {
 	}
 	if !screens.Visible(loot, screens.TGuildLootOpenAll) {
 		t.Error("Open All not seen")
+	}
+}
+
+func TestBackpackBadgedChest(t *testing.T) {
+	bag := capture(t, "claims/backpack.png")
+	if id := screens.Detect(bag); id != screens.Backpack {
+		t.Fatalf("backpack detected as %s", id)
+	}
+	// Two Magic Card Albums, badged, in the first cell; nothing else is.
+	c, ok := nextBadgedCell(bag, map[image.Point]bool{})
+	if !ok || c != image.Pt(96, 403) {
+		t.Fatalf("badged cell %v (%v); want the first", c, ok)
+	}
+	if c, ok := nextBadgedCell(bag, map[image.Point]bool{c: true}); ok {
+		t.Errorf("another badged cell at %v", c)
+	}
+	item := capture(t, "claims/backpack-pack.png")
+	if !assets.MustGet(screens.TBackpackUse).FindIn(item, backpackUseArea).Visible(screens.MinScore) {
+		t.Error("Use not found on the album popup")
 	}
 }

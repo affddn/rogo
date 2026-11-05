@@ -261,6 +261,16 @@ func actions() []*runner.Action {
 				st.Add("shop_lots", n)
 				return out{Progress: n > 0}, err
 			}},
+		// Chests land in the Backpack (card albums from events, logins);
+		// the System badge covers it among others.
+		{Name: "backpack", Priority: 64,
+			Ready: func(s sig, st *st, now time.Time) bool {
+				return s.Has(screens.BadgeSystem) && st.Since("backpack", now) >= 2*time.Hour
+			},
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Backpack(ctx, b)
+				return out{Progress: n > 0, Growth: n > 0}, err
+			}},
 		// The top three of each ranking tab pay 20 diamonds a like, daily.
 		{Name: "ranking", Priority: 64,
 			Ready: func(_ sig, s *st, _ time.Time) bool { return !s.Daily["ranking_likes"] },
@@ -518,6 +528,12 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdBackpack(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Backpack(ctx, newBot(d))
+	fmt.Println("used", n)
 	return err
 }
 
