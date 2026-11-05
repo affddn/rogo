@@ -56,6 +56,8 @@ func TestDetect(t *testing.T) {
 		"loading.png":                     Loading,
 		"refine/page.png":                 Refine,
 		"enchant/page.png":                Enchant,
+		"mall/topup-selected.png":         Mall,
+		"mall/giftpack-selected.png":      Mall,
 		"dungeon/party-invite.png":        PartyInvite,
 		"arena/page.png":                  RuneArena,
 		"arena/page-badged.png":           RuneArena,

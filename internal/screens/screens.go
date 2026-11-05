@@ -208,6 +208,7 @@ const (
 	TGrowthTitle         = "growth_title"
 	TPullsBanner         = "pulls_banner"
 	TMallTopUpTab        = "mall_topup_tab"
+	TMallGiftPackTab     = "mall_giftpack_tab"
 	TMallAdFreeWord      = "mall_adfree_word"
 	TClaimAllWord        = "claimall_word"
 	TAutoSummonMulti     = "autosummon_text_multi"
@@ -414,8 +415,12 @@ func Detect(frame image.Image) ID {
 // tab, but the bar scrolls sideways on the Check-in Bonus page.
 var mallTabBar = image.Rect(0, 1190, 720, 1280)
 
+// inMall spots the Mall by its bottom tabs. The selected tab is drawn
+// differently, so either the Top Up or the Gift Pack tab is in its plain
+// form whichever page is open.
 func inMall(frame image.Image) bool {
-	return assets.MustGet(TMallTopUpTab).FindIn(frame, mallTabBar).Visible(MinScore)
+	return assets.MustGet(TMallTopUpTab).FindIn(frame, mallTabBar).Visible(MinScore) ||
+		assets.MustGet(TMallGiftPackTab).FindIn(frame, mallTabBar).Visible(MinScore)
 }
 
 // mainNav is the main screen's bottom nav. It is opaque enough to read 0.8x
