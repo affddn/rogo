@@ -44,5 +44,10 @@ func FollowGuide(ctx context.Context, b *bot.Bot, skip func(image.Point) bool) (
 		}
 		steps++
 	}
+	if landed == screens.InCombat || landed == screens.Loading {
+		// The arrow started a fight (a stage, most often); leave it to the
+		// caller, which watches it (Dodge) and books the result.
+		return steps, landed, nil
+	}
 	return steps, landed, b.ToMain(ctx)
 }
