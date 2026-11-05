@@ -519,7 +519,11 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		// Stage quests start the stage battle straight from the tracker.
 		lost, err := tasks.WaitStage(ctx, b)
 		if lost {
+			// Book it like the stage action does, so the stuck-stage rule
+			// (and the guide's skip) wait for 5% more power.
 			st.Growth, st.LastDefeat = 0, time.Now()
+			st.PowerAtDefeat, st.PowerLost = st.PowerNow, st.Power
+			st.StageMisses++
 		}
 		return out{Progress: !lost}, err
 	}
