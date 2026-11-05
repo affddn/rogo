@@ -248,6 +248,15 @@ func actions() []*runner.Action {
 				st.Add("guild_steps", n)
 				return out{Progress: n > 0}, err
 			}},
+		// Mode coins buy metal, refine meteorites and Star Powder; limits
+		// reset daily or weekly and coins trickle in, so every few hours.
+		{Name: "shop", Priority: 66,
+			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("shop", now) >= 4*time.Hour },
+			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+				n, err := tasks.Shop(ctx, b)
+				st.Add("shop_lots", n)
+				return out{Progress: n > 0}, err
+			}},
 		{Name: "arena", Priority: 63,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, s *st, now time.Time) bool { return s.Since("arena", now) >= 3*time.Hour }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -486,6 +495,12 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
 	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
+	return err
+}
+
+func cmdShop(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.Shop(ctx, newBot(d))
+	fmt.Println("lots bought", n)
 	return err
 }
 

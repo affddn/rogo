@@ -4,6 +4,7 @@ import (
 	"context"
 	"image"
 	"image/color"
+	"slices"
 	"time"
 
 	"github.com/affddn/rogo/internal/bot"
@@ -122,13 +123,13 @@ func openWeaponGacha(ctx context.Context, b *bot.Bot) (image.Image, error) {
 }
 
 // closePopups taps away level-up and result popups until want shows again.
-func closePopups(ctx context.Context, b *bot.Bot, want screens.ID) error {
+func closePopups(ctx context.Context, b *bot.Bot, want ...screens.ID) error {
 	for i := 0; i < 6; i++ {
 		id, frame, err := b.Look(ctx)
 		if err != nil {
 			return err
 		}
-		if id == want {
+		if slices.Contains(want, id) {
 			return nil
 		}
 		acted, err := b.Dismiss(ctx, id, frame)

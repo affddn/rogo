@@ -79,6 +79,8 @@ const (
 	RuneArena        ID = "rune-arena"
 	ArenaOpponents   ID = "arena-opponents"
 	ArenaTierRewards ID = "arena-tier-rewards"
+	Shop             ID = "shop"
+	ShopBuy          ID = "shop-buy"
 )
 
 // Template names, shared with the tasks that tap them.
@@ -245,6 +247,14 @@ const (
 	TEnchantEmpty        = "enchant_empty"
 	TEnchantNormalChip   = "enchant_normal_chip"
 	TEnchantButton       = "enchant_button"
+	TShopTitle           = "shop_title"
+	TShopBuyTitle        = "shop_buy_title"
+	TShopBuyBtn          = "shop_buy_btn"
+	TShopMetal20         = "shop_metal_20"
+	TShopMetal100        = "shop_metal_100"
+	TShopMetal200        = "shop_metal_200"
+	TShopMeteorite       = "shop_meteorite"
+	TShopStarPowder      = "shop_star_powder"
 	TRefineButton        = "refine_btn"
 	TPartyInviteTitle    = "party_invite_title"
 	TRuneArenaHeader     = "rune_arena_header"
@@ -348,7 +358,9 @@ var rules = []rule{
 	{id: CharSkill, anchors: []string{TSkillHeader, TNavBack}},
 	{id: Awakening, anchors: []string{TAwakeningHeader, TNavBack}},
 	{id: GuildTown, anchors: []string{TGuildTownHall}},
+	{id: ShopBuy, anchors: []string{TShopBuyTitle, TShopBuyBtn}},
 	{id: GuildShop, anchors: []string{TGuildShopTitle}},
+	{id: Shop, anchors: []string{TShopTitle}},
 	{id: GuildBargain, anchors: []string{TGuildBargainTitle}},
 	{id: GuildHunt, anchors: []string{TGuildHuntTitle}},
 	{id: Equipment, anchors: []string{TEquipHeader, TNavBack}},

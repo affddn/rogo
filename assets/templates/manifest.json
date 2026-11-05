@@ -1392,6 +1392,70 @@
     "note": "Rune Arena page header"
   },
   {
+    "name": "shop_buy_btn",
+    "x": 256,
+    "y": 842,
+    "w": 208,
+    "h": 54,
+    "note": "shop Buy dialog: Buy button"
+  },
+  {
+    "name": "shop_buy_title",
+    "x": 300,
+    "y": 365,
+    "w": 120,
+    "h": 45,
+    "note": "shop Buy dialog header"
+  },
+  {
+    "name": "shop_metal_100",
+    "x": 318,
+    "y": 642,
+    "w": 84,
+    "h": 84,
+    "note": "shop item icon: Equipment Reinforce Metal x100 (Guild)"
+  },
+  {
+    "name": "shop_metal_20",
+    "x": 318,
+    "y": 752,
+    "w": 84,
+    "h": 84,
+    "note": "shop item icon: Equipment Reinforce Metal x20 (Dungeon)"
+  },
+  {
+    "name": "shop_metal_200",
+    "x": 318,
+    "y": 960,
+    "w": 84,
+    "h": 84,
+    "note": "shop item icon: Equipment Reinforce Metal x200 (Baphomet, Rune Arena)"
+  },
+  {
+    "name": "shop_meteorite",
+    "x": 318,
+    "y": 752,
+    "w": 84,
+    "h": 84,
+    "note": "shop item icon: Refine Meteorite x1 (Baphomet)"
+  },
+  {
+    "name": "shop_star_powder",
+    "x": 550,
+    "y": 752,
+    "w": 84,
+    "h": 84,
+    "note": "shop item icon: Star Powder x1 (Rune Arena)"
+  },
+  {
+    "name": "shop_title",
+    "x": 20,
+    "y": 22,
+    "w": 110,
+    "h": 38,
+    "note": "System Shop page title (Baphomet, Dungeon and Rune Arena tabs)"
+  },
+  {
     "name": "skill_header",
     "x": 8,
     "y": 16,
