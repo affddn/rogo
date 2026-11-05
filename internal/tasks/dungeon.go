@@ -297,7 +297,8 @@ func awaitAccept(ctx context.Context, b *bot.Bot, limit time.Duration) bool {
 // awaitRun waits for the party run to end back on the Dungeon page,
 // accepting again if a re-match popup shows (someone declined).
 func awaitRun(ctx context.Context, b *bot.Bot) bool {
-	deadline := time.Now().Add(6 * time.Minute)
+	start := time.Now()
+	deadline := start.Add(6 * time.Minute)
 	sawBattle := false
 	for time.Now().Before(deadline) {
 		id, f, err := b.Look(ctx)
@@ -317,8 +318,13 @@ func awaitRun(ctx context.Context, b *bot.Bot) bool {
 			if !awaitAccept(ctx, b, 3*time.Minute) {
 				return false
 			}
-		case id == screens.Dungeon:
+		case id == screens.Dungeon && (sawBattle || time.Since(start) > 20*time.Second):
+			// Back after the run, or no run came: the party fell through.
+			// The page also shows for a moment between Accept and the run
+			// loading, so a fall-through only counts after a while.
 			return sawBattle
+		case id == screens.Dungeon:
+			// Between Accept and the run loading; keep waiting.
 		case id == screens.Unknown, id == screens.InCombat:
 			sawBattle = true
 		default:
