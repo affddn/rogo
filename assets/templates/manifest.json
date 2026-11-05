@@ -1768,6 +1768,14 @@
     "note": "title screen: Start Game"
   },
   {
+    "name": "tower_attempts_zero",
+    "x": 615,
+    "y": 1163,
+    "w": 42,
+    "h": 24,
+    "note": "Endless Tower: Remaining Attempts 0/5 (the 0/5)"
+  },
+  {
     "name": "tower_cleared_none",
     "x": 322,
     "y": 461,

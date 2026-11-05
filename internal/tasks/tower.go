@@ -28,10 +28,12 @@ type TowerResult struct {
 	Swept      bool
 	Challenged bool
 	Climbed    bool // the challenge cleared at least one floor
+	Spent      bool // Remaining Attempts read 0/5; no challenge was tried
 }
 
 // EndlessTower takes the free sweep while badged and, if challenge, fights
-// one Challenge attempt (watching for Dodge).
+// one Challenge attempt (watching for Dodge). The Challenge button stays
+// orange at 0/5 attempts, so the counter is read first.
 func EndlessTower(ctx context.Context, b *bot.Bot, challenge bool) (res TowerResult, err error) {
 	frame, err := openGameMode(ctx, b, towerTile, screens.EndlessTower)
 	if err != nil {
@@ -54,8 +56,14 @@ func EndlessTower(ctx context.Context, b *bot.Bot, challenge bool) (res TowerRes
 		if err := closePopups(ctx, b, screens.EndlessTower); err != nil {
 			return res, err
 		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return res, err
+		}
 	}
-	if challenge {
+	if challenge && screens.Visible(frame, screens.TTowerAttemptsZero) {
+		res.Spent = true
+		b.Log.Info("tower attempts used up")
+	} else if challenge {
 		res.Challenged = true
 		if res.Climbed, err = towerFight(ctx, b); err != nil {
 			return res, err

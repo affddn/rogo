@@ -296,6 +296,7 @@ const (
 	TTowerTitle          = "tower_title"
 	TTowerSweepFree      = "tower_sweep_free"
 	TTowerClearedNone    = "tower_cleared_none"
+	TTowerAttemptsZero   = "tower_attempts_zero"
 	TLoginRewardsTitle   = "login_rewards_title"
 	TLoginIncomplete     = "login_incomplete"
 	TLoginClaimed        = "login_claimed"

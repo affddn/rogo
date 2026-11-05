@@ -342,6 +342,9 @@ func actions() []*runner.Action {
 					}
 					st.Daily["tower_swept"] = true
 					o.Progress = o.Progress || res.Swept || res.Climbed
+					if res.Spent {
+						st.Daily["tower_stuck"] = true
+					}
 					if !res.Challenged {
 						break
 					}

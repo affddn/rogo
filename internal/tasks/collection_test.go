@@ -78,6 +78,13 @@ func TestEndlessTowerReads(t *testing.T) {
 	if !screens.Visible(capture(t, "newmodes/tower-sweep.png"), screens.TTowerSweepFree) {
 		t.Error("Free sweep not seen")
 	}
+	// Remaining Attempts 0/5 against 5/5 (the button is orange in both).
+	if !screens.Visible(capture(t, "newmodes/tower-no-attempts.png"), screens.TTowerAttemptsZero) {
+		t.Error("0/5 attempts missed")
+	}
+	if screens.Visible(tower, screens.TTowerAttemptsZero) {
+		t.Error("5/5 attempts read as 0/5")
+	}
 	res := capture(t, "newmodes/tower-ch-2.png")
 	if s := assets.MustGet(screens.TTowerClearedNone).Find(res, screens.Margin).Score; s < 0.8 {
 		t.Errorf("'Cleared Floor 0' missed (%.2f)", s)
