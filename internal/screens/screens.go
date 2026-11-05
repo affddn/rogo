@@ -442,6 +442,18 @@ func onMain(frame image.Image) bool {
 	return missing <= 1
 }
 
+// LeftRail is the main screen's left rail of feature and event icons. Icons
+// come and go with events and unlocks and the rail reflows into two columns,
+// so its icons are searched for across the whole rail.
+var LeftRail = image.Rect(0, 120, 230, 720)
+
+// SeasonPassIcon finds the Season Pass icon on the main screen's left rail
+// (by shape: the map shows through it).
+func SeasonPassIcon(frame image.Image) (image.Point, bool) {
+	m := assets.MustGet(TMainSeasonPass).FindIn(frame, LeftRail)
+	return m.Center(), m.Score >= 0.7
+}
+
 // Present reports whether an icon is on screen by shape alone, for main
 // screen icons whose see-through backgrounds take on the map's colours
 // (0.84+ on any map, under 0.5 where a new character lacks the feature).

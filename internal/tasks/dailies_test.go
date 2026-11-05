@@ -74,7 +74,7 @@ func TestRailLabelsOnEveryMap(t *testing.T) {
 	for _, file := range []string{"daily/main.png", "main3.png", "after-vp.png"} {
 		img := capture(t, file)
 		for _, name := range []string{screens.TRailMall, screens.TRailGrowth, screens.TRailPulls} {
-			if m := assets.MustGet(name).FindIn(img, leftRail); m.Score < 0.7 {
+			if m := assets.MustGet(name).FindIn(img, screens.LeftRail); m.Score < 0.7 {
 				t.Errorf("%s: %s scored %.2f", file, name, m.Score)
 			}
 		}
@@ -106,7 +106,7 @@ func TestDungeonAndGachaBadges(t *testing.T) {
 	if m := assets.MustGet(screens.TClaimWord).FindIn(capture(t, "modes/dg-achieve.png"), achieveList); !m.Visible(screens.MinScore) {
 		t.Error("achievement Claim not found")
 	}
-	if m := assets.MustGet(screens.TRailLimited).FindIn(capture(t, "daily/main.png"), leftRail); m.Score < 0.7 {
+	if m := assets.MustGet(screens.TRailLimited).FindIn(capture(t, "daily/main.png"), screens.LeftRail); m.Score < 0.7 {
 		t.Errorf("Limited Quest label scored %.2f", m.Score)
 	}
 }

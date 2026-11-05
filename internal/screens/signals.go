@@ -154,7 +154,7 @@ func ReadMain(frame image.Image) Signals {
 		}),
 		StageQuest: StageQuest(frame),
 		System:     Present(frame, TMainSystem),
-		SeasonPass: Present(frame, TMainSeasonPass),
+		SeasonPass: seasonPass(frame),
 	}
 	for b, p := range badgeAt {
 		r := image.Rectangle{Min: p.Sub(image.Pt(8, 8)), Max: p.Add(image.Pt(8, 8))}
@@ -184,4 +184,9 @@ var questRow = image.Rect(90, 912, 320, 948)
 // tracker text is white over the map, so it is matched by shape.
 func StageQuest(frame image.Image) bool {
 	return assets.MustGet(TQuestClearStage).FindIn(frame, questRow).Score >= MinScore
+}
+
+func seasonPass(frame image.Image) bool {
+	_, ok := SeasonPassIcon(frame)
+	return ok
 }

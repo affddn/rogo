@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	seasonPassIcon = image.Pt(48, 410) // left rail
 	passTabs       = []image.Point{{340, 1225}, {470, 1225}, {600, 1225}}
 	passClaimAll   = image.Pt(188, 1129)
 	passClaimBadge = image.Pt(285, 1105)
@@ -22,10 +21,15 @@ func SeasonPass(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return 0, err
 	}
-	if err := b.Tap(ctx, seasonPassIcon, "season pass"); err != nil {
+	_, frame, err := b.Look(ctx)
+	if err != nil {
 		return 0, err
 	}
-	if _, _, err := b.Wait(ctx, 10*time.Second, screens.SeasonPass); err != nil {
+	icon, ok := screens.SeasonPassIcon(frame)
+	if !ok {
+		return 0, nil
+	}
+	if _, _, err := b.TapWait(ctx, screens.Main, icon, "season pass", 10*time.Second, screens.SeasonPass); err != nil {
 		return 0, err
 	}
 	for _, tab := range passTabs {

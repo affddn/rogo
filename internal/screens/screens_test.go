@@ -237,6 +237,18 @@ func TestFeatureIconsOnDarkMap(t *testing.T) {
 	}
 }
 
+func TestSeasonPassAnywhereOnTheRail(t *testing.T) {
+	// Event icons pushed the rail into two columns and moved Season Pass
+	// from (54,394) up to (54,283).
+	p, ok := SeasonPassIcon(load(t, "main-rail2col.png"))
+	if d := p.Sub(image.Pt(54, 283)); !ok || d.X*d.X+d.Y*d.Y > 25 {
+		t.Errorf("season pass at %v (found %v); want near (54,283)", p, ok)
+	}
+	if !ReadMain(load(t, "main-rail2col.png")).SeasonPass {
+		t.Error("season pass signal off with the icon on screen")
+	}
+}
+
 func TestQuickIdleFreeSigns(t *testing.T) {
 	if !Visible(load(t, "income-cave.png"), TIncomeFreeLabel) {
 		t.Error("green Free: label not seen")

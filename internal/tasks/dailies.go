@@ -11,9 +11,8 @@ import (
 )
 
 var (
-	// The main screen's left rail. Event icons come and go, so they are
-	// found by their labels; the icon sits above its label.
-	leftRail   = image.Rect(0, 120, 230, 720)
+	// Left-rail icons are found by their labels; the icon sits above its
+	// label.
 	railIconDY = -35
 
 	// Mall, Gift Pack tab: the daily Diamond x30 and the ad Diamond x100,
@@ -65,7 +64,7 @@ func Dailies(ctx context.Context, b *bot.Bot) (claimed int, err error) {
 		if err != nil {
 			return claimed, err
 		}
-		m := assets.MustGet(step.rail).FindIn(frame, leftRail)
+		m := assets.MustGet(step.rail).FindIn(frame, screens.LeftRail)
 		if m.Score < 0.7 { // white labels over the map: shape only
 			continue // event over
 		}
