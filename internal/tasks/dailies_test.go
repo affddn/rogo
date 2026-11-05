@@ -302,3 +302,14 @@ func TestPetTokenDraw(t *testing.T) {
 		t.Error("a 10-diamond draw taken for a token draw")
 	}
 }
+
+func TestPetDrawLevel(t *testing.T) {
+	for name, want := range map[string]int{"pets-gacha-tokens.png": 1, "pet-level2.png": 2} {
+		if got := petDrawLevel(capture(t, name)); got != want {
+			t.Errorf("%s: Draw Level %d, want %d", name, got, want)
+		}
+	}
+	if !badged(capture(t, "pet-level2.png"), petAchievementBadge) {
+		t.Error("ready draw achievement not seen")
+	}
+}

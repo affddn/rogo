@@ -154,7 +154,11 @@ func actions() []*runner.Action {
 		// Diamonds above the reserve go to weapon draws, then the new
 		// weapons get cultivated.
 		{Name: "diamond-draws", Priority: 69,
-			Ready: func(_ sig, s *st, now time.Time) bool { return s.Since("diamond-draws", now) >= 3*time.Hour },
+			Ready: func(_ sig, s *st, now time.Time) bool {
+				// Pet draws come first until the Draw Level opens the
+				// second Blessing slot.
+				return !petDrawsDue(s) && s.Since("diamond-draws", now) >= 3*time.Hour
+			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				spent, err := tasks.DiamondDraws(ctx, b, diamondReserve)
 				st.Add("diamonds_spent", spent)
@@ -165,12 +169,11 @@ func actions() []*runner.Action {
 				st.Add("cultivate_steps", c)
 				return out{Progress: true, Growth: c > 0}, err
 			}},
-		{Name: "pets", Priority: 68, Snooze: time.Hour, Ready: badge(screens.BadgePet),
-			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				n, err := tasks.Pets(ctx, b)
-				st.Add("pet_steps", n)
-				return out{Progress: n > 0, Growth: n > 0}, err
-			}},
+		{Name: "pets", Priority: 68, Snooze: time.Hour,
+			Ready: func(s sig, st *st, now time.Time) bool {
+				return s.Has(screens.BadgePet) || (petDrawsDue(st) && st.Since("pets", now) >= 3*time.Hour)
+			},
+			Run: petsRun},
 		{Name: "season-pass", Priority: 45,
 			Ready: func(s sig, st *st, now time.Time) bool {
 				return s.SeasonPass && st.Since("season-pass", now) >= time.Hour
@@ -387,8 +390,7 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		st.Add("enhance_levels", n)
 		return out{Progress: n > 0, Growth: n > 0}, err
 	case screens.PetGacha, screens.PetCultivate:
-		n, err := tasks.Pets(ctx, b)
-		return out{Progress: n > 0, Growth: n > 0}, err
+		return petsRun(ctx, b, st)
 	case screens.Attribute, screens.CharOverview, screens.CharSkill:
 		ok, err := tasks.Attributes(ctx, b)
 		return out{Progress: ok, Growth: ok}, err
@@ -507,9 +509,32 @@ func cmdQuestPanel(ctx context.Context, d *device.Device, _ []string) error {
 }
 
 func cmdPets(ctx context.Context, d *device.Device, _ []string) error {
-	n, err := tasks.Pets(ctx, newBot(d))
-	fmt.Println("steps", n)
+	n, lvl, err := tasks.Pets(ctx, newBot(d), petDrawReserve)
+	fmt.Println("steps", n, "draw level", lvl)
 	return err
+}
+
+// petDrawReserve is kept back from pet draws. The owner chose to spend the
+// whole balance on reaching Draw Level 3 (5 Nov); the draw dialog stops at
+// the draws left to the next level, so nothing is spent past it.
+const petDrawReserve = 0
+
+// petsRun works the pet pages, spending diamonds above petDrawReserve on
+// pet draws while the Draw Level is under 3, and keeps the level it read.
+func petsRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
+	n, lvl, err := tasks.Pets(ctx, b, petDrawReserve)
+	st.Add("pet_steps", n)
+	if err == nil {
+		st.Counters["pet_draw_level"] = lvl
+	}
+	return out{Progress: n > 0, Growth: n > 0}, err
+}
+
+// petDrawsDue reports a pet Draw Level under 3 (0 is 3 or more, or not
+// read yet): diamonds go to pet draws until then.
+func petDrawsDue(st *st) bool {
+	lvl := st.Counters["pet_draw_level"]
+	return lvl == 1 || lvl == 2
 }
 
 func cmdObjective(ctx context.Context, d *device.Device, _ []string) error {

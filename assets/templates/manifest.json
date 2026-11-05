@@ -1096,6 +1096,22 @@
     "note": "pet: Auto Formation button"
   },
   {
+    "name": "pet_draw_level1",
+    "x": 76,
+    "y": 94,
+    "w": 32,
+    "h": 36,
+    "note": "Pet Gacha: Draw Level badge reading 1"
+  },
+  {
+    "name": "pet_draw_level2",
+    "x": 76,
+    "y": 94,
+    "w": 32,
+    "h": 36,
+    "note": "Pet Gacha: Draw Level badge reading 2"
+  },
+  {
     "name": "pet_header",
     "x": 8,
     "y": 16,

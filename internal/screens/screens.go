@@ -247,6 +247,8 @@ const (
 	TMVPTabAngeling      = "mvp_tab_angeling"
 	TMVPTabGTB           = "mvp_tab_gtb"
 	TPetTokenCost        = "pet_token_cost"
+	TPetDrawLevel1       = "pet_draw_level1"
+	TPetDrawLevel2       = "pet_draw_level2"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
 )
