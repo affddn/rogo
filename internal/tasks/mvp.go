@@ -37,8 +37,11 @@ func mvpButtonLive(frame image.Image, r image.Rectangle) bool {
 }
 
 // MVP works every unlocked MVP boss whose tab is badged (see mvpBoss).
-// done reports that no boss tab is badged any more.
-func MVP(ctx context.Context, b *bot.Bot) (challenged bool, sweeps int, done bool, err error) {
+// done reports that no boss tab is badged any more. For a quest ("Challenge
+// or Sweep MVP Challenge"), with nothing badged it challenges the first boss
+// whose Challenge button is still live: the tab loses its badge once the
+// sweeps are spent although the next difficulty can still be tried.
+func MVP(ctx context.Context, b *bot.Bot, quest bool) (challenged bool, sweeps int, done bool, err error) {
 	frame, err := openGameMode(ctx, b, mvpTile, screens.MVP)
 	if err != nil {
 		return false, 0, false, err
@@ -64,6 +67,11 @@ func MVP(ctx context.Context, b *bot.Bot) (challenged bool, sweeps int, done boo
 		}
 		frame = f
 	}
+	if quest && !challenged && sweeps == 0 {
+		if challenged, frame, err = mvpQuestChallenge(ctx, b, frame); err != nil {
+			return challenged, sweeps, false, err
+		}
+	}
 	done = true
 	for _, boss := range mvpBosses {
 		if _, ok := mvpTab(frame, boss); ok {
@@ -72,6 +80,40 @@ func MVP(ctx context.Context, b *bot.Bot) (challenged bool, sweeps int, done boo
 	}
 	b.Log.Info("mvp done", "challenged", challenged, "sweeps", sweeps)
 	return challenged, sweeps, done, b.ToMain(ctx)
+}
+
+// mvpQuestChallenge challenges the first unlocked boss whose Challenge
+// button is live, badged or not.
+func mvpQuestChallenge(ctx context.Context, b *bot.Bot, frame image.Image) (bool, image.Image, error) {
+	for _, boss := range mvpBosses {
+		m := assets.MustGet(boss).FindIn(frame, mvpTabStrip)
+		if m.Score < 0.7 {
+			continue
+		}
+		if err := b.Tap(ctx, m.Center(), "mvp boss"); err != nil {
+			return false, frame, err
+		}
+		if err := bot.Sleep(ctx, 2*time.Second); err != nil {
+			return false, frame, err
+		}
+		_, f, err := b.Look(ctx)
+		if err != nil {
+			return false, frame, err
+		}
+		frame = f
+		if !mvpButtonLive(frame, mvpChallenge) {
+			continue
+		}
+		if err := b.Tap(ctx, centre(mvpChallenge), "mvp challenge"); err != nil {
+			return false, frame, err
+		}
+		if frame, err = awaitMVPPage(ctx, b); err != nil {
+			return true, frame, err
+		}
+		b.Log.Info("mvp challenge over", "for", "quest")
+		return true, frame, nil
+	}
+	return false, frame, nil
 }
 
 // mvpTab finds a boss's tab if it is unlocked and badged.

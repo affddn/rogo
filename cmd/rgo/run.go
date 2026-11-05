@@ -371,7 +371,7 @@ func actions() []*runner.Action {
 			}},
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
-			Run:   mvpRun},
+			Run:   func(ctx context.Context, b *bot.Bot, st *st) (out, error) { return mvpRun(ctx, b, st, false) }},
 		{Name: "dungeon", Wakes: wakeQuest, Priority: 62, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
@@ -488,7 +488,7 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		st.LastRun["baphomet"] = time.Now()
 		return out{Progress: err == nil}, err
 	case screens.MVP:
-		return mvpRun(ctx, b, st)
+		return mvpRun(ctx, b, st, true)
 	case screens.Dungeon:
 		n, err := dungeonRuns(ctx, b, st)
 		if err == nil && n == 0 && st.Daily["dungeon_done"] {
@@ -593,9 +593,10 @@ func cmdDiamonds(ctx context.Context, d *device.Device, _ []string) error {
 	return err
 }
 
-// mvpRun challenges the MVP boss and spends the day's sweeps.
-func mvpRun(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-	challenged, sweeps, done, err := tasks.MVP(ctx, b)
+// mvpRun challenges the MVP bosses and spends the day's sweeps; for a
+// quest it also challenges a boss whose tab is not badged.
+func mvpRun(ctx context.Context, b *bot.Bot, st *st, quest bool) (out, error) {
+	challenged, sweeps, done, err := tasks.MVP(ctx, b, quest)
 	st.Add("mvp_sweeps", sweeps)
 	if done {
 		st.Daily["mvp_done"] = true
@@ -615,8 +616,8 @@ func cmdGuild(ctx context.Context, d *device.Device, _ []string) error {
 	return err
 }
 
-func cmdMVP(ctx context.Context, d *device.Device, _ []string) error {
-	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d))
+func cmdMVP(ctx context.Context, d *device.Device, args []string) error {
+	challenged, sweeps, done, err := tasks.MVP(ctx, newBot(d), len(args) > 0 && args[0] == "quest")
 	fmt.Println("challenged", challenged, "sweeps", sweeps, "done", done)
 	return err
 }
