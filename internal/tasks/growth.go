@@ -103,8 +103,27 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			break
 		}
 		readBonuses(b, frame, alloc)
+		// Points on top drift from the best split; once a rebuild beats them
+		// by rebuildGain, reset (free) and spend the whole pool again.
+		if pass == 0 && alloc != ([6]int{}) {
+			if best, ok := rebuildBeats(alloc, points); ok {
+				b.Log.Info("attributes reset for a rebuild", "alloc", alloc, "points", points)
+				if frame, err = resetAttributes(ctx, b); err != nil {
+					return skillsDone || spent > 0, err
+				}
+				points, okPoints = screens.AttributePoints(frame)
+				alloc, okAlloc = screens.AttributeAllocation(frame)
+				if !okPoints || !okAlloc || alloc != ([6]int{}) {
+					b.Log.Warn("attribute reset left points allocated", "shot", b.Save(frame))
+					break
+				}
+				target = best
+			}
+		}
 		if alloc == ([6]int{}) && points >= rebuildPoints {
-			target = bestBuild(points)
+			if target == ([6]int{}) {
+				target = bestBuild(points)
+			}
 			b.Log.Info("attribute pool rebuilt", "points", points, "str", target[statSTR], "agi", target[statAGI],
 				"vit", target[statVIT], "dex", target[statDEX], "luk", target[statLUK])
 		}
@@ -195,6 +214,34 @@ func awaken(ctx context.Context, b *bot.Bot) (int, error) {
 		b.Log.Info("awakening tiers activated", "count", n)
 	}
 	return n, nil
+}
+
+// attrResetConfirm is Confirm on the reset's System Notice.
+var attrResetConfirm = image.Pt(497, 830)
+
+// resetAttributes returns every allocated point to the pool (the reset is
+// free) and hands back the Attribute page after it.
+func resetAttributes(ctx context.Context, b *bot.Bot) (image.Image, error) {
+	_, frame, err := b.Look(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := b.TapTemplate(ctx, frame, screens.TAttrReset); err != nil {
+		return nil, err
+	}
+	for i := 0; i < 4; i++ {
+		if _, frame, err = b.Look(ctx); err != nil {
+			return nil, err
+		}
+		if screens.Visible(frame, screens.TAttrResetNotice) {
+			if err := b.Tap(ctx, attrResetConfirm, "confirm attribute reset"); err != nil {
+				return nil, err
+			}
+			_, frame, err = b.Wait(ctx, 10*time.Second, screens.Attribute)
+			return frame, err
+		}
+	}
+	return nil, fmt.Errorf("attribute reset: the confirmation notice never showed")
 }
 
 // rebuildPoints is the smallest unspent pool, with nothing allocated, that

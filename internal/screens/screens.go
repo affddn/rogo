@@ -181,6 +181,8 @@ const (
 	TItemReplace         = "item_replace_btn"
 	TAttrRecommended     = "attr_recommended"
 	TAttrConfirm         = "attr_confirm"
+	TAttrReset           = "attr_reset"
+	TAttrResetNotice     = "attr_reset_notice"
 	TEquipHeader         = "equip_header"
 	TEquipUpgrade        = "equip_upgrade_btn"
 	TEnhanceHeader       = "enhance_header"

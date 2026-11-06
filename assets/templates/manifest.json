@@ -56,6 +56,22 @@
     "note": "attribute: Recommended Allocation button"
   },
   {
+    "name": "attr_reset",
+    "x": 226,
+    "y": 1095,
+    "w": 44,
+    "h": 44,
+    "note": "Attribute page: the circular-arrow reset button left of Recommended Allocation"
+  },
+  {
+    "name": "attr_reset_notice",
+    "x": 180,
+    "y": 606,
+    "w": 352,
+    "h": 34,
+    "note": "System Notice: Reset all allocated attribute points?"
+  },
+  {
     "name": "autosummon_text",
     "x": 210,
     "y": 520,

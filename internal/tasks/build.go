@@ -7,8 +7,8 @@ import "math"
 // descriptions):
 //
 //   - a stat's next point costs 1 + allocated/5 attribute points, and every
-//     point spent adds the same ~16 flat PATK whichever stat takes it
-//   - STR: +132 PATK; AGI: ASPD along aspdCurve, attacks per second being
+//     point spent adds the same ~50 PATK whichever stat takes it
+//   - STR: +1394 PATK; AGI: ASPD along aspdCurve, attacks per second being
 //     50 / (200 - ASPD); LUK: +0.3 CRIT and +0.3 Skill CRIT; DEX: +0.5%
 //     Haste, half of it skill cooldown reduction; VIT, INT: no damage.
 //     ASPD, CRIT, Skill CRIT and Haste all follow the stat's total (bonuses
@@ -49,12 +49,14 @@ const (
 	// 47, 53 and 57 total AGI rise 0.25-0.29 a point.
 	aspdPerAGI = 0.27
 
-	// basePATK is PATK with no points allocated: 803K shown on 6 Nov less
-	// what the points gave. Stats add only a few percent of it now, so the
-	// plan barely moves with it (the same split from 250K up).
-	basePATK     = 780000
-	patkPerSpent = 16
-	patkPerSTR   = 132
+	// PATK with no points allocated, and what points add, from the
+	// Attribute page's preview right after a reset on 6 Nov: 596.9K bare,
+	// +1441 for the first STR point (+7220 for five), +747 for ten AGI
+	// (15 points spent). At Base 37 they were 40.3K, +148 and +16: gear
+	// raises them, so they want re-measuring now and then.
+	basePATK     = 596900
+	patkPerSpent = 50
+	patkPerSTR   = 1394
 	critPerLUK   = 0.3
 	critDamage   = 0.5 // extra over a normal hit
 )
@@ -187,7 +189,8 @@ func rhythm(str float64) float64 {
 	return 1 + per*stacks
 }
 
-// Survival. VIT gives +0.5% Max HP and +0.2% damage reduction a point; the
+// Survival. VIT gives +0.2% damage reduction a point and +997 Max HP, only
+// 0.053% of the 1.88M bare (6 Nov preview; it was 0.5% at Base 37). The
 // stage pushes the bot keeps losing (Maya at 5-12) are lost by dying with
 // the boss timer running. Damage dealt in such a fight scales with time
 // alive, so the objective weighs effective HP in at survivalWeight: half
@@ -196,7 +199,7 @@ const survivalWeight = 0.5
 
 func effectiveHP(vit int) float64 {
 	v := float64(vit)
-	return (1 + 0.005*v) / (1 - 0.002*v)
+	return (1 + 0.00053*v) / (1 - 0.002*v)
 }
 
 // Skill hits per cast that can crit (each feeds Shadow Assault), in
@@ -269,6 +272,37 @@ func nextStat(alloc [6]int, points int) (int, bool) {
 		return s, true
 	}
 	return greedyStat(alloc, points)
+}
+
+// spendPlanned spends points one at a time by nextStat and returns the
+// allocation and what is left.
+func spendPlanned(alloc [6]int, points int) ([6]int, int) {
+	for {
+		s, ok := nextStat(alloc, points)
+		if !ok {
+			return alloc, points
+		}
+		points -= pointCost(alloc[s])
+		alloc[s]++
+	}
+}
+
+// rebuildGain is how much a rebuild must beat spending new points on top
+// before Attributes resets (it is free) and rebuilds the pool. Point by
+// point the plan drifts: 3% behind a rebuild after 150 more points and 5%
+// after 300 from the 6 Nov rebuild.
+const rebuildGain = 0.02
+
+// rebuildBeats returns bestBuild for alloc's points plus points, and
+// whether it beats spending points on top of alloc by rebuildGain.
+func rebuildBeats(alloc [6]int, points int) ([6]int, bool) {
+	total := points
+	for _, n := range alloc {
+		total += spentOn(n)
+	}
+	onTop, _ := spendPlanned(alloc, points)
+	best := bestBuild(total)
+	return best, damage(best) > damage(onTop)*(1+rebuildGain)
 }
 
 // bestBuild is the split of total attribute points the model rates highest,

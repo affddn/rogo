@@ -5,17 +5,6 @@ import (
 	"testing"
 )
 
-func spend(alloc [6]int, points int) ([6]int, int) {
-	for {
-		s, ok := nextStat(alloc, points)
-		if !ok {
-			return alloc, points
-		}
-		points -= pointCost(alloc[s])
-		alloc[s]++
-	}
-}
-
 // searchBest tries STR/AGI/VIT/LUK splits of total points (AGI, VIT and
 // LUK in steps of 2), with the rest in DEX.
 func searchBest(total int) [6]int {
@@ -59,17 +48,14 @@ func TestBestBuildBeatsTheGrid(t *testing.T) {
 	}
 }
 
-func TestPlannerStaysNearTheBest(t *testing.T) {
-	// Levels bring a few points at a time; from a rebuilt pool the planner
-	// keeps close to what a fresh rebuild would give.
-	for _, total := range []int{594, 854} {
-		got, left := spend(bestBuild(total), 150)
-		if left > 1 {
-			t.Errorf("%d+150 points: %d left", total, left)
-		}
-		if r := damage(got) / damage(bestBuild(total+150)); r < 0.985 {
-			t.Errorf("%d+150 points -> %v, %.3f of a rebuild", total, got, r)
-		}
+func TestRebuildBeats(t *testing.T) {
+	// The build before the 6 Nov reset is ~10% behind a rebuild.
+	if _, ok := rebuildBeats([6]int{59, 36, 11, 0, 12, 51}, 3); !ok {
+		t.Error("the pre-reset 6 Nov build does not call for a rebuild")
+	}
+	// A level's points on a fresh rebuild do not.
+	if _, ok := rebuildBeats(bestBuild(854), 15); ok {
+		t.Error("15 points on a fresh rebuild call for another")
 	}
 }
 
@@ -79,7 +65,7 @@ func TestRhythmTiers(t *testing.T) {
 			t.Errorf("STR %v: rhythm %.3f, want %.3f", str, got, want)
 		}
 	}
-	if effectiveHP(0) != 1 || effectiveHP(20) <= 1.1 {
+	if effectiveHP(0) != 1 || effectiveHP(20) <= 1.04 {
 		t.Errorf("effective HP at VIT 20 is %.3f", effectiveHP(20))
 	}
 }
