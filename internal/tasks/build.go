@@ -10,7 +10,12 @@ import "math"
 //     point spent adds the same ~16 flat PATK whichever stat takes it
 //   - STR: +132 PATK; AGI: ASPD along aspdCurve, attacks per second being
 //     50 / (200 - ASPD); LUK: +0.3 CRIT and +0.3 Skill CRIT; DEX: +0.5%
-//     Haste, half of it skill cooldown reduction; VIT, INT: no damage
+//     Haste, half of it skill cooldown reduction; VIT, INT: no damage.
+//     ASPD, CRIT, Skill CRIT and Haste all follow the stat's total (bonuses
+//     included), checked against four Attribute page readings on 5-6 Nov.
+//   - CRIT, Skill CRIT and Aspd also take gear, cards and job passives
+//     (Katar Specialization: +6 Skill CRIT a level), so calibrate re-reads
+//     their bases from the Attribute page before every plan.
 //   - crits do 150%; each skill adds a follow-up hit on a Skill CRIT
 //   - Rapid Combo: every normal attack cuts all current skill cooldowns by
 //     6%, so attack speed also speeds up every skill
@@ -31,7 +36,7 @@ const (
 	statLUK
 )
 
-// aspdCurve is the ASPD that allocated AGI adds to the bare 152.
+// aspdCurve is the ASPD that total AGI adds to the bare 152.
 var aspdCurve = []struct {
 	agi  int
 	aspd float64
@@ -40,17 +45,30 @@ var aspdCurve = []struct {
 const (
 	baseASPD = 152
 	maxASPD  = 190
-	// aspdPerAGI extends the curve past its last measurement.
+	// aspdPerAGI extends the curve past its last measurement; readings at
+	// 47, 53 and 57 total AGI rise 0.25-0.29 a point.
 	aspdPerAGI = 0.27
 
-	basePATK     = 40300 // with no points allocated
+	// basePATK is PATK with no points allocated: 803K shown on 6 Nov less
+	// what the points gave. Stats add only a few percent of it now, so the
+	// plan barely moves with it (the same split from 250K up).
+	basePATK     = 780000
 	patkPerSpent = 16
 	patkPerSTR   = 132
-	// CRIT and Skill CRIT from total LUK (bonuses included).
-	baseCRIT    = 5.0  // 9.2 shown at LUK 14 (10 allocated)
-	baseSkillCR = 23.5 // Katar Mastery 5/5: 37.0 shown at LUK 45 (40 allocated)
-	critPerLUK  = 0.3
-	critDamage  = 0.5 // extra over a normal hit
+	critPerLUK   = 0.3
+	critDamage   = 0.5 // extra over a normal hit
+)
+
+// Bases the Attribute page shows on top of what stats give, set by
+// calibrate; the defaults are the 6 Nov reading (CRIT 29.4, Skill CRIT 50.4
+// and Aspd 177.39 at 68 LUK and 53 AGI in total).
+var (
+	baseCRIT    = 9.0
+	baseSkillCR = 30.0
+	aspdBonus   = -0.5
+)
+
+const (
 
 	// rapidCombo is the share of every current cooldown a normal attack
 	// removes.
@@ -81,8 +99,19 @@ func aspdFromAGI(n int) float64 {
 	return last.aspd + aspdPerAGI*float64(n-last.agi)
 }
 
+// attacksPerSecond is the ATK Freq the Attribute page shows for total AGI.
 func attacksPerSecond(agi int) float64 {
-	return 50 / (200 - min(baseASPD+aspdFromAGI(agi), maxASPD))
+	return 50 / (200 - min(baseASPD+aspdFromAGI(agi)+aspdBonus, maxASPD))
+}
+
+// calibrate sets the bases from the Attribute page's CRIT, Skill CRIT and
+// Aspd, given the stat totals (allocated plus bonuses) they were shown at.
+func calibrate(total [6]int, crit, skillCrit, aspd float64) {
+	luk := critPerLUK * float64(total[statLUK])
+	baseCRIT, baseSkillCR = crit-luk, skillCrit-luk
+	if aspd < maxASPD { // a capped Aspd says nothing about the bonus
+		aspdBonus = aspd - baseASPD - aspdFromAGI(total[statAGI])
+	}
 }
 
 // castPeriod is how often a skill with cooldown c comes back when normal
@@ -128,8 +157,8 @@ func spentOn(n int) int {
 //
 // statBonus is what pets, cards and gear add to each stat on top of the
 // allocated points: the Attribute page's All column less Total Allocated,
-// read by Attributes before it plans. The defaults are the 5 Nov reading.
-var statBonus = [6]int{statSTR: 4, statAGI: 6, statVIT: 2, statDEX: 1, statLUK: 5}
+// read by Attributes before it plans. The defaults are the 6 Nov reading.
+var statBonus = [6]int{statSTR: 23, statAGI: 17, statVIT: 1, statINT: 12, statDEX: 3, statLUK: 17}
 
 type flatTier struct {
 	at   float64
@@ -201,8 +230,8 @@ func damage(alloc [6]int) float64 {
 	}
 	skillDmg *= rhythm(str)
 
-	f := attacksPerSecond(alloc[statAGI])
-	cdr := (0.5 + 0.5*float64(alloc[statDEX])) / 200
+	f := attacksPerSecond(alloc[statAGI] + statBonus[statAGI])
+	cdr := 0.5 * float64(alloc[statDEX]+statBonus[statDEX]) / 200 // half of Haste
 	perSecond := f * (1 + critDamage*crit)
 	critTriggers := f * crit
 	for i, s := range assassinSkills {
@@ -240,6 +269,61 @@ func nextStat(alloc [6]int, points int) (int, bool) {
 		return s, true
 	}
 	return greedyStat(alloc, points)
+}
+
+// bestBuild is the split of total attribute points the model rates highest,
+// for spending a whole pool after a reset (free on the Attribute page).
+// Point by point the planner cannot get there: the best LUK is not steady
+// as points grow (Skill CRIT 50 is worth chasing at ~600 points with the 6
+// Nov bases, and AGI toward the ASPD cap beats it at ~850), and points
+// once spent stay put. STR goes in single steps, since its Awakening tiers
+// sit on exact totals; AGI, VIT and LUK in steps of 2 with DEX taking the
+// rest, then single-point trades between stats polish the result.
+func bestBuild(total int) [6]int {
+	fill := func(a [6]int, s int) [6]int {
+		left := total
+		for _, n := range a {
+			left -= spentOn(n)
+		}
+		for left >= pointCost(a[s]) {
+			left -= pointCost(a[s])
+			a[s]++
+		}
+		return a
+	}
+	var best [6]int
+	bd := 0.0
+	for st := 0; spentOn(st) <= total; st++ {
+		for ag := 0; spentOn(st)+spentOn(ag) <= total; ag += 2 {
+			for lu := 0; ; lu += 2 {
+				c := spentOn(st) + spentOn(ag) + spentOn(lu)
+				if c > total {
+					break
+				}
+				for vi := 0; c+spentOn(vi) <= total; vi += 2 {
+					a := fill([6]int{statSTR: st, statAGI: ag, statVIT: vi, statLUK: lu}, statDEX)
+					if d := damage(a); d > bd {
+						best, bd = a, d
+					}
+				}
+			}
+		}
+	}
+	for improved := true; improved; {
+		improved = false
+		for from := range best {
+			for to := range best {
+				for k := 1; k <= 3 && from != to && best[from] >= k; k++ {
+					a := best
+					a[from] -= k
+					if a = fill(a, to); damage(a) > bd*(1+1e-9) {
+						best, bd, improved = a, damage(a), true
+					}
+				}
+			}
+		}
+	}
+	return best
 }
 
 func strAt(v int) func([6]int) bool {

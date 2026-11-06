@@ -60,8 +60,8 @@ var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
 // Attributes spends free attribute points where they add the most damage
 // (see build.go) instead of the game's Recommended Allocation, which the
 // model puts about 3% behind. Unspent skill points go by our own skill
-// order (skilltree.go); the one choice there (Potential Burst over Envenom,
-// and equipping it) was made by hand.
+// order (skilltree.go); which actives sit on the skill bar is chosen by
+// hand.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
 	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill, screens.Awakening)
@@ -85,6 +85,9 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 		}
 	}
 	spent := 0
+	// After a reset (nothing allocated) the whole pool goes to bestBuild;
+	// otherwise new points go point by point.
+	var target [6]int
 	// The game drops a tap now and then; confirm, read the page again and
 	// spend what is left.
 	for pass := 0; pass < 3; pass++ {
@@ -100,9 +103,17 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			break
 		}
 		readBonuses(b, frame, alloc)
+		if alloc == ([6]int{}) && points >= rebuildPoints {
+			target = bestBuild(points)
+			b.Log.Info("attribute pool rebuilt", "points", points, "str", target[statSTR], "agi", target[statAGI],
+				"vit", target[statVIT], "dex", target[statDEX], "luk", target[statLUK])
+		}
 		taps := 0
 		for {
-			s, ok := nextStat(alloc, points)
+			s, ok := towards(target, alloc, points)
+			if !ok {
+				s, ok = nextStat(alloc, points)
+			}
 			if !ok {
 				break
 			}
@@ -124,7 +135,7 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 		}
 		spent += taps
 		b.Log.Info("attribute points allocated", "taps", taps,
-			"str", alloc[statSTR], "agi", alloc[statAGI], "dex", alloc[statDEX], "luk", alloc[statLUK])
+			"str", alloc[statSTR], "agi", alloc[statAGI], "vit", alloc[statVIT], "dex", alloc[statDEX], "luk", alloc[statLUK])
 		if _, frame, err = b.Look(ctx); err != nil {
 			return true, err
 		}
@@ -186,6 +197,20 @@ func awaken(ctx context.Context, b *bot.Bot) (int, error) {
 	return n, nil
 }
 
+// rebuildPoints is the smallest unspent pool, with nothing allocated, that
+// Attributes treats as a reset to rebuild rather than a new character.
+const rebuildPoints = 50
+
+// towards returns a stat still below target that the points can pay for.
+func towards(target, alloc [6]int, points int) (int, bool) {
+	for s := range target {
+		if alloc[s] < target[s] && pointCost(alloc[s]) <= points {
+			return s, true
+		}
+	}
+	return 0, false
+}
+
 // readBonuses updates statBonus from the Attribute page, so Awakening
 // thresholds (on total stats) are planned with today's pets and cards.
 func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int) {
@@ -203,6 +228,14 @@ func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int) {
 		statBonus = bonus
 		b.Log.Info("stat bonuses", "str", bonus[statSTR], "agi", bonus[statAGI], "vit", bonus[statVIT],
 			"int", bonus[statINT], "dex", bonus[statDEX], "luk", bonus[statLUK])
+	}
+	// The rates set the CRIT, Skill CRIT and Aspd bases the plan builds on.
+	if crit, sc, aspd, ok := screens.AttributeRates(frame); ok {
+		before := [3]float64{baseCRIT, baseSkillCR, aspdBonus}
+		calibrate(total, crit, sc, aspd)
+		if after := [3]float64{baseCRIT, baseSkillCR, aspdBonus}; after != before {
+			b.Log.Info("attribute bases", "crit", baseCRIT, "skill_crit", baseSkillCR, "aspd_bonus", aspdBonus)
+		}
 	}
 }
 

@@ -44,20 +44,31 @@ func searchBest(total int) [6]int {
 	return best
 }
 
-func TestNextStatNearTheSearchedOptimum(t *testing.T) {
-	// The planner trades up to ~1.5% now for reaching an Awakening tier a
-	// few levels on (Skill CRIT 50 around 600 points).
-	for _, total := range []int{324, 444, 594, 844} {
-		best := searchBest(total)
-		got, left := spend([6]int{}, total)
-		if got[statINT] > 1 || left > 1 {
-			t.Errorf("%d points -> %v (%d left)", total, got, left)
+func TestBestBuildBeatsTheGrid(t *testing.T) {
+	for _, total := range []int{324, 594, 854} {
+		got, grid := bestBuild(total), searchBest(total)
+		if r := damage(got) / damage(grid); r < 0.999 {
+			t.Errorf("%d points -> %v, %.3f of the grid's %v", total, got, r, grid)
 		}
-		if r := damage(got) / damage(best); r < 0.985 {
-			t.Errorf("%d points -> %v, %.3f of the searched best %v", total, got, r, best)
+		if left := total - spentOn(got[0]) - spentOn(got[1]) - spentOn(got[2]) - spentOn(got[3]) - spentOn(got[4]) - spentOn(got[5]); got[statINT] > 0 || left < 0 || left > 1 {
+			t.Errorf("%d points -> %v (%d left)", total, got, left)
 		}
 		if got[statSTR]+statBonus[statSTR] < 40 {
 			t.Errorf("%d points -> STR %d, want the STR 40 Awakening tier", total, got[statSTR]+statBonus[statSTR])
+		}
+	}
+}
+
+func TestPlannerStaysNearTheBest(t *testing.T) {
+	// Levels bring a few points at a time; from a rebuilt pool the planner
+	// keeps close to what a fresh rebuild would give.
+	for _, total := range []int{594, 854} {
+		got, left := spend(bestBuild(total), 150)
+		if left > 1 {
+			t.Errorf("%d+150 points: %d left", total, left)
+		}
+		if r := damage(got) / damage(bestBuild(total+150)); r < 0.985 {
+			t.Errorf("%d+150 points -> %v, %.3f of a rebuild", total, got, r)
 		}
 	}
 }
