@@ -36,18 +36,22 @@ const (
 	statLUK
 )
 
-// aspdCurve is the ASPD that total AGI adds to the bare 152.
+// aspdCurve is the ASPD that total AGI adds to the bare 152, read on the
+// Attribute page's preview on 6 Nov (stepping AGI down from 99 with the
+// minus button, and up from the 17 a reset leaves). It flattens past ~67:
+// 0.25-0.3 a point below, 0.08-0.09 above.
 var aspdCurve = []struct {
 	agi  int
 	aspd float64
-}{{0, 0}, {1, 1}, {5, 5}, {10, 9.85}, {20, 16.1}, {30, 19.15}, {40, 22.15}, {49, 24.84}}
+}{{0, 0}, {10, 8}, {17, 13.6}, {27, 17.65}, {34, 19.75}, {39, 21.25}, {44, 22.75}, {49, 24.25},
+	{54, 25.65}, {59, 26.9}, {64, 28.15}, {69, 29.2}, {74, 29.77}, {79, 30.22}, {84, 30.65},
+	{89, 31.08}, {94, 31.48}, {99, 31.88}}
 
 const (
 	baseASPD = 152
 	maxASPD  = 190
-	// aspdPerAGI extends the curve past its last measurement; readings at
-	// 47, 53 and 57 total AGI rise 0.25-0.29 a point.
-	aspdPerAGI = 0.27
+	// aspdPerAGI extends the curve past its last measurement.
+	aspdPerAGI = 0.08
 
 	// PATK with no points allocated, and what points add, from the
 	// Attribute page's preview right after a reset on 6 Nov: 596.9K bare,
@@ -63,11 +67,11 @@ const (
 
 // Bases the Attribute page shows on top of what stats give, set by
 // calibrate; the defaults are the 6 Nov reading (CRIT 29.4, Skill CRIT 50.4
-// and Aspd 177.39 at 68 LUK and 53 AGI in total).
+// at 68 LUK in total; the Aspd curve was read that day).
 var (
 	baseCRIT    = 9.0
 	baseSkillCR = 30.0
-	aspdBonus   = -0.5
+	aspdBonus   = 0.0
 )
 
 const (
