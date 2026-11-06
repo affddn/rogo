@@ -23,8 +23,6 @@ func TestBadgesChoresFollow(t *testing.T) {
 		{"badges/colgear-equip-enhanced.png", "One-Tap Enhance", colGearEnhanceBadge, false},
 		{"badges/equip-card-badged.png", "Card tab", cardTabBadge, true},
 		{"badges/equip-no-badges.png", "Card tab", cardTabBadge, false},
-		{"badges/gamemode-dungeon-badged.png", "Dungeon tile", dungeonTileBadge, true},
-		{"badges/gamemode-scrolled.png", "Dungeon tile (page scrolled)", dungeonTileBadge, false},
 		{"badges/dungeon-achieve-badged.png", "dungeon Achievement", dungeonAchieveBadge, true},
 	}
 	for _, c := range cases {

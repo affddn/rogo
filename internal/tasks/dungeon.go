@@ -166,26 +166,13 @@ func claimAfterRuns(ctx context.Context, b *bot.Bot, frame image.Image, end erro
 	return end
 }
 
-// dungeonTileBadge is the Dungeon tile's badge on the Game Mode page, lit
-// while helper attempts (or achievements) are left.
-var dungeonTileBadge = image.Pt(344, 640)
-
-// DungeonAssists joins runs as a helper once the day's three clears are
-// spent: the five daily helper attempts pay Helper Coins for the Dungeon
-// Shop's metal, and a failed run spends none. It stops when the Dungeon
-// tile loses its badge, a match does not come, or after max runs.
+// DungeonAssists joins up to max runs as a helper once the day's three
+// clears are spent: the five daily helper attempts pay Helper Coins for the
+// Dungeon Shop's metal, and a failed run spends none. The page shows no
+// helper count (the Game Mode tile's badge goes out after one), so the
+// caller counts them; it stops early when a match does not come.
 func DungeonAssists(ctx context.Context, b *bot.Bot, max int) (runs int, err error) {
 	for runs < max {
-		if err := b.ToMain(ctx); err != nil {
-			return runs, err
-		}
-		frame, err := open(ctx, b, screens.TNavGameMode, screens.GameMode)
-		if err != nil {
-			return runs, err
-		}
-		if !badged(frame, dungeonTileBadge) {
-			break
-		}
 		ok, err := DungeonAssist(ctx, b)
 		if err != nil {
 			return runs, err

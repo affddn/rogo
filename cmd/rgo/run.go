@@ -379,17 +379,19 @@ func actions() []*runner.Action {
 		// (Helper Coins for the Dungeon Shop's metal).
 		{Name: "dungeon", Wakes: wakeQuest, Priority: 62, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool {
-				return !st.Daily["dungeon_done"] || !st.Daily["dungeon_assists_done"]
+				return !st.Daily["dungeon_done"] || st.Today["dungeon_assists"] < dungeonHelperRuns
 			}),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				if !st.Daily["dungeon_done"] {
 					n, err := dungeonRuns(ctx, b, st)
 					return out{Progress: n > 0, Growth: n > 0}, err
 				}
-				n, err := tasks.DungeonAssists(ctx, b, 5)
-				st.Add("dungeon_assists", n)
-				if err == nil {
-					st.Daily["dungeon_assists_done"] = true
+				want := dungeonHelperRuns - st.Today["dungeon_assists"]
+				n, err := tasks.DungeonAssists(ctx, b, want)
+				countAssists(st, n)
+				if err == nil && n < want {
+					// No match came: try again after the snooze.
+					return out{Progress: n > 0}, nil
 				}
 				return out{Progress: n > 0}, err
 			}},
@@ -493,6 +495,15 @@ func dungeonRuns(ctx context.Context, b *bot.Bot, st *st) (int, error) {
 	return n, err
 }
 
+// dungeonHelperRuns is the day's helper attempts (Assist Attempts: 5/5).
+const dungeonHelperRuns = 5
+
+// countAssists books helper runs, today's and all-time.
+func countAssists(st *st, n int) {
+	st.Today["dungeon_assists"] += n
+	st.Add("dungeon_assists", n)
+}
+
 // runFrom runs the chore that belongs to the screen a quest or guide arrow
 // led to. Unknown means a battle probably started (stage quests).
 func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, error) {
@@ -511,7 +522,7 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 			// spent; an assist counts.
 			ok, err := tasks.DungeonAssist(ctx, b)
 			if ok {
-				st.Add("dungeon_assists", 1)
+				countAssists(st, 1)
 			}
 			return out{Progress: ok}, err
 		}

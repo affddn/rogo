@@ -17,6 +17,8 @@ type State struct {
 	// Day is the game day (YYYY-MM-DD, GMT+8) the Daily flags belong to.
 	Day   string          `json:"day"`
 	Daily map[string]bool `json:"daily"`
+	// Today counts things per game day (helper runs); it resets with Daily.
+	Today map[string]int `json:"today"`
 
 	LastRun  map[string]time.Time `json:"last_run"`
 	LastWin  map[string]time.Time `json:"last_progress"` // last run that changed something
@@ -81,6 +83,9 @@ func (s *State) init() {
 	if s.Daily == nil {
 		s.Daily = map[string]bool{}
 	}
+	if s.Today == nil {
+		s.Today = map[string]int{}
+	}
 	if s.LastRun == nil {
 		s.LastRun = map[string]time.Time{}
 	}
@@ -138,6 +143,7 @@ func (s *State) Rollover(now time.Time) bool {
 	}
 	s.Day = day
 	s.Daily = map[string]bool{}
+	s.Today = map[string]int{}
 	return true
 }
 
