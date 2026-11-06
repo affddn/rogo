@@ -117,3 +117,23 @@ func TestAttributeRates(t *testing.T) {
 		})
 	}
 }
+
+func TestAttributeReset(t *testing.T) {
+	for file, want := range map[string][2]bool{ // reset button, notice
+		"attr/6nov.png":         {true, false},
+		"attr/pending-str.png":  {true, false},
+		"attr/reset-dialog.png": {false, true},
+	} {
+		f := load(t, file)
+		if got := [2]bool{Visible(f, TAttrReset), Visible(f, TAttrResetNotice)}; got != want {
+			t.Errorf("%s: reset button, notice %v, want %v", file, got, want)
+		}
+	}
+	after := load(t, "attr/after-reset-6nov.png")
+	if a, ok := AttributeAllocation(after); !ok || a != ([6]int{}) {
+		t.Errorf("after the reset read %v %v", a, ok)
+	}
+	if p, ok := AttributePoints(after); !ok || p != 854 {
+		t.Errorf("after the reset read %d points %v", p, ok)
+	}
+}
