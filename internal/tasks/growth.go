@@ -428,6 +428,14 @@ func Equipment(ctx context.Context, b *bot.Bot) (levels int, err error) {
 			return levels, err
 		}
 	}
+	// The page opens on the Equipment tab when that is badged too, so a
+	// badged Card tab (a card to activate, a star level to raise) is
+	// visited from there.
+	if screens.Detect(frame) == screens.Equipment && badged(frame, cardTabBadge) {
+		if _, frame, err = b.TapWait(ctx, screens.Equipment, cardTab, "card tab", 8*time.Second, screens.CardPage); err != nil {
+			return levels, err
+		}
+	}
 	if screens.Detect(frame) == screens.CardPage {
 		n, err := cards(ctx, b)
 		levels += n

@@ -13,6 +13,7 @@ var (
 	// Equipment page bottom tabs.
 	equipmentTab = image.Pt(487, 1234)
 	cardTab      = image.Pt(571, 1234)
+	cardTabBadge = image.Pt(596, 1194)
 	// Badge corners (top-right) of the first two rows of card tiles; a badge
 	// there means the card can be activated. Card art is too red to scan
 	// the whole grid.

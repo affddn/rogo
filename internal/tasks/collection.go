@@ -138,14 +138,53 @@ var (
 	colGearTabBadge = image.Pt(698, 1192)
 	colGearGrid     = image.Rect(0, 200, 720, 1000)
 	colGearClose    = image.Pt(665, 120)
+	// Sub-tabs: Archive (activate items) and Equip (wear them, and enhance
+	// what is worn with Oridecon, 30 a level).
+	colGearArchive      = image.Pt(141, 1139)
+	colGearEquip        = image.Pt(359, 1139)
+	colGearEquipBadge   = image.Pt(455, 1117)
+	colGearEnhance      = image.Pt(359, 1031)
+	colGearEnhanceBadge = image.Pt(460, 1012)
 )
 
-// collectionGear activates every item marked Can Activate, from the
-// Equipment page (on from), and returns to the Equipment tab.
+// collectionGear enhances the worn Collection Gear while One-Tap Enhance is
+// badged, activates every item marked Can Activate, from the Equipment page
+// (on from), and returns to the Equipment tab. The page opens on whichever
+// sub-tab was used last.
 func collectionGear(ctx context.Context, b *bot.Bot, from screens.ID) (activated int, err error) {
-	_, frame, err := b.TapWait(ctx, from, colGearTab, "collection gear tab", 8*time.Second, screens.CollectionGear)
+	frame, err := lookOrTap(ctx, b, from, colGearTab, "collection gear tab")
 	if err != nil {
 		return 0, err
+	}
+	if badged(frame, colGearEquipBadge) {
+		if _, frame, err = b.TapWait(ctx, screens.CollectionGear, colGearEquip, "collection equip tab", 8*time.Second, screens.CollectionGear); err != nil {
+			return 0, err
+		}
+		if err := bot.Sleep(ctx, time.Second); err != nil {
+			return 0, err
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return 0, err
+		}
+	}
+	if badged(frame, colGearEnhanceBadge) {
+		if err := b.Tap(ctx, colGearEnhance, "collection one-tap enhance"); err != nil {
+			return 0, err
+		}
+		activated++
+		b.Log.Info("collection gear enhanced")
+		if err := closePopups(ctx, b, screens.CollectionGear); err != nil {
+			return activated, err
+		}
+	}
+	if _, frame, err = b.TapWait(ctx, screens.CollectionGear, colGearArchive, "collection archive tab", 8*time.Second, screens.CollectionGear); err != nil {
+		return activated, err
+	}
+	if err := bot.Sleep(ctx, time.Second); err != nil {
+		return activated, err
+	}
+	if _, frame, err = b.Look(ctx); err != nil {
+		return activated, err
 	}
 	canActivate := assets.MustGet(screens.TColGearCanActivate)
 	for range 12 {
@@ -187,8 +226,19 @@ func collectionGear(ctx context.Context, b *bot.Bot, from screens.ID) (activated
 		}
 	}
 	if activated > 0 {
-		b.Log.Info("collection gear activated", "count", activated)
+		b.Log.Info("collection gear done", "steps", activated)
 	}
 	_, _, err = b.TapWait(ctx, screens.CollectionGear, equipmentTab, "equipment tab", 8*time.Second, screens.Equipment)
 	return activated, err
+}
+
+// lookOrTap returns the Collection Gear page: as it is when from is that
+// page already, else after tapping its tab on page from.
+func lookOrTap(ctx context.Context, b *bot.Bot, from screens.ID, tab image.Point, what string) (image.Image, error) {
+	if from == screens.CollectionGear {
+		_, frame, err := b.Look(ctx)
+		return frame, err
+	}
+	_, frame, err := b.TapWait(ctx, from, tab, what, 8*time.Second, screens.CollectionGear)
+	return frame, err
 }
