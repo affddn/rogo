@@ -375,11 +375,23 @@ func actions() []*runner.Action {
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   func(ctx context.Context, b *bot.Bot, st *st) (out, error) { return mvpRun(ctx, b, st, false) }},
+		// Dungeon: the three daily clears, then the five helper attempts
+		// (Helper Coins for the Dungeon Shop's metal).
 		{Name: "dungeon", Wakes: wakeQuest, Priority: 62, Snooze: time.Hour,
-			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool {
+				return !st.Daily["dungeon_done"] || !st.Daily["dungeon_assists_done"]
+			}),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				n, err := dungeonRuns(ctx, b, st)
-				return out{Progress: n > 0, Growth: n > 0}, err
+				if !st.Daily["dungeon_done"] {
+					n, err := dungeonRuns(ctx, b, st)
+					return out{Progress: n > 0, Growth: n > 0}, err
+				}
+				n, err := tasks.DungeonAssists(ctx, b, 5)
+				st.Add("dungeon_assists", n)
+				if err == nil {
+					st.Daily["dungeon_assists_done"] = true
+				}
+				return out{Progress: n > 0}, err
 			}},
 		{Name: "income", Priority: 60,
 			Ready: func(_ sig, s *st, now time.Time) bool {
@@ -750,7 +762,12 @@ func cmdObjective(ctx context.Context, d *device.Device, _ []string) error {
 	return err
 }
 
-func cmdDungeon(ctx context.Context, d *device.Device, _ []string) error {
+func cmdDungeon(ctx context.Context, d *device.Device, args []string) error {
+	if len(args) > 0 && args[0] == "assists" {
+		n, err := tasks.DungeonAssists(ctx, newBot(d), 5)
+		fmt.Println("assists", n)
+		return err
+	}
 	n, err := tasks.Dungeon(ctx, newBot(d), 1)
 	fmt.Println("runs", n)
 	return err

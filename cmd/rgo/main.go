@@ -66,7 +66,7 @@ var commands = map[string]command{
 	"qpanel":        {"", cmdQuestPanel, false},
 	"pets":          {"", cmdPets, false},
 	"goal":          {"", cmdObjective, false},
-	"dungeon":       {"", cmdDungeon, false},
+	"dungeon":       {"[assists]", cmdDungeon, false},
 	"pass":          {"", cmdPass, false},
 	"tunnel":        {"", cmdTunnel, true},
 	"tunnel-rotate": {"", cmdTunnelRotate, true},

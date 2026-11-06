@@ -106,12 +106,12 @@ func dungeon(ctx context.Context, b *bot.Bot, n int, assist bool) (runs int, err
 	for runs < n {
 		if !assist && screens.Visible(frame, screens.TDungeonZeroLeft) {
 			b.Log.Info("dungeon attempts used up")
-			return runs, ErrNoAttempts
+			return runs, claimAfterRuns(ctx, b, frame, ErrNoAttempts)
 		}
 		if err := startMatch(ctx, b, frame); err != nil {
 			if errors.Is(err, ErrNoAttempts) {
 				b.Log.Info("dungeon attempts used up")
-				return runs, ErrNoAttempts
+				return runs, claimAfterRuns(ctx, b, frame, ErrNoAttempts)
 			}
 			return runs, err
 		}
@@ -148,6 +148,55 @@ func dungeon(ctx context.Context, b *bot.Bot, n int, assist bool) (runs int, err
 		if _, frame, err = b.Look(ctx); err != nil {
 			return runs, err
 		}
+	}
+	if err := claimAfterRuns(ctx, b, frame, nil); err != nil {
+		return runs, err
+	}
+	return runs, b.ToMain(ctx)
+}
+
+// claimAfterRuns claims achievements the day's runs finished (clears,
+// joins) while the page is still open, then returns end.
+func claimAfterRuns(ctx context.Context, b *bot.Bot, frame image.Image, end error) error {
+	if id := screens.Detect(frame); id == screens.Dungeon && badged(frame, dungeonAchieveBadge) {
+		if err := dungeonAchievements(ctx, b); err != nil {
+			return err
+		}
+	}
+	return end
+}
+
+// dungeonTileBadge is the Dungeon tile's badge on the Game Mode page, lit
+// while helper attempts (or achievements) are left.
+var dungeonTileBadge = image.Pt(344, 640)
+
+// DungeonAssists joins runs as a helper once the day's three clears are
+// spent: the five daily helper attempts pay Helper Coins for the Dungeon
+// Shop's metal, and a failed run spends none. It stops when the Dungeon
+// tile loses its badge, a match does not come, or after max runs.
+func DungeonAssists(ctx context.Context, b *bot.Bot, max int) (runs int, err error) {
+	for runs < max {
+		if err := b.ToMain(ctx); err != nil {
+			return runs, err
+		}
+		frame, err := open(ctx, b, screens.TNavGameMode, screens.GameMode)
+		if err != nil {
+			return runs, err
+		}
+		if !badged(frame, dungeonTileBadge) {
+			break
+		}
+		ok, err := DungeonAssist(ctx, b)
+		if err != nil {
+			return runs, err
+		}
+		if !ok {
+			break
+		}
+		runs++
+	}
+	if runs > 0 {
+		b.Log.Info("dungeon assists done", "runs", runs)
 	}
 	return runs, b.ToMain(ctx)
 }
