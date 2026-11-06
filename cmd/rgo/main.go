@@ -67,6 +67,7 @@ var commands = map[string]command{
 	"pets":          {"", cmdPets, false},
 	"goal":          {"", cmdObjective, false},
 	"dungeon":       {"", cmdDungeon, false},
+	"pass":          {"", cmdPass, false},
 	"tunnel":        {"", cmdTunnel, true},
 	"tunnel-rotate": {"", cmdTunnelRotate, true},
 	"report":        {"[-state data/state.json]", cmdReport, true},

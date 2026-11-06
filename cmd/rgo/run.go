@@ -755,3 +755,9 @@ func cmdDungeon(ctx context.Context, d *device.Device, _ []string) error {
 	fmt.Println("runs", n)
 	return err
 }
+
+func cmdPass(ctx context.Context, d *device.Device, _ []string) error {
+	n, err := tasks.SeasonPass(ctx, newBot(d))
+	fmt.Println("claimed tabs", n)
+	return err
+}
