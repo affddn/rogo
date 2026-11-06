@@ -19,11 +19,29 @@ import (
 //   - Killing Intent Rising: +1% Skill DMG per skill cast (10 stacks, 5 s);
 //     with ~4 casts in 5 s a level adds about +2%
 //
-// Skills already at 5/5 or still locked take no points; their + is grey.
+// Assassin Cross (read 6 Nov), passives only:
+//   - Shadow Stealth: Shadowless Fang's spike and AoE coefficients +90% a
+//     level (Shadowless Fang is on the bar)
+//   - Katar Specialization: Skill CRIT +6 a level (Job 10)
+//   - Rapid Dual Blades: +1% CRIT DMG per normal attack, 10 stacks (Job 15);
+//     STR Boost needs it at 5
+//   - Shadow Killing Intent: CRIT DMG +2% a level, 10 levels (Job 24)
+//   - STR Boost: STR +2 a level, 10 levels (Job 24)
+//
+// Deadly Envenom (an active Final PATK buff) and Deadly Venom Burst are left
+// out: they pay only with Deadly Envenom on the skill bar, which is the
+// owner's call.
+//
+// Skills already maxed or still locked take no points; their + is grey.
 var skillPriority = []string{
 	screens.TSkillStealthEnh,
 	screens.TSkillSupersonic,
 	screens.TSkillKIR,
+	screens.TSkillShadowStealth,
+	screens.TSkillKatarSpec,
+	screens.TSkillRapidDual,
+	screens.TSkillShadowKI,
+	screens.TSkillSTRBoost,
 }
 
 var (
@@ -87,12 +105,12 @@ func skillByPriority(ctx context.Context, b *bot.Bot, points int) (int, error) {
 // returns its + button.
 func findSkillPlus(ctx context.Context, b *bot.Bot, label string) (image.Point, bool, error) {
 	t := assets.MustGet(label)
-	for i := 0; i < 3; i++ { // to the top
+	for i := 0; i < 4; i++ { // to the top
 		if err := b.D.Swipe(ctx, skillScrollUp[0].X, skillScrollUp[0].Y, skillScrollUp[1].X, skillScrollUp[1].Y, 400*time.Millisecond); err != nil {
 			return image.Point{}, false, err
 		}
 	}
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 8; i++ {
 		_, frame, err := b.Look(ctx)
 		if err != nil {
 			return image.Point{}, false, err

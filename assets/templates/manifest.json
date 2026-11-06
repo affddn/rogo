@@ -1648,12 +1648,36 @@
     "note": "skill tree label: Katar Mastery"
   },
   {
+    "name": "skill_lbl_katarspec",
+    "x": 266,
+    "y": 616,
+    "w": 190,
+    "h": 22,
+    "note": "skill tree label: Katar Specialization (Assassin Cross)"
+  },
+  {
     "name": "skill_lbl_kir",
     "x": 502,
     "y": 662,
     "w": 178,
     "h": 22,
     "note": "skill tree label: Killing Intent Rising"
+  },
+  {
+    "name": "skill_lbl_rapiddual",
+    "x": 504,
+    "y": 616,
+    "w": 174,
+    "h": 22,
+    "note": "skill tree label: Rapid Dual Blades (Assassin Cross)"
+  },
+  {
+    "name": "skill_lbl_shadowki",
+    "x": 260,
+    "y": 836,
+    "w": 202,
+    "h": 22,
+    "note": "skill tree label: Shadow Killing Intent (Assassin Cross)"
   },
   {
     "name": "skill_lbl_shadowless",
@@ -1664,12 +1688,28 @@
     "note": "skill tree label: Shadowless Fang"
   },
   {
+    "name": "skill_lbl_shadowstealth",
+    "x": 288,
+    "y": 395,
+    "w": 146,
+    "h": 22,
+    "note": "skill tree label: Shadow Stealth (Assassin Cross)"
+  },
+  {
     "name": "skill_lbl_stealthenh",
     "x": 262,
     "y": 220,
     "w": 198,
     "h": 22,
     "note": "skill tree label: Stealth Enhancement"
+  },
+  {
+    "name": "skill_lbl_strboost",
+    "x": 543,
+    "y": 836,
+    "w": 96,
+    "h": 22,
+    "note": "skill tree label: STR Boost (Assassin Cross)"
   },
   {
     "name": "skill_lbl_supersonic",
