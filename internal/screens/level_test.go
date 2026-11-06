@@ -1,6 +1,9 @@
 package screens
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestEnhanceLevel(t *testing.T) {
 	cases := map[string][2]int{ // current, next
@@ -90,6 +93,26 @@ func TestPower(t *testing.T) {
 			}
 			if !ok || got != want {
 				t.Errorf("read %d %v, want %d", got, ok, want)
+			}
+		})
+	}
+}
+
+func TestAttributeRates(t *testing.T) {
+	cases := map[string][3]float64{
+		"attr/after-reset.png": {8.8, 25.81, 160},
+		"attr/rebuilt.png":     {23.5, 40.51, 175.65},
+		"attr/5nov.png":        {20.8, 37.81, 178.4},
+		"attr/6nov.png":        {29.4, 50.4, 177.39},
+	}
+	for file, want := range cases {
+		t.Run(file, func(t *testing.T) {
+			crit, sc, aspd, ok := AttributeRates(load(t, file))
+			got := [3]float64{crit, sc, aspd}
+			for i := range got {
+				if !ok || math.Abs(got[i]-want[i]) > 0.001 {
+					t.Fatalf("read %v %v, want %v", got, ok, want)
+				}
 			}
 		})
 	}

@@ -271,6 +271,65 @@ func AttributeTotals(frame image.Image) (total [6]int, ok bool) {
 // AttributePoints reads the unspent Attribute Points.
 func AttributePoints(frame image.Image) (int, bool) { return readNumber(frame, attrPoints) }
 
+// The Attribute page's top panel shows rates in the panel font with a
+// decimal point ("50.4", "177.39"): CRIT, Skill CRIT and Aspd.
+var (
+	attrCRIT      = image.Rect(500, 396, 675, 426)
+	attrSkillCRIT = image.Rect(180, 448, 345, 478)
+	attrAspd      = image.Rect(500, 345, 675, 375)
+)
+
+// AttributeRates reads CRIT, Skill CRIT and Aspd from the Attribute page.
+func AttributeRates(frame image.Image) (crit, skillCrit, aspd float64, ok bool) {
+	if crit, ok = readDecimal(frame, attrCRIT); !ok {
+		return
+	}
+	if skillCrit, ok = readDecimal(frame, attrSkillCRIT); !ok {
+		return
+	}
+	aspd, ok = readDecimal(frame, attrAspd)
+	return
+}
+
+// decimalDotH is the tallest a decimal point stands; digits are ~15 px.
+const decimalDotH = 4
+
+// readDecimal reads panel digits with at most one decimal point.
+func readDecimal(frame image.Image, r image.Rectangle) (float64, bool) {
+	ink := panelFont.inkAt(frame)
+	v, scale, digits, dot := 0.0, 1.0, 0, false
+	for _, g := range panelFont.runs(frame, r) {
+		rows := 0
+		for y := g.Min.Y; y < g.Max.Y; y++ {
+			for x := g.Min.X; x < g.Max.X; x++ {
+				if ink(x, y) {
+					rows++
+					break
+				}
+			}
+		}
+		if rows <= decimalDotH {
+			if dot || digits == 0 {
+				return 0, false
+			}
+			dot = true
+			continue
+		}
+		d, ok := classifyDigit(glyphMask(ink, g), panelFont.refs)
+		if !ok || d > 9 {
+			return 0, false
+		}
+		digits++
+		if dot {
+			scale /= 10
+			v += float64(d) * scale
+		} else {
+			v = v*10 + float64(d)
+		}
+	}
+	return v, digits > 0 && digits <= 6
+}
+
 // refineRate holds the digits of "(Success Rate: 95%)" on the Refine page.
 // The text is right-aligned, so the digits always end just left of the
 // "%", and the colon before them stays outside.
