@@ -81,7 +81,12 @@ bin/rgo -s localhost:5555 run       # arm64 Linux host
 ```
 
 Keep it running: `make install-mac` (launchd + caffeinate) or
-`deploy/rgo.service` on a VPS (`make linux` for arm64).
+`deploy/rgo.service` on a VPS (`make linux` for arm64). The Mac agent restarts
+rgo if it exits and survives closing the terminal; it logs to
+`captures/run.log` (`make logs`). After a rebuild, `make install-mac` again;
+`touch data/pause` holds it between actions, `make uninstall-mac` stops it.
+Closing the lid still sleeps the Mac unless it drives an external display, and
+on battery caffeinate doesn't hold off sleep.
 
 ## sayadroid: our own phone
 
