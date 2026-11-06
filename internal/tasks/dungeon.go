@@ -167,10 +167,11 @@ func claimAfterRuns(ctx context.Context, b *bot.Bot, frame image.Image, end erro
 }
 
 // DungeonAssists joins up to max runs as a helper once the day's three
-// clears are spent: the five daily helper attempts pay Helper Coins for the
-// Dungeon Shop's metal, and a failed run spends none. The page shows no
-// helper count (the Game Mode tile's badge goes out after one), so the
-// caller counts them; it stops early when a match does not come.
+// clears are spent; it stops early when a match does not come. The help
+// text says the five daily helper attempts pay Helper Coins for the Dungeon
+// Shop, but on 6 Nov four such runs paid none and the Game Mode tile still
+// read "Assist Attempts: 5/5", so the runner does not call it (rgo dungeon
+// assists does).
 func DungeonAssists(ctx context.Context, b *bot.Bot, max int) (runs int, err error) {
 	for runs < max {
 		ok, err := DungeonAssist(ctx, b)

@@ -375,25 +375,14 @@ func actions() []*runner.Action {
 		{Name: "mvp", Priority: 63, Snooze: time.Hour,
 			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["mvp_done"] }),
 			Run:   func(ctx context.Context, b *bot.Bot, st *st) (out, error) { return mvpRun(ctx, b, st, false) }},
-		// Dungeon: the three daily clears, then the five helper attempts
-		// (Helper Coins for the Dungeon Shop's metal).
+		// Dungeon: the three daily clears. Helper runs are left to quests
+		// that ask for one: on 6 Nov four of them paid no Helper Coins and
+		// left "Assist Attempts: 5/5" as it was (rgo dungeon assists).
 		{Name: "dungeon", Wakes: wakeQuest, Priority: 62, Snooze: time.Hour,
-			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool {
-				return !st.Daily["dungeon_done"] || st.Today["dungeon_assists"] < dungeonHelperRuns
-			}),
+			Ready: unlocked(screens.BadgeGameMode, func(_ sig, st *st, _ time.Time) bool { return !st.Daily["dungeon_done"] }),
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				if !st.Daily["dungeon_done"] {
-					n, err := dungeonRuns(ctx, b, st)
-					return out{Progress: n > 0, Growth: n > 0}, err
-				}
-				want := dungeonHelperRuns - st.Today["dungeon_assists"]
-				n, err := tasks.DungeonAssists(ctx, b, want)
-				countAssists(st, n)
-				if err == nil && n < want {
-					// No match came: try again after the snooze.
-					return out{Progress: n > 0}, nil
-				}
-				return out{Progress: n > 0}, err
+				n, err := dungeonRuns(ctx, b, st)
+				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
 		{Name: "income", Priority: 60,
 			Ready: func(_ sig, s *st, now time.Time) bool {
@@ -494,9 +483,6 @@ func dungeonRuns(ctx context.Context, b *bot.Bot, st *st) (int, error) {
 	st.LastRun["dungeon"] = time.Now()
 	return n, err
 }
-
-// dungeonHelperRuns is the day's helper attempts (Assist Attempts: 5/5).
-const dungeonHelperRuns = 5
 
 // countAssists books helper runs, today's and all-time.
 func countAssists(st *st, n int) {
