@@ -236,8 +236,58 @@ func guildHunt(ctx context.Context, b *bot.Bot) (int, error) {
 		if err != nil {
 			return n, err
 		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return n, err
+		}
+	}
+	if badged(frame, guildRewardDot) {
+		r, err := guildHuntRewards(ctx, b)
+		n += r
+		if err != nil {
+			return n, err
+		}
 	}
 	return n, nil
+}
+
+// Guild Hunt's Reward: daily rewards for the guild's total hunt points
+// (guild and hunt coins); one Claim takes every tier reached. The Guild Tier
+// tab beside it only lists the weekly ranks.
+var (
+	guildRewardBtn   = image.Pt(662, 245)
+	guildRewardDot   = image.Pt(688, 210)
+	guildRewardList  = image.Rect(50, 360, 670, 1100)
+	guildRewardClose = image.Pt(665, 172)
+)
+
+func guildHuntRewards(ctx context.Context, b *bot.Bot) (int, error) {
+	if err := b.Tap(ctx, guildRewardBtn, "guild hunt rewards"); err != nil {
+		return 0, err
+	}
+	if err := bot.Sleep(ctx, 1500*time.Millisecond); err != nil {
+		return 0, err
+	}
+	_, list, err := b.Look(ctx)
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	if m := assets.MustGet(screens.TClaimWord).FindIn(list, guildRewardList); m.Visible(screens.MinScore) {
+		if _, _, err := b.TapWait(ctx, screens.Unknown, m.Center(), "claim hunt rewards", 6*time.Second, screens.Reward); err != nil {
+			return 0, err
+		}
+		n = 1
+		b.Log.Info("guild hunt rewards claimed")
+		// "Tap empty area to close" the reward, back to the list.
+		if err := b.Tap(ctx, image.Pt(360, 1200), "close reward"); err != nil {
+			return n, err
+		}
+		if err := bot.Sleep(ctx, time.Second); err != nil {
+			return n, err
+		}
+	}
+	_, _, err = b.TapWait(ctx, screens.Unknown, guildRewardClose, "close hunt rewards", 8*time.Second, screens.GuildHunt)
+	return n, err
 }
 
 // Guild Hunt's Loot: chests guildmates' hunts bring back for everyone.
