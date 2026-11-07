@@ -274,3 +274,23 @@ func TestStageQuest(t *testing.T) {
 		}
 	}
 }
+
+// The Current Build emblem tells the Thief line, which the stat and skill
+// models know, from the jobs Job Switch offers (7 Nov).
+func TestClassThief(t *testing.T) {
+	for name, want := range map[string]bool{
+		"char-overview.png":                 true, // Assassin, 5 Nov
+		"class/assassin-cross-overview.png": true,
+		"class/lord-knight-overview.png":    false,
+		"class/sniper-overview.png":         false,
+		"class/magician-overview.png":       false,
+	} {
+		frame := load(t, name)
+		if got := Detect(frame); got != CharOverview {
+			t.Errorf("%s: detected %s, want %s", name, got, CharOverview)
+		}
+		if got := Visible(frame, TClassThief); got != want {
+			t.Errorf("%s: thief emblem %v, want %v", name, got, want)
+		}
+	}
+}

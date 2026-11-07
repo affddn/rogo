@@ -61,12 +61,20 @@ var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
 // (see build.go) instead of the game's Recommended Allocation, which the
 // model puts about 3% behind. Unspent skill points go by our own skill
 // order (skilltree.go); which actives sit on the skill bar is chosen by
-// hand.
+// hand. Both model the Thief line only: on any other job (Job Switch)
+// points go by the game's Recommended Allocation instead.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
 	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill, screens.Awakening)
 	if err != nil {
 		return false, err
+	}
+	var thief bool
+	if frame, thief, err = thiefLine(ctx, b, frame); err != nil {
+		return false, err
+	}
+	if !thief {
+		return recommendedBuild(ctx, b, frame)
 	}
 	skillsDone := false
 	if badged(frame, skillTabBadge) {
@@ -195,6 +203,96 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 		return true, err
 	}
 	return spent > 0 || skillsDone || awoken > 0, b.ToMain(ctx)
+}
+
+var overviewTab = image.Pt(245, 1235)
+
+// thiefLine opens the Overview tab and reports whether the job is in the
+// Thief line (Assassin, Assassin Cross), the only one build.go and
+// skilltree.go model. Job Switch is free (7 Nov), and on Lord Knight the
+// Assassin model rated the game's STR/AGI split a rebuild away from its
+// best: it would have reset it into an Assassin split.
+func thiefLine(ctx context.Context, b *bot.Bot, frame image.Image) (image.Image, bool, error) {
+	if id := screens.Detect(frame); id != screens.CharOverview {
+		var err error
+		if _, frame, err = b.TapWait(ctx, id, overviewTab, "overview tab", 10*time.Second, screens.CharOverview); err != nil {
+			return frame, false, err
+		}
+	}
+	// A second look before calling it another job: the Assassin model on
+	// a Lord Knight resets its attributes, while the game's plan on an
+	// Assassin only costs about 3%.
+	for try := 0; try < 2; try++ {
+		if screens.Visible(frame, screens.TClassThief) {
+			return frame, true, nil
+		}
+		if err := bot.Sleep(ctx, time.Second); err != nil {
+			return frame, false, err
+		}
+		var err error
+		if _, frame, err = b.Look(ctx); err != nil {
+			return frame, false, err
+		}
+	}
+	return frame, false, nil
+}
+
+// recommendedBuild is Attributes for a job outside the Thief line: the
+// game's Recommended Allocation, which plans by the job's attack type and
+// awakenings (Lord Knight: STR and AGI, Magician: INT and LUK, Sniper: AGI,
+// DEX and LUK on 7 Nov), for skill points and then attribute points, and
+// the awakenings after.
+func recommendedBuild(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
+	done := false
+	if badged(frame, skillTabBadge) {
+		ok, err := recommend(ctx, b, frame, skillTab, screens.CharSkill, "skill tab")
+		if err != nil {
+			return done, err
+		}
+		done = ok
+		if _, frame, err = b.Look(ctx); err != nil {
+			return done, err
+		}
+	}
+	ok, err := recommend(ctx, b, frame, attributeTab, screens.Attribute, "attribute tab")
+	if err != nil {
+		return done, err
+	}
+	awoken, err := awaken(ctx, b)
+	if err != nil {
+		return true, err
+	}
+	return done || ok || awoken > 0, b.ToMain(ctx)
+}
+
+// recommend opens a Character tab and, with points to spend, applies the
+// game's Recommended Allocation and confirms it. Points it cannot place (a
+// stat's next point costing more than is left) bring no Confirm and stay.
+func recommend(ctx context.Context, b *bot.Bot, frame image.Image, tab image.Point, want screens.ID, what string) (bool, error) {
+	var err error
+	if id := screens.Detect(frame); id != want {
+		if _, frame, err = b.TapWait(ctx, id, tab, what, 10*time.Second, want); err != nil {
+			return false, err
+		}
+	}
+	points, ok := screens.AttributePoints(frame)
+	if !ok || points == 0 {
+		return false, nil
+	}
+	if err := b.TapTemplate(ctx, frame, screens.TAttrRecommended); err != nil {
+		return false, err
+	}
+	if _, frame, err = b.Look(ctx); err != nil {
+		return false, err
+	}
+	if !screens.Visible(frame, screens.TAttrConfirm) {
+		return false, nil
+	}
+	if err := b.TapTemplate(ctx, frame, screens.TAttrConfirm); err != nil {
+		return false, err
+	}
+	b.Log.Info("recommended allocation applied", "page", want, "points", points)
+	return true, nil
 }
 
 var (

@@ -124,6 +124,7 @@ const (
 	TNavCharacter        = "main_nav_character"
 	TAttrHeader          = "attr_header"
 	TCharOverview        = "char_overview_header"
+	TClassThief          = "class_thief" // Overview's Current Build emblem, Thief line
 	TSkillHeader         = "skill_header"
 	TResonateTitle       = "resonate_title"
 	TResonateActivate    = "resonate_activate"
