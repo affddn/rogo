@@ -191,7 +191,7 @@ func TestStageFingerprintTracksClears(t *testing.T) {
 }
 
 func TestQuestDoneOverMovingBackground(t *testing.T) {
-	for _, f := range []string{"main.png", "main4.png", "main5.png", "now.png"} {
+	for _, f := range []string{"main.png", "main4.png", "main5.png", "main6.png"} {
 		if !QuestDone(load(t, f)) {
 			t.Errorf("%s: completed quest not seen", f)
 		}
