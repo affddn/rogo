@@ -57,8 +57,9 @@ const (
 	// Attribute page's preview right after a reset on 6 Nov: 596.9K bare,
 	// +1441 for the first STR point (+7220 for five), +747 for ten AGI
 	// (15 points spent). At Base 37 they were 40.3K, +148 and +16: gear
-	// raises them, so they want re-measuring now and then.
-	basePATK     = 596900
+	// raises them, so they want re-measuring now and then. The bare 742.5K
+	// is the 7 Nov page's 843.8K less what its 880 spent points add.
+	basePATK     = 742500
 	patkPerSpent = 50
 	patkPerSTR   = 1394
 	critPerLUK   = 0.3
