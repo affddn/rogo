@@ -36,6 +36,13 @@ func cmdReport(_ context.Context, _ *device.Device, args []string) error {
 	default:
 		fmt.Printf("phone link: ok, main seen %s ago\n", now.Sub(s.LinkOK).Round(time.Second))
 	}
+	if last, stalled := stageStall(s, now); !last.IsZero() {
+		verdict := "ok"
+		if stalled {
+			verdict = "STALLED"
+		}
+		fmt.Printf("progress: %s, last stage clear %s, %d stage fights lost since\n", verdict, ago(now, last), s.StageMisses)
+	}
 	fmt.Println()
 	fmt.Println("counters")
 	for _, k := range slices.Sorted(maps.Keys(s.Counters)) {
@@ -52,6 +59,21 @@ func cmdReport(_ context.Context, _ *device.Device, args []string) error {
 	fmt.Println("\ndaily", s.Daily)
 	printProgress(filepath.Join(filepath.Dir(*path), "progress.csv"), now)
 	return nil
+}
+
+// stallAfter is how long the bot can go without a stage clear before it
+// counts as stalled, and a sweep looks at the class and the stat split.
+const stallAfter = 3 * time.Hour
+
+// stageStall returns when a stage was last cleared and whether the bot is
+// stalled: no clear for stallAfter and at least two fights lost since, so a
+// quiet spell between stage runs does not count.
+func stageStall(s *state.State, now time.Time) (last time.Time, stalled bool) {
+	last = s.StageClear
+	if w := s.LastWin["stage"]; w.After(last) {
+		last = w
+	}
+	return last, !last.IsZero() && now.Sub(last) >= stallAfter && s.StageMisses >= 2
 }
 
 func ago(now, t time.Time) string {

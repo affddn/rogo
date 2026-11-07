@@ -35,6 +35,10 @@ type State struct {
 	// StageMisses counts runs in a row that cleared nothing.
 	Stage       string `json:"stage"`
 	StageMisses int    `json:"stage_misses"`
+	// StageClear is when a stage clear was last seen: by the stage action,
+	// or as a new label between its runs (quests and guide arrows fight
+	// stages too). rgo report reads it for the stall check.
+	StageClear time.Time `json:"stage_clear"`
 	// PowerAtDefeat is the power fingerprint when the last stage run lost.
 	PowerAtDefeat string `json:"power_at_defeat"`
 	// PowerNow is the latest power fingerprint read on main.

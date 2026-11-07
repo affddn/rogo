@@ -426,6 +426,9 @@ func actions() []*runner.Action {
 						before = s
 					}
 				}
+				if st.Stage != "" && screens.LevelChanged(st.Stage, before) {
+					st.StageClear = time.Now() // cleared since the last run
+				}
 				lost, err := tasks.Stage(ctx, b)
 				if lost {
 					st.Growth, st.LastDefeat = 0, time.Now()
@@ -443,7 +446,7 @@ func actions() []*runner.Action {
 				st.Stage = after
 				cleared := before != "" && screens.LevelChanged(before, after)
 				if cleared {
-					st.StageMisses = 0
+					st.StageMisses, st.StageClear = 0, time.Now()
 					st.Add("stage_clear_runs", 1)
 				} else {
 					st.StageMisses++
