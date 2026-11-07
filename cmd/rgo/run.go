@@ -563,6 +563,16 @@ func runFrom(ctx context.Context, b *bot.Bot, st *st, landed screens.ID) (out, e
 		// first second, as the Dodge prompt comes early, and gives up on
 		// anything that turns out not to be a stage.
 		lost, err := tasks.WaitStage(ctx, b)
+		// A new stage label means this fight (or one before it) cleared a
+		// stage; book it so the stall check sees quest and guide clears.
+		if id, f, lerr := b.Look(ctx); err == nil && lerr == nil && id == screens.Main {
+			if s := screens.ReadMain(f).Stage; s != "" {
+				if st.Stage != "" && screens.LevelChanged(st.Stage, s) {
+					st.StageMisses, st.StageClear = 0, time.Now()
+				}
+				st.Stage = s
+			}
+		}
 		if lost {
 			// Book it like the stage action does, so the stuck-stage rule
 			// (and the guide's skip) wait for 5% more power.
