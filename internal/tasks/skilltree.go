@@ -132,9 +132,13 @@ func findSkillPlus(ctx context.Context, b *bot.Bot, label string) (image.Point, 
 }
 
 // plusLive reports whether a skill's + button can be tapped: its face is
-// cream (~245) then, grey (~181) when the skill is maxed or no points are
-// left. The patch sampled is the face's top-left, clear of the + sign.
+// cream (~242) then, grey (~181) when the skill is maxed or no points are
+// left (the face's top-left, clear of the + sign). A skill still locked by
+// job level has no button at all, and the tree's background there is as
+// bright as a live face (203-228), so the + sign itself must show too: dark
+// (103-141) on a button, background (212-220) where there is none.
 func plusLive(frame image.Image, p image.Point) bool {
 	r, g, bl := meanRGB(frame, image.Rect(p.X-12, p.Y-12, p.X-8, p.Y-8))
-	return (r+g+bl)/3 > 215
+	cr, cg, cb := meanRGB(frame, image.Rect(p.X-1, p.Y-1, p.X+2, p.Y+2))
+	return (r+g+bl)/3 > 215 && (cr+cg+cb)/3 < 175
 }

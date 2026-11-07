@@ -75,8 +75,13 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 				return false, err
 			}
 		}
+		// A skill that will not take its point must not hold up the
+		// attribute points: on 7 Nov a locked skill did, for 12 runs.
 		if skillsDone, err = skills(ctx, b, frame); err != nil {
-			return false, err
+			b.Log.Warn("skill points not spent", "err", err)
+		}
+		if _, frame, err = b.Look(ctx); err != nil {
+			return skillsDone, err
 		}
 	}
 	if id := screens.Detect(frame); id != screens.Attribute {

@@ -56,7 +56,22 @@ func TestAssassinCrossSkillLabels(t *testing.T) {
 	if !plusLive(frame, plus[screens.TSkillShadowStealth]) {
 		t.Error("Shadow Stealth's + read as grey")
 	}
-	if plusLive(frame, plus[screens.TSkillKatarSpec]) {
-		t.Error("locked Katar Specialization's + read as live")
+	for _, l := range []string{screens.TSkillKatarSpec, screens.TSkillRapidDual, screens.TSkillShadowKI, screens.TSkillSTRBoost} {
+		if plusLive(frame, plus[l]) {
+			t.Errorf("locked %s's + read as live", l)
+		}
+	}
+	// At JOB 1 after the job change (7 Nov) every Assassin Cross skill is
+	// maxed or locked: Rapid Dual Blades' empty spot read as live, and the
+	// skill step failed every run, keeping 54 attribute points unspent.
+	locked := capture(t, "skills/job1-locked.png")
+	for _, l := range []string{screens.TSkillShadowStealth, screens.TSkillKatarSpec, screens.TSkillRapidDual} {
+		m := assets.MustGet(l).FindIn(locked, skillTree)
+		if m.Score < screens.MinScore {
+			t.Fatalf("%s not found on the JOB 1 tree", l)
+		}
+		if plusLive(locked, m.Center().Add(skillPlusFrom)) {
+			t.Errorf("%s read as taking a point at JOB 1", l)
+		}
 	}
 }
