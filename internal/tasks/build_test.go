@@ -23,8 +23,8 @@ func searchBest(total int) [6]int {
 					for c2+spentOn(dx+1) <= total {
 						dx++
 					}
-					if a := [6]int{st, ag, vi, 0, dx, lu}; damage(a) > bd {
-						best, bd = a, damage(a)
+					if a := [6]int{st, ag, vi, 0, dx, lu}; assassin.damage(a) > bd {
+						best, bd = a, assassin.damage(a)
 					}
 				}
 			}
@@ -35,8 +35,8 @@ func searchBest(total int) [6]int {
 
 func TestBestBuildBeatsTheGrid(t *testing.T) {
 	for _, total := range []int{324, 594, 854} {
-		got, grid := bestBuild(total), searchBest(total)
-		if r := damage(got) / damage(grid); r < 0.999 {
+		got, grid := bestBuild(assassin, total), searchBest(total)
+		if r := assassin.damage(got) / assassin.damage(grid); r < 0.999 {
 			t.Errorf("%d points -> %v, %.3f of the grid's %v", total, got, r, grid)
 		}
 		if left := total - spentOn(got[0]) - spentOn(got[1]) - spentOn(got[2]) - spentOn(got[3]) - spentOn(got[4]) - spentOn(got[5]); got[statINT] > 0 || left < 0 || left > 1 {
@@ -50,11 +50,11 @@ func TestBestBuildBeatsTheGrid(t *testing.T) {
 
 func TestRebuildBeats(t *testing.T) {
 	// The build before the 6 Nov reset is ~10% behind a rebuild.
-	if _, ok := rebuildBeats([6]int{59, 36, 11, 0, 12, 51}, 3); !ok {
+	if _, ok := rebuildBeats(assassin, [6]int{59, 36, 11, 0, 12, 51}, 3); !ok {
 		t.Error("the pre-reset 6 Nov build does not call for a rebuild")
 	}
 	// A level's points on a fresh rebuild do not.
-	if _, ok := rebuildBeats(bestBuild(854), 15); ok {
+	if _, ok := rebuildBeats(assassin, bestBuild(assassin, 854), 15); ok {
 		t.Error("15 points on a fresh rebuild call for another")
 	}
 }
@@ -62,7 +62,7 @@ func TestRebuildBeats(t *testing.T) {
 func TestSparePointsSkipINT(t *testing.T) {
 	// 6 Nov 23:30: 22 points on the rebuild went 3 to STR, then the 2 left
 	// to INT, the only stat they could still pay for.
-	if a, _ := spendPlanned([6]int{37, 52, 17, 0, 21, 53}, 22); a[statINT] != 0 {
+	if a, _ := spendPlanned(assassin, [6]int{37, 52, 17, 0, 21, 53}, 22); a[statINT] != 0 {
 		t.Errorf("spare points went to INT: %v", a)
 	}
 }
@@ -80,7 +80,7 @@ func TestRhythmTiers(t *testing.T) {
 
 func TestBuildBeatsTheGameRecommendation(t *testing.T) {
 	recommended := [6]int{22, 30, 0, 0, 0, 37} // the game's allocation at Base 37
-	if r := damage(searchBest(324)) / damage(recommended); r < 1.01 {
+	if r := assassin.damage(searchBest(324)) / assassin.damage(recommended); r < 1.01 {
 		t.Errorf("searched build only %.3f of the recommended one", r)
 	}
 }

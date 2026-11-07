@@ -277,20 +277,22 @@ func TestStageQuest(t *testing.T) {
 
 // The Current Build emblem tells the Thief line, which the stat and skill
 // models know, from the jobs Job Switch offers (7 Nov).
-func TestClassThief(t *testing.T) {
-	for name, want := range map[string]bool{
-		"char-overview.png":                 true, // Assassin, 5 Nov
-		"class/assassin-cross-overview.png": true,
-		"class/lord-knight-overview.png":    false,
-		"class/sniper-overview.png":         false,
-		"class/magician-overview.png":       false,
+func TestClassEmblems(t *testing.T) {
+	for name, want := range map[string]string{
+		"char-overview.png":                 TClassThief, // Assassin, 5 Nov
+		"class/assassin-cross-overview.png": TClassThief,
+		"class/lord-knight-overview.png":    TClassLordKnight,
+		"class/sniper-overview.png":         "",
+		"class/magician-overview.png":       "",
 	} {
 		frame := load(t, name)
 		if got := Detect(frame); got != CharOverview {
 			t.Errorf("%s: detected %s, want %s", name, got, CharOverview)
 		}
-		if got := Visible(frame, TClassThief); got != want {
-			t.Errorf("%s: thief emblem %v, want %v", name, got, want)
+		for _, emblem := range []string{TClassThief, TClassLordKnight} {
+			if got := Visible(frame, emblem); got != (emblem == want) {
+				t.Errorf("%s: %s visible %v", name, emblem, got)
+			}
 		}
 	}
 }

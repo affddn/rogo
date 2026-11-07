@@ -57,35 +57,42 @@ var (
 
 var statNames = [6]string{"STR", "AGI", "VIT", "INT", "DEX", "LUK"}
 
-// Attributes spends free attribute points where they add the most damage
-// (see build.go) instead of the game's Recommended Allocation, which the
-// model puts about 3% behind. Unspent skill points go by our own skill
-// order (skilltree.go); which actives sit on the skill bar is chosen by
-// hand. Both model the Thief line only: on any other job (Job Switch)
-// points go by the game's Recommended Allocation instead.
+// Attributes spends free attribute points where the job line's model (see
+// build.go and lordknight.go) says they add the most damage, instead of the
+// game's Recommended Allocation, which the models put about 3% behind.
+// Unspent skill points go by our own skill order (skilltree.go) on the
+// Thief line, by the game's Recommended Allocation on other lines; which
+// actives sit on the skill bar is chosen by hand. On a job no model covers
+// (Job Switch), both go by the game's Recommended Allocation.
 func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// Character opens on whichever tab is badged.
 	frame, err := open(ctx, b, screens.TNavCharacter, screens.Attribute, screens.CharOverview, screens.CharSkill, screens.Awakening)
 	if err != nil {
 		return false, err
 	}
-	var thief bool
-	if frame, thief, err = thiefLine(ctx, b, frame); err != nil {
+	var line *job
+	if frame, line, err = jobLine(ctx, b, frame); err != nil {
 		return false, err
 	}
-	if !thief {
+	if line == nil {
 		return recommendedBuild(ctx, b, frame)
 	}
+	m := line.model
 	skillsDone := false
 	if badged(frame, skillTabBadge) {
-		if id := screens.Detect(frame); id != screens.CharSkill {
-			if _, frame, err = b.TapWait(ctx, id, skillTab, "skill tab", 10*time.Second, screens.CharSkill); err != nil {
-				return false, err
+		if line.ownSkills {
+			if id := screens.Detect(frame); id != screens.CharSkill {
+				if _, frame, err = b.TapWait(ctx, id, skillTab, "skill tab", 10*time.Second, screens.CharSkill); err != nil {
+					return false, err
+				}
 			}
+			skillsDone, err = skills(ctx, b, frame)
+		} else {
+			skillsDone, err = recommend(ctx, b, frame, skillTab, screens.CharSkill, "skill tab")
 		}
 		// A skill that will not take its point must not hold up the
 		// attribute points: on 7 Nov a locked skill did, for 12 runs.
-		if skillsDone, err = skills(ctx, b, frame); err != nil {
+		if err != nil {
 			b.Log.Warn("skill points not spent", "err", err)
 		}
 		if _, frame, err = b.Look(ctx); err != nil {
@@ -132,11 +139,11 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			b.Log.Warn("could not read the attribute page", "shot", b.Save(frame))
 			break
 		}
-		readBonuses(b, frame, alloc)
+		readBonuses(b, frame, alloc, m)
 		// Points on top drift from the best split; once a rebuild beats them
 		// by rebuildGain, reset (free) and spend the whole pool again.
 		if pass == 0 && alloc != ([6]int{}) {
-			if best, ok := rebuildBeats(alloc, points); ok {
+			if best, ok := rebuildBeats(m, alloc, points); ok {
 				b.Log.Info("attributes reset for a rebuild", "alloc", alloc, "points", points)
 				if frame, err = resetAttributes(ctx, b); err != nil {
 					return skillsDone || spent > 0, err
@@ -152,7 +159,7 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 		}
 		if alloc == ([6]int{}) && points >= rebuildPoints {
 			if target == ([6]int{}) {
-				target = bestBuild(points)
+				target = bestBuild(m, points)
 			}
 			b.Log.Info("attribute pool rebuilt", "points", points, "str", target[statSTR], "agi", target[statAGI],
 				"vit", target[statVIT], "dex", target[statDEX], "luk", target[statLUK])
@@ -164,7 +171,7 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 		for taps < attrChunk {
 			s, ok := towards(target, alloc, points)
 			if !ok {
-				s, ok = nextStat(alloc, points)
+				s, ok = nextStat(m, alloc, points)
 			}
 			if !ok {
 				break
@@ -207,41 +214,53 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 
 var overviewTab = image.Pt(245, 1235)
 
-// thiefLine opens the Overview tab and reports whether the job is in the
-// Thief line (Assassin, Assassin Cross), the only one build.go and
-// skilltree.go model. Job Switch is free (7 Nov), and on Lord Knight the
-// Assassin model rated the game's STR/AGI split a rebuild away from its
-// best: it would have reset it into an Assassin split.
-func thiefLine(ctx context.Context, b *bot.Bot, frame image.Image) (image.Image, bool, error) {
+// A job is a job line the bot has a stat model for, told apart by the
+// Overview's Current Build emblem. ownSkills says whether skilltree.go
+// knows the line's skills.
+type job struct {
+	emblem    string
+	model     *model
+	ownSkills bool
+}
+
+var jobs = []job{
+	{screens.TClassThief, assassin, true},         // Assassin, Assassin Cross
+	{screens.TClassLordKnight, lordKnight, false}, // Agi Sword path
+}
+
+// jobLine opens the Overview tab and returns the job's line in jobs, or nil
+// for a job no model covers. Job Switch is free (7 Nov), and the wrong
+// model resets the attributes into its own split (the Assassin model would
+// have on Lord Knight), so it looks twice before giving up on an emblem:
+// the game's plan only costs a few percent.
+func jobLine(ctx context.Context, b *bot.Bot, frame image.Image) (image.Image, *job, error) {
 	if id := screens.Detect(frame); id != screens.CharOverview {
 		var err error
 		if _, frame, err = b.TapWait(ctx, id, overviewTab, "overview tab", 10*time.Second, screens.CharOverview); err != nil {
-			return frame, false, err
+			return frame, nil, err
 		}
 	}
-	// A second look before calling it another job: the Assassin model on
-	// a Lord Knight resets its attributes, while the game's plan on an
-	// Assassin only costs about 3%.
 	for try := 0; try < 2; try++ {
-		if screens.Visible(frame, screens.TClassThief) {
-			return frame, true, nil
+		for i := range jobs {
+			if screens.Visible(frame, jobs[i].emblem) {
+				return frame, &jobs[i], nil
+			}
 		}
 		if err := bot.Sleep(ctx, time.Second); err != nil {
-			return frame, false, err
+			return frame, nil, err
 		}
 		var err error
 		if _, frame, err = b.Look(ctx); err != nil {
-			return frame, false, err
+			return frame, nil, err
 		}
 	}
-	return frame, false, nil
+	return frame, nil, nil
 }
 
-// recommendedBuild is Attributes for a job outside the Thief line: the
-// game's Recommended Allocation, which plans by the job's attack type and
-// awakenings (Lord Knight: STR and AGI, Magician: INT and LUK, Sniper: AGI,
-// DEX and LUK on 7 Nov), for skill points and then attribute points, and
-// the awakenings after.
+// recommendedBuild is Attributes for a job no model covers: the game's
+// Recommended Allocation, which plans by the job's attack type and
+// awakenings (Magician: INT and LUK, Sniper: AGI, DEX and LUK on 7 Nov), for
+// skill points and then attribute points, and the awakenings after.
 func recommendedBuild(ctx context.Context, b *bot.Bot, frame image.Image) (bool, error) {
 	done := false
 	if badged(frame, skillTabBadge) {
@@ -391,8 +410,9 @@ func towards(target, alloc [6]int, points int) (int, bool) {
 }
 
 // readBonuses updates statBonus from the Attribute page, so Awakening
-// thresholds (on total stats) are planned with today's pets and cards.
-func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int) {
+// thresholds (on total stats) are planned with today's pets and cards, and
+// the model's bases from its rates.
+func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int, m *model) {
 	total, ok := screens.AttributeTotals(frame)
 	if !ok {
 		return
@@ -410,10 +430,10 @@ func readBonuses(b *bot.Bot, frame image.Image, alloc [6]int) {
 	}
 	// The rates set the CRIT, Skill CRIT and Aspd bases the plan builds on.
 	if crit, sc, aspd, ok := screens.AttributeRates(frame); ok {
-		before := [3]float64{baseCRIT, baseSkillCR, aspdBonus}
-		calibrate(total, crit, sc, aspd)
-		if after := [3]float64{baseCRIT, baseSkillCR, aspdBonus}; after != before {
-			b.Log.Info("attribute bases", "crit", baseCRIT, "skill_crit", baseSkillCR, "aspd_bonus", aspdBonus)
+		before := fmt.Sprint(m.bases()...)
+		m.calibrate(total, crit, sc, aspd)
+		if fmt.Sprint(m.bases()...) != before {
+			b.Log.Info("attribute bases", m.bases()...)
 		}
 	}
 }

@@ -1,6 +1,33 @@
 package tasks
 
-import "math"
+import (
+	"math"
+	"slices"
+)
+
+// A model is one job line's damage model: how attribute points turn into
+// damage, and the Awakening thresholds worth saving points for. The planner
+// below (nextStat, bestBuild, rebuildBeats) works on any of them.
+type model struct {
+	// damage is damage per second, up to a constant factor.
+	damage func(alloc [6]int) float64
+	// calibrate sets the model's bases from the Attribute page's CRIT,
+	// Skill CRIT and Aspd, given the stat totals they were shown at.
+	calibrate func(total [6]int, crit, skillCrit, aspd float64)
+	// bases are those bases as log key/value pairs.
+	bases func() []any
+	// goals are the Awakening thresholds thresholdStat plans for.
+	goals []goal
+	// idle are the stats that add nothing but the flat PATK every point
+	// gives: spare points wait for a better stat rather than go there.
+	idle []int
+}
+
+// A goal is an Awakening threshold reached by pouring points into stat.
+type goal struct {
+	stat   int
+	target func([6]int) bool
+}
 
 // The Assassin's stat build, from a damage model built on what the game
 // shows (Attribute page with a free reset at Base 37, and the skill
@@ -111,9 +138,10 @@ func attacksPerSecond(agi int) float64 {
 	return 50 / (200 - min(baseASPD+aspdFromAGI(agi)+aspdBonus, maxASPD))
 }
 
-// calibrate sets the bases from the Attribute page's CRIT, Skill CRIT and
-// Aspd, given the stat totals (allocated plus bonuses) they were shown at.
-func calibrate(total [6]int, crit, skillCrit, aspd float64) {
+// calibrateAssassin sets the bases from the Attribute page's CRIT, Skill
+// CRIT and Aspd, given the stat totals (allocated plus bonuses) they were
+// shown at.
+func calibrateAssassin(total [6]int, crit, skillCrit, aspd float64) {
 	luk := critPerLUK * float64(total[statLUK])
 	baseCRIT, baseSkillCR = crit-luk, skillCrit-luk
 	if aspd < maxASPD { // a capped Aspd says nothing about the bonus
@@ -147,7 +175,6 @@ func spentOn(n int) int {
 	return s
 }
 
-// damage is the model's damage per second, up to a constant factor.
 // Awakening (Character > Awakening, read 5 Nov). Each build has two
 // abilities whose tiers switch on at stat thresholds (total stats, gear
 // included).
@@ -162,9 +189,10 @@ func spentOn(n int) int {
 // 4 stacks cast 3 AoE hits of 300% (+100% at 30, +150% at 50; 5 hits from
 // 90); flat tiers at 20, 40, 60, 75.
 //
-// statBonus is what pets, cards and gear add to each stat on top of the
-// allocated points: the Attribute page's All column less Total Allocated,
-// read by Attributes before it plans. The defaults are the 6 Nov reading.
+// statBonus is what pets, cards, gear and the job add to each stat on top
+// of the allocated points: the Attribute page's All column less Total
+// Allocated, read by Attributes before it plans (it differs between jobs).
+// The defaults are the Assassin's 6 Nov reading.
 var statBonus = [6]int{statSTR: 23, statAGI: 17, statVIT: 1, statINT: 12, statDEX: 3, statLUK: 17}
 
 type flatTier struct {
@@ -211,7 +239,24 @@ func effectiveHP(vit int) float64 {
 // assassinSkills order.
 var skillHits = []float64{2, 2, 8, 2}
 
-func damage(alloc [6]int) float64 {
+var assassin = &model{
+	damage:    assassinDamage,
+	calibrate: calibrateAssassin,
+	bases: func() []any {
+		return []any{"crit", baseCRIT, "skill_crit", baseSkillCR, "aspd_bonus", aspdBonus}
+	},
+	goals: []goal{
+		{statSTR, strAt(40)}, {statSTR, strAt(60)}, {statSTR, strAt(80)}, {statSTR, strAt(95)},
+		{statSTR, strAt(110)}, {statSTR, strAt(125)},
+		{statLUK, scAt(40)}, {statLUK, scAt(50)}, {statLUK, scAt(60)}, {statLUK, scAt(75)},
+	},
+	// INT adds nothing but the flat PATK every point gives, so a cheap INT
+	// point would only take what is better saved for the next STR or AGI
+	// point (it took 2 on 6 Nov).
+	idle: []int{statINT},
+}
+
+func assassinDamage(alloc [6]int) float64 {
 	spent := 0
 	for _, n := range alloc {
 		spent += spentOn(n)
@@ -272,18 +317,18 @@ func damage(alloc [6]int) float64 {
 // nextStat picks the stat whose next point adds the most damage per
 // attribute point among those the points can still pay for. Damage moves in
 // steps (attack timing), so each stat is judged over its next few points.
-func nextStat(alloc [6]int, points int) (int, bool) {
-	if s, ok := thresholdStat(alloc); ok && pointCost(alloc[s]) <= points {
+func nextStat(m *model, alloc [6]int, points int) (int, bool) {
+	if s, ok := thresholdStat(m, alloc); ok && pointCost(alloc[s]) <= points {
 		return s, true
 	}
-	return greedyStat(alloc, points)
+	return greedyStat(m, alloc, points)
 }
 
 // spendPlanned spends points one at a time by nextStat and returns the
 // allocation and what is left.
-func spendPlanned(alloc [6]int, points int) ([6]int, int) {
+func spendPlanned(m *model, alloc [6]int, points int) ([6]int, int) {
 	for {
-		s, ok := nextStat(alloc, points)
+		s, ok := nextStat(m, alloc, points)
 		if !ok {
 			return alloc, points
 		}
@@ -300,14 +345,14 @@ const rebuildGain = 0.02
 
 // rebuildBeats returns bestBuild for alloc's points plus points, and
 // whether it beats spending points on top of alloc by rebuildGain.
-func rebuildBeats(alloc [6]int, points int) ([6]int, bool) {
+func rebuildBeats(m *model, alloc [6]int, points int) ([6]int, bool) {
 	total := points
 	for _, n := range alloc {
 		total += spentOn(n)
 	}
-	onTop, _ := spendPlanned(alloc, points)
-	best := bestBuild(total)
-	return best, damage(best) > damage(onTop)*(1+rebuildGain)
+	onTop, _ := spendPlanned(m, alloc, points)
+	best := bestBuild(m, total)
+	return best, m.damage(best) > m.damage(onTop)*(1+rebuildGain)
 }
 
 // bestBuild is the split of total attribute points the model rates highest,
@@ -318,7 +363,7 @@ func rebuildBeats(alloc [6]int, points int) ([6]int, bool) {
 // once spent stay put. STR goes in single steps, since its Awakening tiers
 // sit on exact totals; AGI, VIT and LUK in steps of 2 with DEX taking the
 // rest, then single-point trades between stats polish the result.
-func bestBuild(total int) [6]int {
+func bestBuild(m *model, total int) [6]int {
 	fill := func(a [6]int, s int) [6]int {
 		left := total
 		for _, n := range a {
@@ -332,6 +377,11 @@ func bestBuild(total int) [6]int {
 	}
 	var best [6]int
 	bd := 0.0
+	// An idle VIT stays at 0, which spares the search a loop.
+	vitMax := total
+	if slices.Contains(m.idle, statVIT) {
+		vitMax = 0
+	}
 	for st := 0; spentOn(st) <= total; st++ {
 		for ag := 0; spentOn(st)+spentOn(ag) <= total; ag += 2 {
 			for lu := 0; ; lu += 2 {
@@ -339,9 +389,9 @@ func bestBuild(total int) [6]int {
 				if c > total {
 					break
 				}
-				for vi := 0; c+spentOn(vi) <= total; vi += 2 {
+				for vi := 0; vi <= vitMax && c+spentOn(vi) <= total; vi += 2 {
 					a := fill([6]int{statSTR: st, statAGI: ag, statVIT: vi, statLUK: lu}, statDEX)
-					if d := damage(a); d > bd {
+					if d := m.damage(a); d > bd {
 						best, bd = a, d
 					}
 				}
@@ -355,8 +405,8 @@ func bestBuild(total int) [6]int {
 				for k := 1; k <= 3 && from != to && best[from] >= k; k++ {
 					a := best
 					a[from] -= k
-					if a = fill(a, to); damage(a) > bd*(1+1e-9) {
-						best, bd, improved = a, damage(a), true
+					if a = fill(a, to); m.damage(a) > bd*(1+1e-9) {
+						best, bd, improved = a, m.damage(a), true
 					}
 				}
 			}
@@ -377,20 +427,13 @@ func scAt(v float64) func([6]int) bool {
 // planned for (about ten levels).
 const planHorizon = 200
 
-// thresholdStat returns the stat to pour points into when reaching an
-// Awakening threshold within planHorizon points beats spending the same
-// points greedily. Greedy steps cannot see a bonus 15 points away.
-func thresholdStat(alloc [6]int) (int, bool) {
-	greedy := damage(spendGreedy(alloc, planHorizon))
+// thresholdStat returns the stat to pour points into when reaching one of
+// the model's Awakening thresholds within planHorizon points beats spending
+// the same points greedily. Greedy steps cannot see a bonus 15 points away.
+func thresholdStat(m *model, alloc [6]int) (int, bool) {
+	greedy := m.damage(spendGreedy(m, alloc, planHorizon))
 	best, bestDmg := -1, greedy
-	for _, goal := range []struct {
-		stat   int
-		target func([6]int) bool
-	}{
-		{statSTR, strAt(40)}, {statSTR, strAt(60)}, {statSTR, strAt(80)}, {statSTR, strAt(95)},
-		{statSTR, strAt(110)}, {statSTR, strAt(125)},
-		{statLUK, scAt(40)}, {statLUK, scAt(50)}, {statLUK, scAt(60)}, {statLUK, scAt(75)},
-	} {
+	for _, goal := range m.goals {
 		if goal.target(alloc) {
 			continue
 		}
@@ -402,16 +445,16 @@ func thresholdStat(alloc [6]int) (int, bool) {
 		if !goal.target(a) {
 			continue
 		}
-		if d := damage(spendGreedy(a, left)); d > bestDmg*1.005 {
+		if d := m.damage(spendGreedy(m, a, left)); d > bestDmg*1.005 {
 			best, bestDmg = goal.stat, d
 		}
 	}
 	return best, best >= 0
 }
 
-func spendGreedy(alloc [6]int, points int) [6]int {
+func spendGreedy(m *model, alloc [6]int, points int) [6]int {
 	for {
-		s, ok := greedyStat(alloc, points)
+		s, ok := greedyStat(m, alloc, points)
 		if !ok {
 			return alloc
 		}
@@ -421,22 +464,19 @@ func spendGreedy(alloc [6]int, points int) [6]int {
 }
 
 // greedyStat picks the stat whose next few points add the most damage per
-// attribute point.
-func greedyStat(alloc [6]int, points int) (int, bool) {
+// attribute point, leaving the model's idle stats alone.
+func greedyStat(m *model, alloc [6]int, points int) (int, bool) {
 	const lookahead = 3
-	now := damage(alloc)
+	now := m.damage(alloc)
 	best, bestValue := -1, 0.0
 	for s := range alloc {
-		// INT adds nothing but the flat PATK every point gives, so a cheap
-		// INT point would only take what is better saved for the next STR
-		// or AGI point (it took 2 on 6 Nov).
-		if s == statINT || pointCost(alloc[s]) > points {
+		if slices.Contains(m.idle, s) || pointCost(alloc[s]) > points {
 			continue
 		}
 		next := alloc
 		next[s] += lookahead
 		cost := spentOn(next[s]) - spentOn(alloc[s])
-		if v := (damage(next) - now) / float64(cost); v > bestValue {
+		if v := (m.damage(next) - now) / float64(cost); v > bestValue {
 			best, bestValue = s, v
 		}
 	}

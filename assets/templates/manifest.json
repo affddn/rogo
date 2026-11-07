@@ -224,6 +224,14 @@
     "note": "Mall Special Pass: Claim All button word"
   },
   {
+    "name": "class_lord_knight",
+    "x": 588,
+    "y": 608,
+    "w": 72,
+    "h": 72,
+    "note": "Character Overview: the Current Build emblem while the job is in the Swordman line's Lord Knight (sword emblem)"
+  },
+  {
     "name": "class_thief",
     "x": 588,
     "y": 608,
