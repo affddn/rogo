@@ -152,9 +152,10 @@ var incomeDiamonds = image.Rect(488, 984, 580, 1008)
 // PaidQuickIdles buys Quick Idles (one hour of adventure income, mostly
 // Base and Job EXP) while the Job level is under target, the diamonds cover
 // one and the price is at most maxPrice; at most max a run. The price
-// starts at 100 and rises 50 a purchase. job is the last level read, 0
-// when unread.
-func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) (bought, job int, err error) {
+// starts at 100 and rises 50 a purchase. A level below last (the one read
+// the run before, 0 for none) means the job change has come and buys
+// nothing. job is the last level read, 0 when unread.
+func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, last, maxPrice, max int) (bought, job int, err error) {
 	if err := b.ToMain(ctx); err != nil {
 		return 0, 0, err
 	}
@@ -170,7 +171,7 @@ func PaidQuickIdles(ctx context.Context, b *bot.Bot, target, maxPrice, max int) 
 			break
 		}
 		job = lv
-		if job >= target {
+		if job >= target || job < last {
 			break
 		}
 		if freeQuickIdle(frame) && free < 5 {

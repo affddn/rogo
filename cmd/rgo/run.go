@@ -142,10 +142,16 @@ func actions() []*runner.Action {
 				return jobEXPDue(s) && s.Since("job-exp", now) >= time.Hour
 			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
-				n, job, err := tasks.PaidQuickIdles(ctx, b, jobTarget, quickIdleMaxPrice, 20)
+				n, job, err := tasks.PaidQuickIdles(ctx, b, jobTarget, st.Counters["job_level"], quickIdleMaxPrice, 20)
 				st.Add("paid_quick_idles", n)
-				if job >= jobTarget {
+				// A level below the last one read means the job change came
+				// between runs, Job 30 never seen: on 7 Nov the bot last
+				// read 28, then Job 1, and kept holding diamonds back.
+				if job >= jobTarget || (job > 0 && job < st.Counters["job_level"]) {
 					st.Counters["job_target_reached"] = 1
+				}
+				if job > 0 {
+					st.Counters["job_level"] = job
 				}
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
@@ -635,7 +641,7 @@ func cmdMVP(ctx context.Context, d *device.Device, args []string) error {
 }
 
 func cmdQuickIdle(ctx context.Context, d *device.Device, args []string) error {
-	n, job, err := tasks.PaidQuickIdles(ctx, newBot(d), jobTarget, quickIdleMaxPrice, 1)
+	n, job, err := tasks.PaidQuickIdles(ctx, newBot(d), jobTarget, 0, quickIdleMaxPrice, 1)
 	fmt.Println("paid quick idles", n, "job", job)
 	return err
 }
