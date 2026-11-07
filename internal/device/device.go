@@ -160,6 +160,17 @@ func (d *Device) Tap(ctx context.Context, x, y int) error {
 	return d.input(ctx, fmt.Sprintf("tap %d %d", x, y))
 }
 
+// Taps taps one point n times, gap apart, in a single shell: one adb round
+// trip for a run of + taps instead of one each.
+func (d *Device) Taps(ctx context.Context, x, y, n int, gap time.Duration) error {
+	if d.DryRun {
+		d.Log("dry-run input tap %d %d x%d", x, y, n)
+		return nil
+	}
+	_, err := d.Shell(ctx, strings.Repeat(fmt.Sprintf("input tap %d %d; sleep %.2f; ", x, y, gap.Seconds()), n))
+	return err
+}
+
 func (d *Device) Swipe(ctx context.Context, x1, y1, x2, y2 int, dur time.Duration) error {
 	return d.input(ctx, fmt.Sprintf("swipe %d %d %d %d %d", x1, y1, x2, y2, dur.Milliseconds()))
 }

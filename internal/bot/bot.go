@@ -133,6 +133,25 @@ func (b *Bot) Tap(ctx context.Context, p image.Point, what string) error {
 	return sleep(ctx, b.Settle)
 }
 
+// TapN taps a point n times, as on a + button, with one deny check and one
+// adb call for them all, then waits for the UI to settle. Tap by tap a
+// 190-point stat rebuild took 3 s a point (the deny check, the settle) and
+// ran past the action's 10 minutes before its Confirm, on 7 Nov.
+func (b *Bot) TapN(ctx context.Context, p image.Point, n int, what string) error {
+	if name := b.denied(p); name != "" {
+		b.Log.Error("refused tap on deny-listed button", "what", what, "button", name, "shot", b.Save(b.last))
+		return fmt.Errorf("%w: %s", ErrDenied, name)
+	}
+	b.Log.Debug("taps", "what", what, "x", p.X, "y", p.Y, "n", n)
+	if err := b.D.Taps(ctx, p.X, p.Y, n, tapGap); err != nil {
+		return err
+	}
+	return sleep(ctx, b.Settle)
+}
+
+// tapGap spaces TapN's taps, so the game takes each one.
+const tapGap = 200 * time.Millisecond
+
 func (b *Bot) denied(p image.Point) string {
 	if b.last == nil {
 		return ""

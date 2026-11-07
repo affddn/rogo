@@ -94,8 +94,9 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 	// otherwise new points go point by point.
 	var target [6]int
 	// The game drops a tap now and then; confirm, read the page again and
-	// spend what is left.
-	for pass := 0; pass < 3; pass++ {
+	// spend what is left. A rebuild goes attrChunk points a pass, so a
+	// run cut short keeps what it confirmed.
+	for pass := 0; pass < 8; pass++ {
 		// The counter first: a power-up banner can cover the stat rows
 		// right after a confirm, when nothing is left to spend anyway.
 		points, okPoints := screens.AttributePoints(frame)
@@ -132,8 +133,11 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			b.Log.Info("attribute pool rebuilt", "points", points, "str", target[statSTR], "agi", target[statAGI],
 				"vit", target[statVIT], "dex", target[statDEX], "luk", target[statLUK])
 		}
+		// Plan the pass, then tap it stat by stat: a point's cost depends
+		// only on its own stat, so the order does not matter.
+		var per [6]int
 		taps := 0
-		for {
+		for taps < attrChunk {
 			s, ok := towards(target, alloc, points)
 			if !ok {
 				s, ok = nextStat(alloc, points)
@@ -141,15 +145,21 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			if !ok {
 				break
 			}
-			if err := b.Tap(ctx, image.Pt(statPlusX, screens.AttrRows[s]), "add "+statNames[s]); err != nil {
-				return skillsDone || spent > 0, err
-			}
 			points -= pointCost(alloc[s])
 			alloc[s]++
+			per[s]++
 			taps++
 		}
 		if taps == 0 {
 			break
+		}
+		for s, n := range per {
+			if n == 0 {
+				continue
+			}
+			if err := b.TapN(ctx, image.Pt(statPlusX, screens.AttrRows[s]), n, "add "+statNames[s]); err != nil {
+				return skillsDone || spent > 0, err
+			}
 		}
 		if _, frame, err = b.Look(ctx); err != nil {
 			return skillsDone || spent > 0, err
@@ -248,6 +258,9 @@ func resetAttributes(ctx context.Context, b *bot.Bot) (image.Image, error) {
 	}
 	return nil, fmt.Errorf("attribute reset: the confirmation notice never showed")
 }
+
+// attrChunk is the most points one pass taps before its Confirm.
+const attrChunk = 60
 
 // rebuildPoints is the smallest unspent pool, with nothing allocated, that
 // Attributes treats as a reset to rebuild rather than a new character.
