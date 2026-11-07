@@ -374,7 +374,9 @@ var rules = []rule{
 	{id: AccountChooser, anchors: []string{TAccountChooser}},
 	// The Login dialog leaves the title screen undimmed, so it goes first.
 	{id: Login, anchors: []string{TLoginTitle, TLoginGoogle}},
-	{id: Title, anchors: []string{TTitleAgreeText}},
+	// The agreement line renders dimmer on some boots (it scored 0.94 on the
+	// 1.0.8.2 night title), so Start Game also identifies the screen.
+	{id: Title, anyOf: []string{TTitleAgreeText, TTitleStartGame}, need: 1},
 	{id: IdleRewards, anchors: []string{TIdleTitle, TIdleClaim}},
 	{id: StageDefeat, anchors: []string{TStageDefeat, TStageLeave}},
 	{id: CombatEnded, anchors: []string{TCombatEnded, TCombatLeave}},
