@@ -426,7 +426,10 @@ func greedyStat(alloc [6]int, points int) (int, bool) {
 	now := damage(alloc)
 	best, bestValue := -1, 0.0
 	for s := range alloc {
-		if pointCost(alloc[s]) > points {
+		// INT adds nothing but the flat PATK every point gives, so a cheap
+		// INT point would only take what is better saved for the next STR
+		// or AGI point (it took 2 on 6 Nov).
+		if s == statINT || pointCost(alloc[s]) > points {
 			continue
 		}
 		next := alloc

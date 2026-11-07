@@ -59,6 +59,14 @@ func TestRebuildBeats(t *testing.T) {
 	}
 }
 
+func TestSparePointsSkipINT(t *testing.T) {
+	// 6 Nov 23:30: 22 points on the rebuild went 3 to STR, then the 2 left
+	// to INT, the only stat they could still pay for.
+	if a, _ := spendPlanned([6]int{37, 52, 17, 0, 21, 53}, 22); a[statINT] != 0 {
+		t.Errorf("spare points went to INT: %v", a)
+	}
+}
+
 func TestRhythmTiers(t *testing.T) {
 	for str, want := range map[float64]float64{5: 1.10, 60: 1.15, 95: 1.30, 180: 1.50} {
 		if got := rhythm(str); math.Abs(got-want) > 1e-9 {
