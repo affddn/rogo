@@ -104,6 +104,22 @@ func Attributes(ctx context.Context, b *bot.Bot) (bool, error) {
 			break
 		}
 		alloc, okAlloc := screens.AttributeAllocation(frame)
+		// With points left after a confirm (a rebuild's chunks), the
+		// power-up banner covers the LUK row for a few seconds: wait it
+		// out. On 7 Nov it stopped a rebuild after its first 60 points.
+		for try := 0; pass > 0 && (!okAlloc || !okPoints) && try < 5; try++ {
+			if err := bot.Sleep(ctx, 1500*time.Millisecond); err != nil {
+				return true, err
+			}
+			if _, frame, err = b.Look(ctx); err != nil {
+				return true, err
+			}
+			points, okPoints = screens.AttributePoints(frame)
+			alloc, okAlloc = screens.AttributeAllocation(frame)
+		}
+		if okPoints && points == 0 {
+			break
+		}
 		if !okAlloc || !okPoints {
 			b.Log.Warn("could not read the attribute page", "shot", b.Save(frame))
 			break
