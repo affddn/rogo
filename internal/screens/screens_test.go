@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"slices"
 	"testing"
 )
 
@@ -307,6 +308,21 @@ func TestAdTemplates(t *testing.T) {
 		frame := load(t, name)
 		for _, tmpl := range []string{TPetAdReady, TWeaponAdReady} {
 			if got := Visible(frame, tmpl); got != (tmpl == want) {
+				t.Errorf("%s: %s visible %v", name, tmpl, got)
+			}
+		}
+	}
+}
+
+func TestMallCoinTemplates(t *testing.T) {
+	for name, want := range map[string][]string{
+		"mall/coin-deal-ready.png":    {TMallCoinTitle, TMallCoinPrice},
+		"mall/coin-deal-sold-out.png": {TMallCoinTitle},
+		"mall/coin-buy-dialog.png":    {TMallCoinDialog},
+	} {
+		frame := load(t, name)
+		for _, tmpl := range []string{TMallCoinTitle, TMallCoinPrice, TMallCoinDialog} {
+			if got := Visible(frame, tmpl); got != slices.Contains(want, tmpl) {
 				t.Errorf("%s: %s visible %v", name, tmpl, got)
 			}
 		}

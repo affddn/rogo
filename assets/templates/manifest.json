@@ -1080,6 +1080,30 @@
     "note": "Mall: Diamondx100 ad Free button (ad-free with the Lifetime Card)"
   },
   {
+    "name": "mall_coin_dialog",
+    "x": 196,
+    "y": 456,
+    "w": 214,
+    "h": 28,
+    "note": "Mall Buy dialog: the item name Weapon Gacha Coin"
+  },
+  {
+    "name": "mall_coin_price",
+    "x": 552,
+    "y": 886,
+    "w": 96,
+    "h": 36,
+    "note": "Mall: the Weapon Gacha Coinx100 price button, a diamond and 200 (Sold Out once bought this week)"
+  },
+  {
+    "name": "mall_coin_title",
+    "x": 60,
+    "y": 808,
+    "w": 280,
+    "h": 28,
+    "note": "Mall, Gift Pack, Normal Pack: the Weapon Gacha Coinx100 row title (weekly, 200 diamonds)"
+  },
+  {
     "name": "mall_free_word",
     "x": 566,
     "y": 492,

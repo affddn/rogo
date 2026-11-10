@@ -132,6 +132,40 @@ func growthGift(ctx context.Context, b *bot.Bot) (int, error) {
 	return n, b.Tap(ctx, image.Pt(40, 1225), "back")
 }
 
+// mallCoinBuy is Buy in the weekly coin deal's dialog.
+var mallCoinBuy = image.Pt(360, 870)
+
+// weeklyCoins buys the Gift Pack's Weapon Gacha Coinx100: 200 diamonds, once
+// a week, for 100 draws that cost 500 in diamonds. In #20's plan since 4
+// Nov; bought from 10 Nov, when the owner asked to spend the free account
+// Simao's diamonds better. Its price button turns to Sold Out once bought,
+// and Buy is only tapped in a dialog that names the coin.
+func weeklyCoins(ctx context.Context, b *bot.Bot, frame image.Image) (int, error) {
+	if !screens.Visible(frame, screens.TMallCoinTitle) {
+		return 0, nil
+	}
+	price := assets.MustGet(screens.TMallCoinPrice).Find(frame, screens.Margin)
+	if !price.Visible(screens.MinScore) {
+		return 0, nil // bought this week
+	}
+	if err := b.Tap(ctx, price.Center(), "weekly weapon coins"); err != nil {
+		return 0, err
+	}
+	_, f, err := b.Look(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if !screens.Visible(f, screens.TMallCoinDialog) {
+		b.Log.Warn("weapon coin deal opened no Buy dialog", "shot", b.Save(f))
+		return 0, closePopups(ctx, b, screens.Mall)
+	}
+	if err := b.Tap(ctx, mallCoinBuy, "buy weapon coins"); err != nil {
+		return 0, err
+	}
+	b.Log.Info("weekly weapon coins bought", "coins", 100, "diamonds", 200)
+	return 1, closePopups(ctx, b, screens.Mall)
+}
+
 func mall(ctx context.Context, b *bot.Bot) (int, error) {
 	n := 0
 	_, frame, err := b.Look(ctx)
@@ -160,6 +194,12 @@ func mall(ctx context.Context, b *bot.Bot) (int, error) {
 		if _, frame, err = b.Look(ctx); err != nil {
 			return n, err
 		}
+	}
+
+	bought, err := weeklyCoins(ctx, b, frame)
+	n += bought
+	if err != nil {
+		return n, err
 	}
 
 	if err := b.Tap(ctx, mallSpecialTab, "special pass tab"); err != nil {

@@ -325,6 +325,10 @@ const (
 	// buttons are not badged.
 	TPetAdReady    = "pet_ad_ready"
 	TWeaponAdReady = "weapon_ad_ready"
+	// The Mall's weekly Weapon Gacha Coinx100 for 200 diamonds.
+	TMallCoinTitle  = "mall_coin_title"
+	TMallCoinPrice  = "mall_coin_price"
+	TMallCoinDialog = "mall_coin_dialog"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any
