@@ -26,6 +26,10 @@ type State struct {
 	Snooze   map[string]time.Time `json:"snooze"` // action ignored until then
 	Counters map[string]int       `json:"counters"`
 
+	// F2P marks an account that is played free: no paid Quick Idles. Set
+	// by hand in the account's state.json (Simao, 10 Nov).
+	F2P bool `json:"f2p,omitempty"`
+
 	// Level is the level fingerprint attributes were last handled at, Seen
 	// the one on screen now; a difference means points arrived.
 	Level string `json:"level"`

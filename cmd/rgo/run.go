@@ -53,8 +53,11 @@ const jobTarget = 30
 const quickIdleMaxPrice = 300
 
 // jobEXPDue holds diamonds for Quick Idles until Job 30 has been seen once
-// (the level restarts after the job change).
-func jobEXPDue(s *st) bool { return s.Counters["job_target_reached"] == 0 }
+// (the level restarts after the job change). A free account buys none: at
+// 100 to 200 diamonds an hour of income they cost 20 to 40 weapon draws,
+// and Job 30 comes with the stages anyway (Simao, Hunter: its Job 30 task
+// opens only after 7-6, 10 Nov).
+func jobEXPDue(s *st) bool { return !s.F2P && s.Counters["job_target_reached"] == 0 }
 
 // wakeQuest unmutes quest-go: a quest whose objective could not be done
 // waits 15 minutes, but a new quest or growth may unblock it sooner.

@@ -49,3 +49,14 @@ func TestStageStall(t *testing.T) {
 		t.Error("stalled after one lost fight")
 	}
 }
+
+func TestJobEXPDueFree(t *testing.T) {
+	st, _ := state.Load(filepath.Join(t.TempDir(), "s.json"))
+	if !jobEXPDue(st) {
+		t.Error("a paid account short of Job 30 buys no Quick Idles")
+	}
+	st.F2P = true
+	if jobEXPDue(st) {
+		t.Error("a free account buys Quick Idles")
+	}
+}
