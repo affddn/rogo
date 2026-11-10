@@ -1272,6 +1272,14 @@
     "note": "season pass page header"
   },
   {
+    "name": "pet_ad_ready",
+    "x": 78,
+    "y": 1116,
+    "w": 30,
+    "h": 18,
+    "note": "Pet Gacha: the ad draw's count reads 1/1 (an ad draw left today; on an account without the Lifetime Card the button plays an ad and is not badged)"
+  },
+  {
     "name": "pet_auto_formation",
     "x": 76,
     "y": 1092,
@@ -1942,6 +1950,14 @@
     "w": 560,
     "h": 60,
     "note": "Hint: current version too old, restart and update"
+  },
+  {
+    "name": "weapon_ad_ready",
+    "x": 118,
+    "y": 963,
+    "w": 30,
+    "h": 19,
+    "note": "Weapon Gacha: the ad draw's count reads 1/1 (an ad draw left today; unbadged without the Lifetime Card)"
   },
   {
     "name": "yield_confirm",

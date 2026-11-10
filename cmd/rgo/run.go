@@ -188,13 +188,19 @@ func actions() []*runner.Action {
 				st.Add("enhance_levels", n)
 				return out{Progress: n > 0, Growth: n > 0}, err
 			}},
-		{Name: "weapon", Wakes: wakeQuest, Priority: 70, Snooze: 2 * time.Hour, Ready: badge(screens.BadgeWeapon),
+		// Also once a day for the ad draw, which lights no badge without
+		// the Lifetime Card.
+		{Name: "weapon", Wakes: wakeQuest, Priority: 70, Snooze: 2 * time.Hour,
+			Ready: func(s sig, st *st, _ time.Time) bool {
+				return s.Has(screens.BadgeWeapon) || !st.Daily["weapon_ad"]
+			},
 			Run: func(ctx context.Context, b *bot.Bot, st *st) (out, error) {
 				n, err := tasks.WeaponGacha(ctx, b)
 				st.Add("gacha_batches", n)
 				if err != nil {
 					return out{Progress: n > 0}, err
 				}
+				st.Daily["weapon_ad"] = true
 				// Fresh pulls are only worth power once activated and levelled.
 				c, err := tasks.WeaponCultivate(ctx, b)
 				st.Add("cultivate_steps", c)

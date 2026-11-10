@@ -118,8 +118,11 @@ func petGacha(ctx context.Context, b *bot.Bot, reserve int) (steps, level int, e
 			return steps, 0, err
 		}
 	}
-	if badged(frame, petAdBadge) {
+	if badged(frame, petAdBadge) || screens.Visible(frame, screens.TPetAdReady) {
 		if err := b.Tap(ctx, petAdButton, "free pet ad draw"); err != nil {
+			return steps, 0, err
+		}
+		if _, err := b.WatchAd(ctx); err != nil {
 			return steps, 0, err
 		}
 		steps++

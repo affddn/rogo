@@ -321,6 +321,10 @@ const (
 	TPetDrawLevel2       = "pet_draw_level2"
 	TValuePackTitle      = "value_pack_title"
 	TValuePackClose      = "value_pack_close"
+	// An ad draw left today ("1/1"); without the Lifetime Card the ad
+	// buttons are not badged.
+	TPetAdReady    = "pet_ad_ready"
+	TWeaponAdReady = "weapon_ad_ready"
 )
 
 // Deny lists buttons that spend real money or lead to a shop. Bot refuses any

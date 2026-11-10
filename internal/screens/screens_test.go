@@ -296,3 +296,19 @@ func TestClassEmblems(t *testing.T) {
 		}
 	}
 }
+
+func TestAdTemplates(t *testing.T) {
+	for name, want := range map[string]string{
+		"ads/pet-gacha-ad-ready.png":    TPetAdReady,
+		"ads/pet-gacha-ad-used.png":     "",
+		"ads/weapon-gacha-ad-ready.png": TWeaponAdReady,
+		"ads/weapon-gacha-ad-used.png":  "",
+	} {
+		frame := load(t, name)
+		for _, tmpl := range []string{TPetAdReady, TWeaponAdReady} {
+			if got := Visible(frame, tmpl); got != (tmpl == want) {
+				t.Errorf("%s: %s visible %v", name, tmpl, got)
+			}
+		}
+	}
+}

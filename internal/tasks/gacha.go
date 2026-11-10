@@ -81,7 +81,8 @@ func WeaponGacha(ctx context.Context, b *bot.Bot) (batches int, err error) {
 }
 
 // The ad button left of Draw 1 Time: a free 10-draw a day, ad-free with
-// the Kafra Lifetime Card. Its badge shows while it is unused.
+// the Kafra Lifetime Card. Its badge shows while it is unused; without the
+// card it is not badged and its count reads 1/1 until the ad is watched.
 var (
 	gachaAdButton = image.Pt(132, 1033)
 	gachaAdBadge  = image.Pt(153, 1012)
@@ -89,10 +90,13 @@ var (
 
 // adDraw takes the day's free draw from the ad button if it is due.
 func adDraw(ctx context.Context, b *bot.Bot, frame image.Image) error {
-	if !badged(frame, gachaAdBadge) {
+	if !badged(frame, gachaAdBadge) && !screens.Visible(frame, screens.TWeaponAdReady) {
 		return nil
 	}
 	if err := b.Tap(ctx, gachaAdButton, "free ad draw"); err != nil {
+		return err
+	}
+	if _, err := b.WatchAd(ctx); err != nil {
 		return err
 	}
 	b.Log.Info("free ad draw taken")

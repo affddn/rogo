@@ -190,6 +190,27 @@ func (d *Device) AppFocused(ctx context.Context, pkg string) bool {
 	return strings.Contains(out, pkg)
 }
 
+// TopActivity returns the resumed activity on top as "package/class", or ""
+// when none is listed.
+func (d *Device) TopActivity(ctx context.Context) (string, error) {
+	out, err := d.Shell(ctx, "dumpsys activity activities | grep -m1 topResumedActivity")
+	if err != nil {
+		return "", err
+	}
+	return parseTopActivity(out), nil
+}
+
+// parseTopActivity pulls "package/class" out of a dumpsys line such as
+// "topResumedActivity=ActivityRecord{b8890ef u0 com.ggv.rogosea.aos/com.google.android.gms.ads.AdActivity t33}".
+func parseTopActivity(line string) string {
+	for _, f := range strings.Fields(line) {
+		if strings.Contains(f, "/") && !strings.Contains(f, "=") {
+			return strings.TrimSuffix(f, "}")
+		}
+	}
+	return ""
+}
+
 // Launch starts pkg's launcher activity. --pct-syskeys 0 lets monkey run on
 // devices without hardware keys (redroid), where it otherwise aborts.
 func (d *Device) Launch(ctx context.Context, pkg string) error {
