@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "guide",
+      "runtimeExecutable": "vp",
+      "runtimeArgs": ["dev", "--port", "5174", "--strictPort"],
+      "cwd": "apps/web",
+      "port": 5174
+    }
+  ]
+}

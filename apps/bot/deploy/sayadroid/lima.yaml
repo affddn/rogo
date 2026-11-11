@@ -1,0 +1,34 @@
+# sayadroid on an Apple Silicon Mac: an Ubuntu VM with the binder module that
+# redroid needs (Docker Desktop's kernel has none). adb lands on the Mac at
+# localhost:25555 (5555 would be picked up as an emulator by adb's scan).
+#
+#   limactl create --name=sayadroid apps/bot/deploy/sayadroid/lima.yaml && limactl start sayadroid
+#   limactl shell sayadroid sudo docker build -t sayadroid:13 - < apps/bot/deploy/sayadroid/Dockerfile
+#   limactl shell sayadroid sudo docker run -d --name sayadroid --privileged \
+#     --restart unless-stopped -p 5555:5555 -v sayadroid-data:/data sayadroid:13
+#
+# Graphics are software-rendered here: the game takes ~5 of the 6 cores.
+minimumLimaVersion: 2.0.0
+base:
+  - template:_images/ubuntu-24.04
+vmType: vz
+arch: aarch64
+cpus: 6
+memory: 6GiB
+disk: 40GiB
+mounts: []
+portForwards:
+  - guestPort: 5555
+    hostIP: 127.0.0.1
+    hostPort: 25555
+provision:
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y docker.io "linux-modules-extra-$(uname -r)"
+      echo binder_linux > /etc/modules-load.d/redroid.conf
+      echo 'options binder_linux devices="binder,hwbinder,vndbinder"' > /etc/modprobe.d/redroid.conf
+      modprobe binder_linux devices="binder,hwbinder,vndbinder"

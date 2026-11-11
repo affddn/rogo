@@ -1,0 +1,261 @@
+id	domain	effect	action
+4001	Session	session	Enter the selected realm using an issued publisher session; a second login can disconnect the first client.
+4003	Session	unclear	Send a serverBean string and receive a status; no player-facing purpose established.
+4005	Character	read	Load your private character snapshot: bag, gear, weapons, pets, cards, job, stage, quests and more. There is no target player ID.
+4009	Session	session	Send a heartbeat and receive server time and time-zone offset.
+4011	Character	spend	Change nickname and gender in the name editor; the rename fee depends on prior changes.
+4013	Character	read	Inspect a character's visible player card by ID, including displayed stats and loadout; not their private bag.
+4015	Session	read	Query the Tencent SDK report timestamp; not a gameplay reward or account export.
+4017	Character	change	Submit contact details to exclusive customer service; reply can include a reward. Personal information.
+4019	Character	read	Retrieve the character's previously submitted customer-service contact details. Personal information.
+4021	Quests & rewards	change	Save tutorial or guide-step progress.
+4023	Session	session	Resume a dropped game connection with the game's reconnect token, not the publisher login token.
+4025	Character	change	Change the character's gender; distinct from the name editor's combined nickname/gender request.
+4031	Character	change	Create a character on a realm with a nickname and gender; not required for an existing character.
+4041	Equipment	read	Query the signed-in character's equipment, slots, dismantle settings and active enchant scheme.
+4043	Equipment	change	Put a specific piece of equipment in a gear slot.
+4045	Equipment	spend	Spend enhancement materials to strengthen a gear slot once or towards a target level.
+4047	Equipment	spend	Attempt a gear-slot refinement with materials; protection is an explicit option.
+4049	Equipment	change	Dismantle selected equipment IDs for materials; the equipment is removed.
+4051	Equipment	change	Set auto-dismantle criteria, including quality and power thresholds.
+4053	Equipment	change	Activate an eligible refine mastery (resonance) tier.
+4055	Equipment	spend	Reroll enchantments for a slot and category; locks affect the cost.
+4057	Equipment	change	Lock or unlock an enchantment attribute line before rerolling.
+4059	Equipment	change	Set the desired enchant attributes for a slot and category.
+4061	Elite summon	spend	Summon an elite monster for gear drops using the configured item cost; supports a multi-drop multiplier.
+4063	Elite summon	claim	Request elite-summon rewards. The inspected summon UI also receives rewards directly from 4061.
+4065	Elite summon	spend	Pay the configured upgrade materials to advance an Elite Summon strengthening step.
+4067	Elite summon	change	Start the timed Elite Summon level upgrade after its strengthening steps are complete.
+4069	Elite summon	spend	Shorten the Elite Summon upgrade timer using items, or after a rewarded ad within its allowance.
+4071	Equipment	change	Switch to another saved enchantment scheme.
+4073	Equipment	change	Activate an eligible enhancement mastery (resonance) tier.
+4075	Equipment	read	Preview the power difference between two pieces of equipment without equipping them.
+4081	Inventory & idle	read	List items in the signed-in character's bag.
+4083	Inventory & idle	spend	Use bag items, including selected or random chests and idle-yield buffs; contents/count can be consumed.
+4085	Inventory & idle	read	Query recoverable power and its last recovery time; not the character's battle-power score.
+4087	Inventory & idle	read	Check the available online idle reward count before requesting a payout.
+4089	Inventory & idle	claim	Collect online idle rewards against accrued reward intervals and kills.
+4091	Character	read	List unlocked profile portraits and head frames.
+4093	Character	change	Set the profile portrait shown to other players.
+4095	Inventory & idle	spend	Collect Quick Idle income; the UI selects a free allowance, ticket or diamond cost depending on current state.
+4097	Inventory & idle	read	Inspect idle-yield bonus state without claiming the income.
+4101	Mail	read	Fetch inbox messages and attachment state; this does not collect the attachments.
+4103	Mail	claim	Collect attachments from an individual message or use the mailbox's Claim All.
+4105	Mail	change	Delete messages; the mailbox UI offers bulk deletion of eligible received mail.
+4107	Mail	change	Mark one or more messages as read; this is not the read-only inbox fetch.
+4117	Character	read	List the character's profile head frames.
+4119	Character	change	Equip an unlocked profile head frame.
+4121	Character	spend	Unlock a head frame; its configured requirement may include an item cost.
+4179	Quests & rewards	claim	Redeem an exchange code for prizes; this consumes a redemption, not a reward preview.
+4191	Shop & payments	spend	Buy a shop listing in a chosen quantity; price and free/ad eligibility depend on the listing.
+4193	Shop & payments	spend	Buy a stage pack by pack entry; the message alone does not specify its price.
+4201	Shop & payments	spend	Initiate a real-money recharge order; the reply supplies the order ID for the separate publisher payment flow.
+4203	Shop & payments	claim	Collect an unlocked first-recharge reward; this does not perform the recharge.
+4207	Shop & payments	claim	Claim a cumulative recharge milestone reward at the specified grade.
+4209	Quests & rewards	claim	Collect eligible season/battle pass rewards; the ordinary claim path uses buyLevel = 0.
+4213	Shop & payments	spend	Pay for a recharge product with in-game vouchers instead of opening platform checkout.
+4217	Shop & payments	spend	Buy a currently available triggered gift with diamonds or items; its real-money variant uses the recharge flow.
+4219	Shop & payments	claim	Claim daily rewards from an eligible monthly card.
+4221	Quests & rewards	change	Report a task-progress event by requirement type and count; this is not a reward claim.
+4223	Quests & rewards	claim	Claim an eligible task reward and update its activity counters.
+4225	Quests & rewards	claim	Claim an eligible daily task activity-score reward.
+4227	Quests & rewards	change	Report progress for specific task entries, including batched entries.
+4229	Quests & rewards	spend	Extend an eligible time-limited quest using its configured extension cost.
+4231	Quests & rewards	change	Skip guild-task progress after rewarded-ad completion, within the remaining skip allowance.
+4233	Quests & rewards	claim	Claim an eligible weekly task activity-score reward.
+4235	Quests & rewards	claim	Claim a Carnival task activity-score reward.
+4237	Quests & rewards	claim	Claim the reward for a completed time-limited quest.
+4239	Shop & payments	claim	Collect the monthly-card page's daily free reward, separate from cardholder rewards.
+4241	Session	unclear	Poll for a GMT message after a server notification; the reply is a success flag, not message contents.
+4247	Quests & rewards	claim	Claim an eligible guild daily-task activity-score reward.
+4261	Rankings	read	View the campaign-stage leaderboard and your own rank entry.
+4275	Teams	read	Get recommended players to invite for a team type and stage, excluding specified players.
+4301	Teams	social	Create a team PvE room for a dungeon stage.
+4303	Teams	social	Join an existing team by room code or from its invitation.
+4305	Teams	social	Leave the current team.
+4307	Teams	social	Remove a player from the room; the client checks that you are the host.
+4309	Teams	social	Disband a team, closing the room for its members.
+4313	Teams	social	Auto-join from a list of pending, unexpired team invitations.
+4317	Teams	social	Queue the team for matchmaking on an unlocked dungeon stage.
+4319	Teams	social	Cancel the team's matchmaking queue.
+4321	Teams	social	Accept or decline a proposed match before the ready check expires.
+4323	Teams	change	Choose the dungeon stage for the room as its host.
+4325	Teams	change	Toggle your own assist-only participation in team PvE.
+4341	Friends & chat	social	Send a channel message, private message or emote; chat limits apply.
+4343	Friends & chat	session	Subscribe to chat channels and request their history (zone, server, guild and team invites).
+4345	Friends & chat	read	Read the character's saved chat-filter settings.
+4347	Friends & chat	change	Save chat filters such as minimum level or filtering strangers.
+4349	Teams	social	Broadcast a team recruitment message or invite selected players to a stage.
+4351	Friends & chat	read	List blocked players.
+4353	Friends & chat	social	Block a player.
+4355	Friends & chat	social	Unblock a player.
+4361	Friends & chat	read	List the character's friends.
+4363	Friends & chat	social	Send a friend request to a player.
+4365	Friends & chat	social	Remove a player from the friend list.
+4367	Friends & chat	read	Get suggested players to add as friends.
+4369	Friends & chat	read	List incoming friend requests.
+4371	Friends & chat	social	Accept or reject pending friend requests; the UI can submit multiple IDs.
+4373	Friends & chat	read	Find candidate players by nickname or character ID; select a server and ID before requesting the detailed card.
+4431	Guild	read	Open your guild overview, including its hall members.
+4433	Guild	spend	Found a guild with a name, badge and recruitment policy; creation can cost diamonds or an item.
+4435	Guild	read	Look up a guild by ID or search by name.
+4437	Guild	social	Apply to a guild or join immediately if it allows it; the UI checks the post-leave cooldown.
+4439	Guild	read	List applicants awaiting guild admission.
+4441	Guild	social	Approve or refuse guild applications, including batch decisions where permitted.
+4443	Guild	social	Quit your guild, or expel a lower-ranking member if your guild role allows it.
+4445	Guild	spend	Edit guild name, badge, join policy, notice or recruitment slogan with permission; renaming can cost diamonds.
+4447	Guild	read	Get the guild member roster and roles.
+4449	Guild	read	Browse the list of guilds.
+4451	Guild	social	Change a member's guild role; assigning the president role transfers leadership.
+4453	Guild	social	Disband the guild for everyone; the UI presents a president-only control and confirmation.
+4455	Guild	read	Read the guild activity log.
+4457	Guild	spend	Donate to the guild for rewards: free, ad-backed or diamond-funded depending on the option and remaining allowance.
+4459	Guild	read	View today's Guild Bargain deal, including its current price.
+4461	Guild	spend	Cut the Guild Bargain price or buy the deal; the buy branch pays the current price unless it is zero.
+4463	Guild	social	Send a guild recruitment invitation; the request does not name a target player.
+4465	Guild boss	read	View Guild Hunt boss state and progress.
+4467	Guild boss	change	Add to the Guild Hunt boss buff count; the request does not specify how the use is earned.
+4469	Rankings	read	View guilds ranked by battle power.
+4471	Guild	social	Quick-join an available guild; the UI checks the post-leave cooldown.
+4473	Guild boss	combat	Start a Guild Hunt boss fight.
+4475	Guild boss	combat	Settle an existing Guild Hunt fight with its fight ID, run statistics, score and stage damage.
+4477	Guild boss	combat	Sweep Guild Hunt for rewards using an eligible sweep opportunity.
+4479	Rankings	read	View individual Guild Hunt scores and your own placement.
+4481	Platform	unclear	Submit signed/encrypted platform Game Club data and receive club data entries; SEA player workflow not identified.
+4483	Guild boss	claim	Claim an eligible Guild Hunt score reward.
+4485	Guild	read	Inspect guild technology and research state.
+4487	Guild	spend	Start the next guild skill research level in an available slot; configured research material costs may apply.
+4489	Guild	spend	Speed up guild research with acceleration items or via the official rewarded-ad flow.
+4491	Quests & rewards	claim	Claim the reward for an eligible feature preview.
+4493	Rankings	read	View Guild Hunt scores grouped by guild rather than by player.
+4495	Guild boss	claim	Open a Guild Hunt loot chest and collect its rewards.
+4501	Character	change	Activate an eligible character title.
+4503	Character	change	Equip a title or remove the displayed title.
+4505	Guild	read	List outstanding guild help requests and today's assist-reward count.
+4507	Guild	social	Request guild help speeding up skill research or an Elite Summon upgrade.
+4509	Guild	social	Help a guildmate with a specific outstanding request.
+4511	Platform	change	Opt in to or out of WeChat offline notifications; SEA client availability not established.
+4513	Guild	read	Check guild help cooldowns, daily counts and remaining research or Elite Summon upgrade time.
+4521	Character	change	Select a new job or advance to a qualifying career tier.
+4523	Character	change	Switch the active career specialization to an unlocked build.
+4525	Character	spend	Commit skill-point allocations to raise skills in a career build.
+4527	Character	change	Request advancement for a career stage; the observed job-transfer UI uses the separate career-change command.
+4529	Character	spend	Commit available attribute points to selected stats in the current build.
+4531	Character	change	Reset the current build's allocated attribute points for reassignment.
+4533	Character	change	Save the ordered skill loadout for the build (including empty slots); this does not cast a combat skill.
+4535	Character	change	Activate an eligible awakening tier for the character.
+4537	Rankings	read	View the zone battle-power leaderboard and your placement.
+4539	Rankings	read	View the server battle-power leaderboard and your placement.
+4541	Rankings	social	Give a thumbs-up to a player on the battle-power leaderboard.
+4601	Weapons	read	List your weapons and identify the equipped one.
+4603	Weapons	spend	Activate weapons using collected copies; the quick-activate button requests all eligible qualities.
+4605	Weapons	change	Equip an activated weapon by quality.
+4609	Weapons	spend	Raise the star rank of a weapon using copies of that quality.
+4615	Weapons	claim	Claim an earned Weapon Master achievement reward.
+4621	Weapons	spend	Draw weapons; normal draws use the selected cost and there are separate free and ad draw modes.
+4623	Weapons	claim	Claim earned weapon-summon level rewards.
+4625	Weapons	spend	Bulk star-up already activated weapons with spare copies (the Quick Awaken confirmation).
+4627	Pets	change	Swap your fighting pet with the pet in a selected guard slot.
+4631	Pets	read	View your pet roster and formation.
+4633	Pets	spend	Activate one pet using enough copies of that pet.
+4635	Pets	spend	Level up a selected pet using copies.
+4637	Pets	spend	Draw pets; normal draws use the selected cost and there are separate free and ad draw modes.
+4639	Pets	spend	Activate all pets for which you have the required copies.
+4641	Pets	spend	Level up eligible pets in bulk using their copies.
+4643	Pets	change	Deploy a pet as your fighting pet, or clear the fighting slot.
+4645	Pets	change	Assign a pet to a guard position, or clear that position.
+4647	Pets	claim	Claim earned pet-summon level rewards.
+4649	Pets	change	Apply the one-click pet formation, updating the fighting pet and roster assignments.
+4651	Cards	read	View your own card collection, equipped slots and collection-bonus progress.
+4653	Cards	spend	Activate one card when you have enough copies.
+4655	Cards	spend	Spend copies to raise one activated card's star rank.
+4657	Cards	spend	Activate eligible cards in bulk using copies.
+4659	Cards	spend	Raise star ranks of eligible cards in bulk using copies.
+4661	Cards	change	Insert a chosen card into an equipment card slot.
+4663	Cards	change	Remove the card from a chosen equipment slot.
+4665	Cards	claim	Claim earned card collection bonuses.
+4667	Cards	spend	Combine shards of a selected card into card copies.
+4671	Costumes	read	View your unlocked costume pieces, equipped appearance and collection progress.
+4673	Costumes	spend	Unlock a costume piece; depending on the piece, this uses an item or requires a career tier or weapon quality.
+4675	Costumes	change	Equip an unlocked costume piece.
+4677	Costumes	change	Remove the equipped costume piece in a selected category.
+4679	Friends & chat	read	Check online status for player IDs; the private-chat list batches up to 50 per call.
+4681	Arena	read	Fetch a saved fight report for an arena replay using its report ID and client build.
+4683	Collection Gear	read	View your Collection Gear inventory, equipped slots and enhancement state.
+4685	Collection Gear	spend	Spend shards to activate one Collection Gear piece.
+4687	Collection Gear	spend	Spend shards to raise the star rank of one active Collection Gear piece.
+4689	Collection Gear	spend	Activate eligible Collection Gear pieces in bulk using shards.
+4691	Collection Gear	spend	Star up eligible Collection Gear pieces in bulk using shards.
+4693	Collection Gear	spend	Combine shards for a selected Collection Gear piece.
+4695	Collection Gear	change	Equip a Collection Gear piece in a compatible slot; the UI checks career and base level.
+4697	Collection Gear	change	Unequip the Collection Gear piece in a selected slot.
+4699	Collection Gear	spend	Spend enhancement materials to upgrade an equipped slot, not the piece itself.
+4701	Collection Gear	spend	Enhance eligible equipped slots in bulk using enhancement materials.
+4703	Collection Gear	claim	Claim an earned Collection Gear collection bonus.
+4705	Loadouts	change	Switch the active card-slot preset.
+4707	Loadouts	change	Rename one enchant, card, pet or Collection Gear preset.
+4709	Loadouts	change	Switch the active pet formation preset.
+4711	Loadouts	change	Switch the active Collection Gear preset.
+4713	Loadouts	change	Apply a combined loadout set across enchantments, cards, pets and Collection Gear.
+4715	Loadouts	change	Rename a combined loadout set.
+4717	Collection Gear	read	Check progress and counts for a selected Collection Gear summon pool.
+4719	Collection Gear	spend	Draw from a common or career Collection Gear pool; normal draws use tickets and the UI also offers an ad mode.
+4721	Collection Gear	claim	Claim earned draw-progress rewards for the selected Collection Gear pool.
+4723	Settings	read	Read the character's saved push-notification preferences.
+4725	Settings	change	Save push-notification preferences; the client sets the idle-reward notification toggle here.
+4727	Quests & rewards	claim	Claim the one-time review-prompt reward; opening the platform review screen is a separate SDK action.
+4813	Teams	read	Retrieve a list of team IDs; the reply is not a roster of team members.
+5001	Campaign	combat	Challenge a campaign stage; receive the fight ID and simulation arguments.
+5003	Campaign	combat	Settle that campaign fight with its ID, stage and battle statistics; the reply contains the outcome, progress and any rewards.
+5011	Resource realms	combat	Sweep a resource stage for rewards rather than playing the fight.
+5013	Resource realms	combat	Enter a resource-stage challenge and obtain its fight ID and arguments.
+5015	Resource realms	combat	Settle the resource-stage fight; first-clear and ordinary rewards are separate in the reply.
+5017	Resource realms	combat	Request a bulk sweep by resource type rather than sweeping a single stage.
+5031	World boss	read	View Baphomet's HP ratio, your best score, tier, rank and weekly settlement time.
+5033	World boss	combat	Start a world-boss challenge and receive the fight ID and simulation arguments.
+5035	World boss	combat	Settle the world-boss fight with the damage dealt; receive the score, rank and rewards.
+5037	Rankings	read	View the world-boss leaderboard and your own placement.
+5041	MVP	read	View MVP challenge records, including cleared difficulty and sweep progress.
+5043	MVP	combat	Challenge an MVP at a selected difficulty stage.
+5045	MVP	combat	Settle the MVP fight and update the challenge record; new clears can return first-clear rewards.
+5047	MVP	combat	Sweep an eligible MVP stage for the requested count; the reply reports how many daily sweeps were used.
+5051	Endless Tower	read	View current and next floor, daily challenges and sweeps, and whether a fight is still unsettled.
+5053	Endless Tower	combat	Start the next tower challenge; the response identifies the floor and fight.
+5055	Endless Tower	combat	Settle a tower floor. The reply can end the run or supply fight data for the next floor.
+5057	Endless Tower	combat	Sweep the tower for rewards using the selected sweep type; free and rewarded-ad allowances are tracked separately.
+5059	Rankings	read	View Endless Tower rankings and your own entry.
+5061	Arena	read	Open the arena overview: score, tier, rank, season timing, allowances and top players.
+5063	Arena	combat	Challenge an arena opponent, including a counterattack linked to a report. The start reply can already contain the result.
+5065	Arena	combat	Submit an arena fight completion. A send method exists; normal arena settlement in this build displays the cached start result.
+5067	Arena	change	Refresh the opponent list. The UI enforces a refresh allowance, season check and cooldown.
+5069	Arena	spend	Buy a specified number of arena tickets; not the command to start a challenge.
+5071	Arena	claim	Claim eligible arena score awards and update reward times.
+5073	Arena	read	Request arena match candidates; this is separate from challenging an opponent or rerolling the list.
+5075	Rankings	read	View the arena score leaderboard and your own entry.
+5077	Arena	read	View recent arena battle logs; the UI separately clears its local new-record indicator.
+6001	Team dungeons	combat	Start a team PvE stage. The direct reply is empty; team fight notifications carry further state.
+6003	Team dungeons	read	Fetch the fight ID and simulation arguments for a team dungeon by team ID.
+6005	Team dungeons	combat	Settle the dungeon fight and receive updated personal team-PvE data, reward type and rewards.
+6009	Team dungeons	spend	Request the team PvE item allowance; the body has a use_diamond option, so this is not unconditionally free.
+6011	Team dungeons	claim	Claim eligible team-dungeon achievement rewards.
+6013	Rankings	read	View team PvE rankings and your own entry.
+6015	Team dungeons	read	Check which listed players have unlocked a dungeon stage, optionally checking online status.
+7001	Events	claim	Claim event-task rewards for a selected event and group.
+7003	Events	spend	Buy a listing in an activity shop, by event and goods entry.
+7005	Events	claim	Request an activity reward with event-specific arguments.
+7007	Events	claim	Claim a sign-in reward by entry; receive the updated sign-in state.
+7009	Events	spend	Unlock a sign-in activity using its configured item purchase; the cash variant goes through recharge instead.
+7021	Events	spend	Draw from a summon activity; count, free and rewarded-ad variants depend on the event and eligibility.
+7023	Events	claim	Claim a summon event's earned score rewards.
+7025	Events	spend	Buy a quantity of goods in the summon-event shop.
+7027	Events	claim	Draw on the film-summon wheel using an eligible rewarded ad or the account's ad-skip benefit.
+7029	Events	claim	Claim an earned film-summon progress reward.
+9001	GM & testing	restricted	Development fight test that returns fight arguments; not an ordinary player action.
+9003	GM & testing	restricted	General GM console operation; not a player command interface.
+9005	GM & testing	restricted	Equipment-specific GM operation; not normal equipment management.
+9007	GM & testing	restricted	Administrative adjustment of one task's progress; distinct from normal progress reporting.
+9009	GM & testing	restricted	Recharge test operation, not a player purchase or proof of payment.
+9011	GM & testing	restricted	Refresh data for the GM interface, not the normal character bootstrap.
+9013	GM & testing	restricted	Inspect diagnostic attribute and battle-power calculations.
+9015	GM & testing	restricted	Update tasks by class in the GM tools, not an ordinary claim.
+9017	GM & testing	restricted	Start a test PvP simulation for chosen players, not normal arena matchmaking.

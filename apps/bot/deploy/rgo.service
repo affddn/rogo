@@ -1,0 +1,17 @@
+# systemd unit for a Linux VPS. Copy the repo to /opt/rogo (bin/rgo built with
+# `make linux`), put the VMOS keys in /opt/rogo/.env, then:
+#   sudo cp apps/bot/deploy/rgo.service /etc/systemd/system/ && sudo systemctl enable --now rgo
+[Unit]
+Description=rgo Ragnarok GO automation
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/rogo
+ExecStart=/opt/rogo/bin/rgo run
+Restart=always
+RestartSec=30
+User=rogo
+
+[Install]
+WantedBy=multi-user.target

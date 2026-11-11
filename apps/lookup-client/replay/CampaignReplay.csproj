@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ReplayAssets>$(MSBuildThisFileDirectory)../bin/replay</ReplayAssets>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Cross"><HintPath>../bin/Cross.dll</HintPath></Reference>
+    <Reference Include="GameProto"><HintPath>../bin/GameProto.dll</HintPath></Reference>
+    <Reference Include="DefaultEcs"><HintPath>$(ReplayAssets)/DefaultEcs.dll</HintPath></Reference>
+    <Reference Include="Google.Protobuf"><HintPath>$(ReplayAssets)/Google.Protobuf.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ReplayAssets)/Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,58 @@
+import type { Profile } from "./profile";
+
+/** The reference fight that calibrates the stage model: an Archer's stats read from Attribute Details
+ * (10 Nov 2026), which lost 6-10 with ~96% of the enemy HP gone. It is model data, never offered as a
+ * character: it anchors the estimates before a player gives their own progress, and its stat mix is the
+ * template for characters set up from power alone. */
+export const REFERENCE: Profile = {
+  id: "reference",
+  name: "Reference build",
+  spec: 41,
+  level: 55,
+  power: 8_380_700,
+  damage: "physical",
+  statsSource: "entered",
+  attributes: {
+    base: { str: 1, agi: 7, vit: 4, int: 3, dex: 5, luk: 6 },
+    alloc: { str: 0, agi: 57, vit: 0, int: 0, dex: 46, luk: 23 },
+    free: 26,
+  },
+  normalShare: 0.5,
+  cards: {},
+  skills: {},
+  progress: { cleared: "6-9", stuck: { stage: "6-10", done: 0.96 } },
+  stats: {
+    patk: 138_700,
+    matk: 33_900,
+    pdef: 15_300,
+    mdef: 15_000,
+    hp: 510_300,
+    atkFreq: 3.19,
+    haste: 0.255,
+    crit: 15.7,
+    skillCrit: 14.7,
+    critDmg: 1.5,
+    critShield: 0,
+    hit: 60,
+    flee: 77,
+    pen: 0,
+    penRes: 0,
+    dmgBoost: 0.171,
+    dmgRed: 0.008,
+    normalAtkBoost: 0.15,
+    skillBoost: 0,
+    physBoost: 0.04,
+    magicBoost: 0,
+    minionUp: 0.03,
+    minionRed: 0,
+    bossUp: 0,
+    bossRed: 0,
+    finalDmgBoost: 0,
+    finalDmgRed: 0,
+    refinePatk: 9_587,
+    refinePdef: 1_416,
+    refineMatk: 2_784,
+    refineMdef: 1_397,
+    gearAtkPct: 0,
+  },
+};

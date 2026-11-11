@@ -13,3 +13,15 @@
 .env
 .env.*
 !.env.example
+
+# workspace tool output and local checkouts
+node_modules/
+dist/
+.vite/
+.vite-temp/
+.viteplus/
+__pycache__/
+/.claude/worktrees/
+/scratch/rgo
+
+*.tsbuildinfo

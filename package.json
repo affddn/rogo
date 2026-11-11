@@ -1,0 +1,25 @@
+{
+  "name": "rogo-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp run @rogo/web#dev",
+    "build": "vp run -F '@rogo/*' build",
+    "test": "vp run -F '@rogo/*' test",
+    "lint": "vp lint",
+    "preview": "vp run @rogo/web#preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.18.0",
+      "onFail": "download"
+    }
+  }
+}

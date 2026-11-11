@@ -1,0 +1,10 @@
+{
+  "name": "@rogo/lookup-client",
+  "private": true,
+  "scripts": {
+    "demo": "uv run wire_probe.py demo",
+    "decode": "uv run wire_probe.py decode",
+    "login": "uv run login_smoke.py",
+    "actions": "python3 catalog/browse.py"
+  }
+}
