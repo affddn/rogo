@@ -19,9 +19,12 @@ afterEach(() => {
 
 function harness(game: FakeGame, options: Partial<ProgressOptions> = {}) {
   const lock = { busy: false };
-  const stats = { inFlight: 0, maxInFlight: 0, scans: 0, prepares: 0, executes: 0 };
+  const stats = { inFlight: 0, maxInFlight: 0, scans: 0, prepares: 0, executes: 0, keepalives: 0 };
   const track =
-    <A extends unknown[], T>(name: "scans" | "prepares" | "executes", fn: (...a: A) => T) =>
+    <A extends unknown[], T>(
+      name: "scans" | "prepares" | "executes" | "keepalives",
+      fn: (...a: A) => T,
+    ) =>
     async (...a: A) => {
       stats[name] += 1;
       stats.inFlight += 1;
@@ -39,6 +42,7 @@ function harness(game: FakeGame, options: Partial<ProgressOptions> = {}) {
     scan: track("scans", () => game.scan()),
     prepare: track("prepares", (s) => game.review(s)),
     execute: track("executes", (s) => game.run(s)),
+    keepalive: track("keepalives", () => ({ serverTime: 0 })),
   };
   const keepAlive = vi.fn();
   const job = new ProgressionJob({ ...DEFAULT_PROGRESS_OPTIONS, ...options }, transport, {
@@ -134,21 +138,21 @@ it("re-arms levers only at the named percentage rise", async () => {
   expect(risenEnough("123456789012345678901234", "119860000000000000000000")).toBe(true);
 });
 
-it("says once per stall that idle income keeps being collected while waiting", async () => {
+it("says once per stall that every rescan settles idle income", async () => {
   const game = new FakeGame(1);
   game.skillless.add("2,1");
   const { job } = harness(game);
   await run(30 * 60_000);
   const log = texts(job);
   expect(log.filter((t) => t.includes("no skills allocated"))).toHaveLength(1);
-  expect(log.filter((t) => t.includes("idle income is collected on each rescan"))).toHaveLength(1);
+  expect(log.filter((t) => t.includes("settled by the server on every rescan"))).toHaveLength(1);
   expect(log.filter((t) => t.startsWith("Stalled")).length).toBeGreaterThan(3);
   job.requestStop();
 });
 
 it("keeps job memory bounded over a long session", async () => {
   const game = new FakeGame(400);
-  game.idleEvery = 2;
+  game.settleEvery = 2;
   let n = 0;
   game.outcome = (s, g) => {
     if (s.kind === "claim") return Number(s.key.split(":")[1]) % 4 === 0 ? "reject" : "ok";
@@ -195,36 +199,143 @@ it("after a class switch: stats → skills → loadout → boss", async () => {
   job.requestStop();
 });
 
-it("stalled: idle income raises power and the boss is retried", async () => {
+it("stalled: idle income settled by rescans raises power and the boss is retried", async () => {
   const game = new FakeGame(1);
-  game.idleEvery = 2;
+  game.settleEvery = 2;
   game.outcome = (s, g) => (s.command === 5001 ? (g.pw >= 1 ? "win" : "lose") : "ok");
-  game.onIdle = (g) => {
-    if (g.idleClaims === 8) g.progress();
+  game.onSettle = (g) => {
+    if (g.settlements === 8) g.progress();
   };
   const { job } = harness(game);
-  await run(30 * 60_000);
-  const sent = game.sent;
-  const rise = sent.findIndex((k, i) => k === "idle:4089" && sent.slice(0, i + 1).filter((x) => x === "idle:4089").length === 8);
-  expect(rise).toBeGreaterThan(0);
-  expect(sent.slice(rise + 1)).toContain("fight:5001:1");
+  await run(6 * 60 * 60_000);
+  expect(game.settlements).toBeGreaterThanOrEqual(8);
   expect(job.status().counters.clears).toBe(1);
-  // Every due claim was taken: "seen" never suppressed a later revision.
-  expect(game.idleClaims).toBeGreaterThanOrEqual(8);
+  expect(game.sent.filter((k) => k.startsWith("idle:"))).toEqual([]); // no online idle claim
+  const log = texts(job);
+  expect(
+    log.filter((t) => t.startsWith("Idle income settled by this scan: 60 s, 3 reward kinds.")),
+  ).toHaveLength(game.settlements);
   job.requestStop();
 });
 
-it("keeps collecting idle income on each rescan while stalled", async () => {
-  const game = new FakeGame(1);
-  game.idleEvery = 2;
+it("nothing about idle income is logged when a scan settled none", async () => {
+  const game = new FakeGame(0);
   const { job } = harness(game);
-  await run(5 * 60_000);
-  const before = game.idleClaims;
-  await run(30 * 60_000);
-  expect(job.status().stall).not.toBeNull();
-  expect(game.idleClaims).toBeGreaterThan(before + 5);
-  expect(game.sent.filter((k) => k !== "idle:4089").length).toBe(12); // nothing else repeated
+  await run(10 * 60_000);
+  expect(texts(job).some((t) => t.startsWith("Idle income settled"))).toBe(false);
   job.requestStop();
+});
+
+const waits = (job: ProgressionJob) =>
+  texts(job)
+    .map((t) => /Rescanning in (\d+) (s|min)/.exec(t))
+    .filter((m) => m !== null)
+    .map((m) => Number(m![1]) * (m![2] === "min" ? 60 : 1));
+
+it("a lost retry does not restart the short waits; a confirmed claim does", async () => {
+  const game = new FakeGame(1);
+  const { job } = harness(game);
+  await run(10 * 60_000);
+  const stalled = waits(job);
+  expect(stalled.at(-1)).toBe(480);
+  game.smallRise(); // new fingerprint: the boss is retried on the original build, and lost
+  await run(30 * 60_000);
+  expect(game.sent.at(-1)).toBe("fight:5001:1");
+  expect(waits(job).slice(stalled.length)).not.toContain(30);
+  const before = waits(job).length;
+  game.chores.push("claim:new");
+  await run(60 * 60_000);
+  expect(game.sent.at(-1)).toBe("claim:new");
+  expect(waits(job)[before]).toBe(30); // first wait after the confirmed claim
+  job.requestStop();
+});
+
+async function until(check: () => boolean, step = 1_000, limit = 6 * 60 * 60_000) {
+  for (let t = 0; t < limit && !check(); t += step) await run(step);
+  expect(check()).toBe(true);
+}
+
+it("stalled waits grow to 30 minutes and stay there", async () => {
+  const game = new FakeGame(0);
+  const { job } = harness(game);
+  await run(2 * 60 * 60_000);
+  expect(waits(job).slice(0, 8)).toEqual([30, 60, 120, 240, 480, 900, 1800, 1800]);
+  expect(texts(job)).toContainEqual(expect.stringContaining("Rescanning in 30 min."));
+  job.requestStop();
+});
+
+it("a 30-minute wait sends one keepalive a minute and exactly one scan at the end", async () => {
+  const game = new FakeGame(0);
+  const { job, stats } = harness(game);
+  await until(() => waits(job).at(-1) === 1800);
+  const { scans, keepalives } = { ...stats };
+  const due = job.status().nextScanAt!;
+  expect(due - Date.now()).toBe(1_800_000);
+  expect(texts(job).at(-1)).toContain("kept alive by heartbeats");
+  await run(1_800_000 - 1);
+  expect(stats.scans).toBe(scans);
+  expect(stats.keepalives - keepalives).toBe(29); // at 1, 2, … 29 min; the 30th minute is the rescan
+  await run(1 + 2_000); // the usual 2 s gap before a scan
+  expect(stats.scans).toBe(scans + 1);
+  expect(stats.keepalives - keepalives).toBe(29);
+  expect(stats.maxInFlight).toBe(1);
+  job.requestStop();
+});
+
+it("stop during a long wait returns at once and sends nothing after", async () => {
+  const game = new FakeGame(0);
+  const { job, stats } = harness(game);
+  await until(() => waits(job).at(-1) === 1800);
+  await run(10 * 60_000);
+  const sent = { ...stats };
+  job.requestStop();
+  expect(job.status().state).toBe("stopped");
+  await run(2 * 60 * 60_000);
+  expect(stats).toEqual(sent);
+  await job.done;
+});
+
+it("a failed keepalive ends the job as a session end, not an uncertain outcome", async () => {
+  const game = new FakeGame(0);
+  const { job, transport } = harness(game);
+  transport.keepalive = async () => {
+    throw new Error("session_lost");
+  };
+  await run(10 * 60_000);
+  expect(job.status()).toMatchObject({ state: "stopped", uncertain: false });
+  expect(job.status().stopReason).toContain("keepalive heartbeat failed (session_lost)");
+});
+
+it("a time cap wakes the job on time, not at the end of a long wait", async () => {
+  const game = new FakeGame(0);
+  const { job } = harness(game, { maxMinutes: 20 });
+  await run(3 * 60 * 60_000);
+  const status = job.status();
+  expect(status.stopReason).toContain("time cap");
+  expect(status.endedAt! - status.startedAt).toBeGreaterThanOrEqual(20 * 60_000);
+  expect(status.endedAt! - status.startedAt).toBeLessThan(20 * 60_000 + 5_000);
+});
+
+it("the server day rollover shortens a long wait", async () => {
+  const game = new FakeGame(0);
+  game.dayEndAt = Date.now() + 20 * 60_000;
+  const { job, stats } = harness(game);
+  await until(() => texts(job).some((t) => t.includes("server day rolls over")));
+  const at = stats.scans;
+  await until(() => stats.scans > at, 1_000, 30 * 60_000);
+  // The rescan lands just after the rollover (plus the one-minute margin), not up to 15 min later.
+  expect(Date.now() - (game.dayEndAt - 86_400_000)).toBeLessThanOrEqual(61_000 + 3_000);
+  job.requestStop();
+});
+
+it("a skipped step does not count toward the action cap", async () => {
+  const game = new FakeGame(0, 4);
+  game.outcome = (s) => (s.key === "claim:0" || s.key === "claim:1" ? "skip" : "ok");
+  const { job } = harness(game, { maxActions: 2 });
+  await run(60_000);
+  expect(game.sent).toEqual(["claim:0", "claim:1", "claim:2", "claim:3"]);
+  expect(job.status()).toMatchObject({ state: "stopped", counters: { actions: 2 } });
+  expect(job.status().stopReason).toContain("action cap");
 });
 
 it("a rejected lever is not offered again and the run continues", async () => {

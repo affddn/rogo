@@ -478,12 +478,11 @@ it("never offers skill allocation or loadout changes, which belong to the progre
   expect(keys).not.toContain(skills.key);
   expect(keys).not.toContain(loadout.key);
 });
-it("leaves session-timed idle income and Quick Idle to the progression job", () => {
-  const online = step("idle:4089", "idle", { command: 4089, idle: { type: "online", ticks: 2 } });
+it("leaves the free Quick Idle to the progression job", () => {
   const fast = step("idle:4095", "idle", {
     command: 4095,
     idle: { type: "fast", freeBefore: 0, paidBefore: 0 },
   });
-  const plan = makeAutoPlan(scan([online, fast, step("claim")]), { ...rewards, mode: "fights" });
+  const plan = makeAutoPlan(scan([fast, step("claim")]), { ...rewards, mode: "fights" });
   expect(previewAuto(plan).map((s) => s.key)).toEqual(["claim"]);
 });

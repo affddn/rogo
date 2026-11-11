@@ -15,6 +15,8 @@ export type JobStatus = {
   power: string | null;
   stall: { stage: number; origin: { career: number; spec: number }; since: number } | null;
   current: string | null;
+  // When a waiting job rescans next (ms since epoch), or null.
+  nextScanAt: number | null;
   stopReason: string | null;
   uncertain: boolean;
 };

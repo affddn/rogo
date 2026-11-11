@@ -29,6 +29,7 @@ function job(id = "a", state: JobStatus["state"] = "running"): JobStatus {
     power: "1000",
     stall: null,
     current: null,
+    nextScanAt: null,
     stopReason: state === "stopped" ? "Stopped on request." : null,
     uncertain: false,
   };

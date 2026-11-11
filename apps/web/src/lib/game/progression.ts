@@ -22,7 +22,13 @@ export const DEFAULT_PROGRESS_OPTIONS: ProgressOptions = {
   assist: false,
 };
 // Rescans must land inside both five-minute idle timers (bridge and Python worker).
-export const WAIT_STEPS_MS = [30_000, 60_000, 120_000, 240_000];
+// Waits grow while nothing changes, then stay at 30 min; the server settles up to 12 h of idle
+// time per scan, so long waits lose nothing. The runner keeps the session alive meanwhile.
+export const WAIT_STEPS_MS = [30_000, 60_000, 120_000, 240_000, 480_000, 900_000, 1_800_000];
+// Keepalive cadence during a wait (runner): twice the client's 30 s heartbeat interval.
+export const KEEPALIVE_MS = 60_000;
+// Rescan this long after the server day rolls over, so daily resets have happened.
+export const DAY_MARGIN_MS = 60_000;
 export const MAX_CONSECUTIVE_REJECTIONS = 3;
 export const MIN_ACTION_GAP_MS = 2_000;
 // Build-change levers re-arm only after the original build's power rises by this many percent
@@ -87,7 +93,7 @@ export type JobEvent =
   | { type: "failed"; code: string; sent: boolean }
   | { type: "woke"; now: number }
   | { type: "stopRequested" }
-  | { type: "sessionEnded" };
+  | { type: "sessionEnded"; reason?: string };
 export type LogLevel = "info" | "decision" | "action" | "result" | "wait" | "warn" | "error";
 export type LogDraft = {
   level: LogLevel;
@@ -102,6 +108,9 @@ export type JobState = {
   phase: "idle" | "scanning" | "preparing" | "executing" | "waiting" | "stopped";
   options: ProgressOptions;
   startedAt: number;
+  // Last time an event reported, and when the server day next rolls over (both ms).
+  now: number;
+  dayEndsAt: number | null;
   identity: { sessionId: string; characterId: string; realm: string } | null;
   expected: BuildId | null;
   stopRequested: boolean;
@@ -132,6 +141,8 @@ export function initialState(options: ProgressOptions, now: number): JobState {
     phase: "idle",
     options,
     startedAt: now,
+    now,
+    dayEndsAt: null,
     identity: null,
     expected: null,
     stopRequested: false,
@@ -204,16 +215,9 @@ function choose(s: JobState, scan: Scan, day: string, log: LogDraft[]): Planned 
   // 1. Free rewards and listings first: they can raise level and power.
   const claim = fresh.find((st) => st.kind === "claim" && unseen(st));
   if (claim) return pick(claim, "claim", "Ready reward; claims can raise level or power.");
-  // Idle income (paced by the helper's session clock) and a free Quick Idle raise level too.
+  // A free Quick Idle raises level too. Idle income itself is settled by every scan.
   const idle = fresh.find((st) => st.kind === "idle" && unseen(st));
-  if (idle)
-    return pick(
-      idle,
-      "idle",
-      idle.idle?.type === "fast"
-        ? "A free Quick Idle is left today."
-        : "Idle income is due (battery-saving rate).",
-    );
+  if (idle) return pick(idle, "idle", "A free Quick Idle is left today.");
   const offer = s.options.freeListings
     ? fresh.find((st) => st.kind === "offer" && unseen(st))
     : undefined;
@@ -395,15 +399,37 @@ function reject(s: JobState, log: LogDraft[], scan = true): Reduction {
   }
   return scan ? rescan(s, log) : wait(s, log);
 }
+export function duration(ms: number) {
+  const s = Math.round(ms / 1000);
+  if (s < 90) return `${s} s`;
+  const m = Math.round(s / 60);
+  if (m < 90) return `${m} min`;
+  return `${Math.floor(m / 60)} h ${m % 60} min`;
+}
+
 function wait(s: JobState, log: LogDraft[], reason?: string): Reduction {
   if (s.stopRequested) return stop(s, "Stopped on request. No further actions will be sent.");
   s.phase = "waiting";
   s.plan = null;
-  const ms = WAIT_STEPS_MS[Math.min(s.waitIndex, WAIT_STEPS_MS.length - 1)];
+  let ms = WAIT_STEPS_MS[Math.min(s.waitIndex, WAIT_STEPS_MS.length - 1)];
   s.waitIndex += 1;
+  let why = "";
+  // Never sleep past an optional time cap or the server's day rollover (daily resets).
+  const cap = s.options.maxMinutes ? s.startedAt + s.options.maxMinutes * 60_000 - s.now : Infinity;
+  const day = s.dayEndsAt !== null ? s.dayEndsAt + DAY_MARGIN_MS - s.now : Infinity;
+  if (cap < ms && cap <= day) {
+    ms = cap;
+    why = " (the time cap)";
+  } else if (day < ms) {
+    ms = day;
+    why = " (just after the server day rolls over)";
+  }
+  ms = Math.max(1_000, Math.round(ms));
   log.push({
     level: "wait",
-    text: `${reason ?? "Nothing useful to do right now."} Rescanning in ${Math.round(ms / 1000)} s.`,
+    text:
+      `${reason ?? "Nothing useful to do right now."} Rescanning in ${duration(ms)}${why}.` +
+      (ms > KEEPALIVE_MS ? " The session is kept alive by heartbeats meanwhile." : ""),
   });
   return { state: s, command: { type: "wait", ms }, log };
 }
@@ -417,6 +443,9 @@ function capReason(s: JobState, now: number) {
 }
 
 function onScanned(s: JobState, scan: Scan, now: number): Reduction {
+  s.now = now;
+  if (typeof scan.nextDayIn === "number" && scan.nextDayIn > 0)
+    s.dayEndsAt = now + scan.nextDayIn * 1000;
   const log: LogDraft[] = [];
   if (!hasAutoIdentity(scan))
     return stop(s, "The helper returned a scan without session identity. Reconnect.", "error");
@@ -465,6 +494,17 @@ function onScanned(s: JobState, scan: Scan, now: number): Reduction {
   if (s.power !== null && powerOf(scan.character.power) > powerOf(s.power))
     log.push({ level: "info", text: `Power rose to ${scan.character.power}.` });
   s.power = scan.character.power;
+  // Each scan reads the login data, which settles idle time since the previous read.
+  const off = scan.character.offline;
+  if (off)
+    log.push({
+      level: "info",
+      text:
+        `Idle income settled by this scan: ${off.duration} s, ${off.items} reward kind${off.items === 1 ? "" : "s"}` +
+        (off.levelBefore != null && off.levelAfter != null && off.levelBefore !== off.levelAfter
+          ? `; level ${off.levelBefore} → ${off.levelAfter}.`
+          : "."),
+    });
   if (s.stall && onBuild(scan, s.stall.origin)) s.stall.basis = scan.character.power;
   prune(s, scan);
   // One notice per stall (and per build for the skills notice), not one per wait.
@@ -486,11 +526,13 @@ function onScanned(s: JobState, scan: Scan, now: number): Reduction {
       text: "This build has no skills allocated and no skill allocation was offered (no unspent points, or the build couldn't be read). Its fight is likely to lose; the job tries anyway (fights are free).",
     });
   if (!plan) {
-    if (s.stall && stallNote("idle"))
+    if (s.stall && stallNote("idle")) {
+      const max = scan.character.offline?.max;
       log.push({
         level: "info",
-        text: "While stalled, idle income is collected on each rescan at the battery-saving rate (one claim per 15 s at most); the boss is retried when level or power changes.",
+        text: `Idle income is settled by the server on every rescan${max ? ` (up to ${Math.round(max / 3600)} h at a time)` : ""}, so waiting longer between rescans loses nothing. The boss is retried when level or power changes.`,
       });
+    }
     const reason = s.stall
       ? "Stalled: every available build has fought this boss and dailies are done. Waiting for level or power to change."
       : "Nothing eligible right now.";
@@ -575,7 +617,8 @@ function onExecuted(s: JobState, run: Run): Reduction {
       "error",
     );
   }
-  s.counters.actions += 1;
+  // Only sends the server answered count toward the action cap; a skip sent nothing that counts.
+  if (r.status === "confirmed" || r.status === "rejected") s.counters.actions += 1;
   const summary = { status: r.status, command: r.command, won: r.won, note: r.note };
   const log: LogDraft[] = [];
   const say = (level: LogLevel, text: string) =>
@@ -596,7 +639,9 @@ function onExecuted(s: JobState, run: Run): Reduction {
     return rescan(s, log);
   }
   s.rejections = 0;
-  s.waitIndex = 0;
+  // Only a confirmed action that can change the build or power restarts the short waits;
+  // a lost fight changes neither, so a stalled job keeps backing off between rescans.
+  if (!((p.purpose === "campaign" || p.purpose === "fight") && r.won === false)) s.waitIndex = 0;
   const change = p.step.development;
   if (change && ["class", "advance", "spec"].includes(change.type)) {
     const state = r.buildState;
@@ -679,9 +724,10 @@ export function reduce(prev: JobState, event: JobEvent): Reduction {
         s.uncertain = true;
         return stop(s, "The game session ended during an action; its outcome is unknown.", "error");
       }
-      return stop(s, "The game session ended.");
+      return stop(s, event.reason ?? "The game session ended.");
     case "woke":
       if (s.phase !== "waiting") break;
+      s.now = event.now;
       {
         const cap = capReason(s, event.now);
         if (cap) return stop(s, cap);

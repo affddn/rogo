@@ -280,6 +280,11 @@ export default function AutomationPage() {
               {new Date(job.stall.since).toLocaleTimeString(undefined, { hour12: false })}
             </Stat>
           )}
+          {job?.nextScanAt && (
+            <Stat label="Next rescan">
+              {new Date(job.nextScanAt).toLocaleTimeString(undefined, { hour12: false })}
+            </Stat>
+          )}
           {job?.current && (
             <div className="col-span-2 grid gap-0.5 sm:col-span-3">
               <dt className="text-xs text-muted-foreground uppercase">Current step</dt>
@@ -427,8 +432,8 @@ export default function AutomationPage() {
           <ul className="list-disc space-y-1 pl-5 text-sm">
             <li>Free actions only: no premium spending, paid refills, ads or purchases.</li>
             <li>
-              It collects idle income at the game's battery-saving rate and a Quick Idle only while
-              a free one is left.
+              Idle income is settled by each rescan (no claim is sent); it takes a Quick Idle only
+              while a free one is left.
             </li>
             <li>
               It spends unused stat and skill points on the active build and fills empty skill

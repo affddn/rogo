@@ -69,6 +69,7 @@ function sessionTransport(worker: RogoWorker): JobTransport {
       if (!Array.isArray(v.steps) || !isRecord(v.normalized)) throw new Error("worker_protocol");
       return v as never;
     },
+    keepalive: () => worker.operation("prepare", -9102, {}),
     execute: async (selection) => {
       const v = record(await worker.operation("execute", -9101, selection, "routine.run"));
       if (!Array.isArray(v.receipts)) throw new Error("worker_protocol");

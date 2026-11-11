@@ -201,3 +201,15 @@ it("disconnecting ends the job; another browser cannot read or stop it", async (
   expect(after.body.job.stopReason).toContain("session ended");
   server.emit("close");
 });
+
+it("the worker keepalive is not reachable as a browser gateway command", async () => {
+  shared.game = new FakeGame(0);
+  const { call, server } = bridge();
+  await call(op, { operation: "character.sync", payload: {} });
+  for (const operation of ["gateway.prepare", "gateway.execute"]) {
+    const r = await call(op, { operation, command: -9102, payload: {} });
+    expect(r.code).toBe(400);
+  }
+  expect(shared.calls).not.toContain("prepare:-9102");
+  server.emit("close");
+});

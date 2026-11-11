@@ -24,8 +24,6 @@ const BASE: Constants = {
   Chores: 1,
   Dailies: 1,
   Faults: 1,
-  // Idle income falling due once more during the run (a recurring chore).
-  Idle: 1,
   CheckTried: true,
   CheckStop: true,
   CheckRisen: true,
@@ -326,8 +324,7 @@ TSpec == TInit /\\ [][TStep]_<<vars, i>>
 function checkTrace(states: string[], constants: Constants) {
   return check({
     source: traceModule(states),
-    // The fake game's traces never add idle income, so none needs to fall due.
-    config: config({ ...BASE, Idle: 0, ...constants }, "TSpec", SAFETY),
+    config: config({ ...BASE, ...constants }, "TSpec", SAFETY),
     loadModule: (name) => (name === "ProgressionJob" ? spec : undefined),
   });
 }

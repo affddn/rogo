@@ -3,6 +3,7 @@ import type { JobStatus, LogEntry } from "../src/lib/game/automation-feed.ts";
 import type { Run, Scan, Selection, Step } from "../src/lib/game/daily-types.ts";
 import {
   initialState,
+  KEEPALIVE_MS,
   MIN_ACTION_GAP_MS,
   reduce,
   type Command,
@@ -17,6 +18,8 @@ export type JobTransport = {
   scan(): Promise<Scan>;
   prepare(selection: Selection): Promise<{ steps: Step[]; normalized: Selection }>;
   execute(selection: Selection): Promise<Run>;
+  // One heartbeat through the session worker; keeps it and the game session alive during waits.
+  keepalive(): Promise<unknown>;
 };
 export type JobHooks = {
   // Shares the bridge's single-operation lock; false while an interactive request holds it.
@@ -40,6 +43,9 @@ export class ProgressionJob {
   private wake?: () => void;
   private timer?: NodeJS.Timeout;
   private inFlight = 0;
+  private nextScanAt: number | null = null;
+  // Keepalives sent during waits (tests read this).
+  keepalives = 0;
   readonly done: Promise<void>;
   private now: () => number;
   private transport: JobTransport;
@@ -91,6 +97,7 @@ export class ProgressionJob {
           }
         : null,
       current: s.plan?.step.title ?? null,
+      nextScanAt: this.nextScanAt,
       stopReason: s.stopReason,
       uncertain: s.uncertain,
     };
@@ -174,6 +181,49 @@ export class ProgressionJob {
     }
   }
 
+  // Sleeps until the rescan is due, sending a keepalive every KEEPALIVE_MS. Stop interrupts at once;
+  // a failed keepalive is a session end (only a heartbeat was sent, so nothing is uncertain).
+  private async wait(ms: number): Promise<JobEvent | null> {
+    const until = this.now() + ms;
+    this.nextScanAt = until;
+    this.hooks.keepAlive();
+    try {
+      while (this.active) {
+        const left = until - this.now();
+        if (left <= 0) break;
+        await this.sleep(Math.min(KEEPALIVE_MS, left));
+        if (!this.active) return null;
+        if (until - this.now() <= 0) break;
+        if (!(await this.lock())) {
+          if (!this.active) return null;
+          continue; // the lock stayed busy: skip this keepalive, the next one is a minute away
+        }
+        this.inFlight += 1;
+        this.hooks.keepAlive();
+        try {
+          await this.transport.keepalive();
+          this.keepalives += 1;
+        } catch (e) {
+          const code =
+            e instanceof Error && /^[a-z][a-z_0-9]{1,65}$/.test(e.message)
+              ? e.message
+              : "keepalive_failed";
+          return {
+            type: "sessionEnded",
+            reason: `The game session ended while waiting: the keepalive heartbeat failed (${code}).`,
+          };
+        } finally {
+          this.inFlight -= 1;
+          this.hooks.release();
+          this.hooks.keepAlive();
+        }
+      }
+      return this.active ? { type: "woke", now: this.now() } : null;
+    } finally {
+      this.nextScanAt = null;
+    }
+  }
+
   private async loop() {
     await Promise.resolve();
     let command = this.apply({ type: "start" });
@@ -201,9 +251,7 @@ export class ProgressionJob {
           (run) => ({ type: "executed", run }),
         );
       } else if (command.type === "wait") {
-        this.hooks.keepAlive();
-        await this.sleep(command.ms);
-        event = { type: "woke", now: this.now() };
+        event = await this.wait(command.ms);
       }
       if (!event || !this.active) break;
       command = this.apply(event);

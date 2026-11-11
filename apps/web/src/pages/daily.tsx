@@ -31,7 +31,7 @@ const modeLinks: [string, string][] = [
 ];
 const otherRewards: [number, string, string][] = [
   [4063, "Elite summon reward", "Schema only; ordinary gear drops arrive with the summon."],
-  [4089, "Online idle income", "Collected by Automation at the battery-saving rate, not here."],
+  [4089, "Online idle income", "Not sent: each account scan already settles idle time as offline income."],
   [4179, "Exchange code", "Supply your own code."],
   [
     4207,

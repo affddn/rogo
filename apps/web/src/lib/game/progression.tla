@@ -13,7 +13,7 @@
 EXTENDS Integers, FiniteSets
 
 \* Faults bounds how many rejections/skips/failed reads the environment may produce in a run.
-CONSTANTS NStages, MaxPw, MaxNudge, MaxRej, Chores, Dailies, Faults, Idle,
+CONSTANTS NStages, MaxPw, MaxNudge, MaxRej, Chores, Dailies, Faults,
           CheckTried, CheckStop, CheckRisen, CheckResetOnce, CheckLock
 
 Lines == {1, 2}
@@ -35,14 +35,13 @@ VARIABLES
   tried, pulled, resets, blocked, rej,
   stage, build, pw, nudge, rebuilt, chores, dailies,     \* game and bridge
   interactive, meddled, faults,
-  bad,                                                   \* flags raised when a property breaks
-  idleLeft                                               \* idle income that may still fall due
+  bad                                                    \* flags raised when a property breaks
 
 job == <<phase, plan, stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
          tried, pulled, resets, blocked, rej>>
 game == <<stage, build, pw, nudge, rebuilt, chores, dailies, interactive, meddled, faults>>
 ghost == <<bad>>
-vars == <<job, game, ghost, idleLeft>>
+vars == <<job, game, ghost>>
 
 FP == <<build, pw, nudge, rebuilt[build]>>
 
@@ -52,7 +51,7 @@ Init ==
   /\ tried = {} /\ pulled = [k \in LeverKeys |-> -1] /\ resets = {} /\ blocked = {} /\ rej = 0
   /\ stage = 1 /\ build = <<1, 1>> /\ pw = 0 /\ nudge = 0 /\ rebuilt = [b \in Builds |-> FALSE]
   /\ chores = Chores /\ dailies = Dailies /\ interactive = FALSE /\ meddled = FALSE /\ faults = 0
-  /\ bad = {} /\ idleLeft = Idle
+  /\ bad = {}
 
 StopJob == phase' = "stopped" /\ plan' = NoPlan
 \* After a confirmed or rejected action the job rescans, unless a stop was requested meanwhile.
@@ -101,54 +100,48 @@ StepKey(p) ==
 Start ==
   /\ phase = "idle" /\ (CheckLock => ~interactive) /\ phase' = "scanning"
   /\ UNCHANGED <<plan, stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 InteractiveBegin ==
   /\ ~interactive /\ (CheckLock => phase \in {"idle", "stopped"})
   /\ interactive' = TRUE
-  /\ UNCHANGED <<job, stage, build, pw, nudge, rebuilt, chores, dailies, meddled, faults, ghost, idleLeft>>
+  /\ UNCHANGED <<job, stage, build, pw, nudge, rebuilt, chores, dailies, meddled, faults, ghost>>
 InteractiveEnd ==
   /\ interactive /\ interactive' = FALSE
-  /\ UNCHANGED <<job, stage, build, pw, nudge, rebuilt, chores, dailies, meddled, faults, ghost, idleLeft>>
+  /\ UNCHANGED <<job, stage, build, pw, nudge, rebuilt, chores, dailies, meddled, faults, ghost>>
 RequestStop ==
   /\ phase \notin {"idle", "stopped"} /\ ~stopReq /\ stopReq' = TRUE
   /\ IF phase = "waiting" THEN StopJob ELSE UNCHANGED <<phase, plan>>
   /\ UNCHANGED <<uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 SessionEnd ==
   /\ phase \notin {"idle", "stopped"} /\ StopJob
   /\ uncertain' = (uncertain \/ phase = "executing")
   /\ UNCHANGED <<stopReq, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 \* Level/power rises from outside the ladder; new points can make a rebuild worthwhile again.
 \* The job only observes power when a scan is answered, so raising it while a scan is pending
 \* or while waiting covers every change it can see.
 Progress ==
   /\ phase \in {"idle", "scanning", "waiting"} /\ pw < MaxPw /\ pw' = pw + 1 /\ rebuilt' \in {rebuilt, [b \in Builds |-> FALSE]}
-  /\ UNCHANGED <<job, stage, build, nudge, chores, dailies, interactive, meddled, faults, ghost, idleLeft>>
+  /\ UNCHANGED <<job, stage, build, nudge, chores, dailies, interactive, meddled, faults, ghost>>
 \* A small rise (e.g. a claimed reward): new fingerprint, same band.
 Nudge ==
   /\ phase \in {"idle", "scanning", "waiting"} /\ nudge < MaxNudge /\ nudge' = nudge + 1
-  /\ UNCHANGED <<job, stage, build, pw, rebuilt, chores, dailies, interactive, meddled, faults, ghost, idleLeft>>
-\* Idle income falls due as time passes (the helper paces it at one claim per 15 s): another
-\* chore, recurring rather than a fixed budget. Idle bounds how often it recurs in a checked run.
-IdleDue ==
-  /\ phase \in {"scanning", "waiting"} /\ idleLeft > 0
-  /\ idleLeft' = idleLeft - 1 /\ chores' = chores + 1
-  /\ UNCHANGED <<job, stage, build, pw, nudge, rebuilt, dailies, interactive, meddled, faults, bad>>
+  /\ UNCHANGED <<job, stage, build, pw, rebuilt, chores, dailies, interactive, meddled, faults, ghost>>
 \* Another client changes the class while the job waits.
 Meddle ==
   /\ ~meddled /\ phase = "waiting" /\ meddled' = TRUE /\ build' \in Builds \ {build}
-  /\ UNCHANGED <<job, stage, pw, nudge, rebuilt, chores, dailies, interactive, faults, ghost, idleLeft>>
+  /\ UNCHANGED <<job, stage, pw, nudge, rebuilt, chores, dailies, interactive, faults, ghost>>
 
 \* ---- Job: scanned ----
 ScanMismatch ==
   /\ phase = "scanning" /\ Mismatch /\ StopJob
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 ScanStopped ==
   /\ phase = "scanning" /\ ~Mismatch /\ stopReq /\ StopJob /\ expected' = Exp1
   /\ UNCHANGED <<stopReq, uncertain, jstage, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 ScanDecide ==
   /\ phase = "scanning" /\ ~Mismatch /\ ~stopReq
   /\ LET ch == Choice(St1, Tr1, Pl1, Or1, Bs1) IN
@@ -157,13 +150,13 @@ ScanDecide ==
   /\ jstage' = stage /\ stall' = St1 /\ tried' = Tr1 /\ pulled' = Pl1 /\ origin' = Or1
   /\ basis' = Bs1 /\ expected' = Exp1
   /\ resets' = IF St1 = 0 THEN {} ELSE resets
-  /\ UNCHANGED <<stopReq, uncertain, stallId, blocked, rej, game, ghost, idleLeft>>
+  /\ UNCHANGED <<stopReq, uncertain, stallId, blocked, rej, game, ghost>>
 \* A read that failed without ending the session: count it, then wait and rescan.
 ScanFail ==
   /\ faults < Faults /\ faults' = faults + 1 /\ phase = "scanning" /\ rej' = rej + 1
   /\ IF rej + 1 >= MaxRej \/ stopReq THEN StopJob ELSE phase' = "waiting" /\ plan' = NoPlan
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, stage, build, pw, nudge, rebuilt, chores, dailies, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, stage, build, pw, nudge, rebuilt, chores, dailies, interactive, meddled, ghost>>
 
 \* ---- Job: prepared (the last point before anything is sent) ----
 \* Stages only increase and pw never falls, so `tried` (pruned per stage) and `pulled` (last
@@ -183,7 +176,7 @@ PrepareOk ==
                      \cup Flag(plan[1] = "campaign" /\ plan[2] \in tried, "dupFight")
                      \cup Flag(plan[1] = "lever" /\ pulled[plan[2]] = basis, "dupLever")
                      \cup Flag(IsRebuild(plan) /\ <<stall, build>> \in resets, "dupReset")
-  /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis, blocked, rej, game, idleLeft>>
+  /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis, blocked, rej, game>>
 \* Review failed before sending: never offer that step again this run.
 PrepareFail ==
   /\ faults < Faults /\ faults' = faults + 1 /\ phase = "preparing"
@@ -193,14 +186,14 @@ PrepareFail ==
   /\ rej' = rej + 1
   /\ IF rej + 1 >= MaxRej THEN StopJob ELSE Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost>>
 
 \* The reviewed step no longer matched the scan: nothing sent, rescan.
 PrepareChanged ==
   /\ faults < Faults /\ faults' = faults + 1 /\ phase = "preparing" /\ rej' = rej + 1
   /\ IF rej + 1 >= MaxRej THEN StopJob ELSE Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, stage, build, pw, nudge, rebuilt, chores, dailies, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, stage, build, pw, nudge, rebuilt, chores, dailies, interactive, meddled, ghost>>
 
 \* ---- Job: executed (the environment picks the outcome) ----
 Moved(p) ==
@@ -216,12 +209,12 @@ ExecOk ==
   /\ dailies' = IF plan[1] = "daily" THEN dailies - 1 ELSE dailies
   /\ rej' = 0 /\ Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, stage, pw, nudge, interactive, meddled, faults, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, stage, pw, nudge, interactive, meddled, faults, ghost>>
 ExecWin ==
   /\ phase = "executing" /\ plan[1] = "campaign" /\ stage' = stage + 1 /\ rej' = 0 /\ Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
                  tried, pulled, resets, blocked, build, pw, nudge, rebuilt, chores, dailies,
-                 interactive, meddled, faults, ghost, idleLeft>>
+                 interactive, meddled, faults, ghost>>
 \* A defeat opens a stall on the build that fought, unless one is already open on this stage.
 ExecLose ==
   /\ phase = "executing" /\ plan[1] = "campaign" /\ rej' = 0 /\ Continue
@@ -229,7 +222,7 @@ ExecLose ==
      THEN stallId' = stallId + 1 /\ stall' = stallId + 1 /\ origin' = expected
           /\ basis' = plan[2][2][2]
      ELSE UNCHANGED <<stall, stallId, origin, basis>>
-  /\ UNCHANGED <<stopReq, uncertain, jstage, expected, tried, pulled, resets, blocked, game, ghost, idleLeft>>
+  /\ UNCHANGED <<stopReq, uncertain, jstage, expected, tried, pulled, resets, blocked, game, ghost>>
 ExecReject ==
   /\ faults < Faults /\ faults' = faults + 1 /\ phase = "executing"
   /\ blocked' = IF plan[1] \in {"lever", "revert"} THEN blocked \cup {plan[2]} ELSE blocked
@@ -238,7 +231,7 @@ ExecReject ==
   /\ rej' = rej + 1
   /\ IF rej + 1 >= MaxRej THEN StopJob ELSE Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost>>
 \* The worker refused the selection before sending (e.g. the scan expired).
 ExecNotSent ==
   /\ faults < Faults /\ faults' = faults + 1 /\ phase = "executing"
@@ -248,12 +241,12 @@ ExecNotSent ==
   /\ rej' = rej + 1
   /\ IF rej + 1 >= MaxRej THEN StopJob ELSE Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost>>
 \* Unknown outcome (timeout, lost connection, incomplete receipt): stop, never replay.
 ExecUncertain ==
   /\ phase = "executing" /\ uncertain' = TRUE /\ StopJob
   /\ UNCHANGED <<stopReq, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 
 \* The helper skipped the step because eligibility changed after review.
 ExecSkipped ==
@@ -262,24 +255,24 @@ ExecSkipped ==
   /\ dailies' = IF plan[1] = "daily" THEN dailies - 1 ELSE dailies
   /\ Continue
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, stage, build, pw, nudge, rebuilt, interactive, meddled, ghost>>
 \* The helper stopped the step itself (e.g. no local battle engine): stop without retrying.
 ExecHalt ==
   /\ phase = "executing" /\ StopJob
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 
 Woke ==
   /\ phase = "waiting" /\ phase' = "scanning" /\ plan' = NoPlan
   /\ UNCHANGED <<stopReq, uncertain, jstage, expected, stall, stallId, origin, basis,
-                 tried, pulled, resets, blocked, rej, game, ghost, idleLeft>>
+                 tried, pulled, resets, blocked, rej, game, ghost>>
 
 JobNext == ScanMismatch \/ ScanStopped \/ ScanDecide \/ ScanFail
            \/ PrepareOk \/ PrepareFail \/ PrepareChanged
            \/ ExecOk \/ ExecWin \/ ExecLose \/ ExecReject \/ ExecNotSent \/ ExecSkipped
            \/ ExecUncertain \/ ExecHalt \/ Woke
 EnvNext == Start \/ InteractiveBegin \/ InteractiveEnd \/ RequestStop \/ SessionEnd
-           \/ Progress \/ Nudge \/ IdleDue \/ Meddle
+           \/ Progress \/ Nudge \/ Meddle
 Next == JobNext \/ EnvNext
 Spec == Init /\ [][Next]_vars /\ WF_vars(JobNext) /\ WF_vars(InteractiveEnd)
 

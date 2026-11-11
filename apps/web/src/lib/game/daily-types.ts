@@ -49,16 +49,15 @@ export type Step = {
   stageEntry?: number | null;
   nextStage?: number | null;
   assist?: { type: "watch" | "join"; day: string; used: number } | null;
-  // Session-timed idle income (battery-saving mirror) or the free Quick Idle; progression job only.
-  idle?:
-    | { type: "online"; ticks: number }
-    | { type: "fast"; freeBefore: number; paidBefore: number }
-    | null;
+  // The free Quick Idle; progression job only.
+  idle?: { type: "fast"; freeBefore: number; paidBefore: number } | null;
 };
 export type Scan = {
   scanId: string;
   sessionId: string;
   checkedAt: number;
+  // Seconds until the server's day rolls over (server-local midnight), from the server clock.
+  nextDayIn?: number | null;
   character: {
     id: string;
     name: string;
@@ -66,6 +65,14 @@ export type Scan = {
     level: number;
     power: string;
     build?: CharacterBuild | null;
+    // Idle time this scan's login-data read settled as offline income (numbers only), or null.
+    offline?: {
+      duration: number;
+      max: number;
+      items: number;
+      levelBefore?: number | null;
+      levelAfter?: number | null;
+    } | null;
   };
   steps: Step[];
   warnings: string[];
@@ -98,7 +105,7 @@ export type Receipt = {
   cleanupUncertain?: boolean;
   buildState?: { career: number; spec: number };
   substeps?: { command: number; reply: number; status: "confirmed" }[];
-  idle?: { times?: number; kills?: number; pending?: number; freeUsed?: number; paidUsed?: number };
+  idle?: { freeUsed?: number; paidUsed?: number };
   idleDuration?: number;
   level?: { before?: number; after?: number } | null;
 };

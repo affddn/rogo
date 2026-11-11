@@ -27,11 +27,13 @@ export class FakeGame {
   rebuilt = new Set<string>();
   // Builds ("line,spec") whose scan reports no allocated skills.
   skillless = new Set<string>();
-  // Opt-in: idle income becomes claimable every `idleEvery` scans (the helper paces it by clock).
-  idleEvery = 0;
-  idleClaims = 0;
-  lastIdleScan = 0;
-  onIdle: (game: FakeGame) => void = () => {};
+  // Opt-in: like the live server, a scan's login-data read settles idle time as offline income
+  // every `settleEvery` scans; `onSettle` lets a test raise power with it.
+  settleEvery = 0;
+  // Opt-in: the server day rolls over at this time (ms, Date.now clock), then every 24 h.
+  dayEndAt: number | null = null;
+  settlements = 0;
+  onSettle: (game: FakeGame) => void = () => {};
   // Opt-in: a build switched to for the first time arrives with unused stat and skill points.
   buildChores = false;
   pending = new Map<string, ("stats" | "skills" | "loadout")[]>();
@@ -66,17 +68,6 @@ export class FakeGame {
     const b = this.build;
     for (const key of this.chores)
       steps.push({ key, revision: "r", kind: "claim", command: 4223, title: key, detail: "" });
-    if (this.idleEvery && this.scans - this.lastIdleScan >= this.idleEvery)
-      steps.push({
-        key: "idle:4089",
-        revision: `i${this.idleClaims}`,
-        kind: "idle",
-        command: 4089,
-        title: "Collect idle income",
-        detail: "",
-        autoGroup: "idle",
-        idle: { type: "online", ticks: 1 },
-      });
     if (this.stage <= this.stages)
       steps.push({
         key: `fight:5001:${this.stage}`,
@@ -159,17 +150,25 @@ export class FakeGame {
   }
   scan(): Scan {
     this.scans += 1;
+    let offline: Scan["character"]["offline"] = null;
+    if (this.settleEvery && this.scans % this.settleEvery === 0) {
+      this.settlements += 1;
+      this.onSettle(this);
+      offline = { duration: 60, max: 43_200, items: 3, levelBefore: 50, levelAfter: 50 };
+    }
     const b = this.build;
     return {
       scanId: `scan-${this.scans}`,
       sessionId: this.sessionId,
       checkedAt: 1_000_000,
+      nextDayIn: this.nextDayIn(),
       character: {
         id: "1",
         name: "Fixture",
         realm: "realm",
         level: 50,
         power: this.power(),
+        offline,
         build: {
           career: careerOf(b[0]),
           spec: specOf(b),
@@ -187,6 +186,11 @@ export class FakeGame {
       warnings: [],
       maxSteps: 24,
     };
+  }
+  nextDayIn() {
+    if (this.dayEndAt === null) return null;
+    while (this.dayEndAt <= Date.now()) this.dayEndAt += 86_400_000;
+    return Math.ceil((this.dayEndAt - Date.now()) / 1000);
   }
   review(selection: Selection) {
     const step = this.steps().find((s) => s.key === selection.keys[0]);
@@ -216,11 +220,7 @@ export class FakeGame {
       this.drop(step.key);
       return { receipts: [receipt], notRun: 0 };
     }
-    if (step.kind === "idle") {
-      this.idleClaims += 1;
-      this.lastIdleScan = this.scans;
-      this.onIdle(this);
-    } else if (step.command === 5001) {
+    if (step.command === 5001) {
       receipt.won = result === "win";
       if (receipt.won) this.stage += 1;
     } else if (step.development) {
