@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Plugin } from "vite-plus";
 import { readCharacter } from "@rogo/game/connected-character";
 import { OperationReview } from "./operation-review.ts";
+import { parseOptions, ProgressionJob, type JobTransport } from "./progression-job.ts";
 import { acquireDevice } from "./vmos-device.ts";
 import { isRecord, RogoWorker } from "./rogo-worker.ts";
 
@@ -49,6 +50,32 @@ const messages: Record<string, string> = {
     "The server started a fight with unexpected inputs or a different build. No result was submitted.",
   worker_protocol: "The local gateway helper returned an unexpected response.",
 };
+
+// Light shape checks on worker replies; the decision core trusts these types.
+function sessionTransport(worker: RogoWorker): JobTransport {
+  const record = (v: unknown) => {
+    if (!isRecord(v)) throw new Error("worker_protocol");
+    return v;
+  };
+  return {
+    scan: async () => {
+      const v = record(await worker.operation("prepare", -9100, {}));
+      if (typeof v.scanId !== "string" || !Array.isArray(v.steps) || !isRecord(v.character))
+        throw new Error("worker_protocol");
+      return v as never;
+    },
+    prepare: async (selection) => {
+      const v = record(await worker.operation("prepare", -9101, selection));
+      if (!Array.isArray(v.steps) || !isRecord(v.normalized)) throw new Error("worker_protocol");
+      return v as never;
+    },
+    execute: async (selection) => {
+      const v = record(await worker.operation("execute", -9101, selection, "routine.run"));
+      if (!Array.isArray(v.receipts)) throw new Error("worker_protocol");
+      return v as never;
+    },
+  };
+}
 
 const localAddresses = ["127.0.0.1", "::1", "::ffff:127.0.0.1"];
 function localOrigin(server: Server | null, req: IncomingMessage) {
@@ -150,6 +177,9 @@ export function rogoBridge(): Plugin {
       const dir = path.join(root, "apps/lookup-client");
       const review = new OperationReview();
       let session: RogoWorker | undefined;
+      // One progression job per owned session. Its log stays readable by the same browser after it ends.
+      let job: ProgressionJob | undefined;
+      let jobOwner = "";
       let owner = "",
         activeRealm = "",
         activeName = "";
@@ -160,6 +190,7 @@ export function rogoBridge(): Plugin {
       let idle: NodeJS.Timeout | undefined;
       function stop() {
         clearTimeout(idle);
+        job?.end();
         review.clear();
         session?.stop();
         session = undefined;
@@ -167,7 +198,7 @@ export function rogoBridge(): Plugin {
       }
       function keepAlive() {
         clearTimeout(idle);
-        idle = setTimeout(stop, 5 * 60 * 1000);
+        idle = setTimeout(() => (job?.active ? keepAlive() : stop()), 5 * 60 * 1000);
         idle.unref();
       }
       server.httpServer?.once("close", () => {
@@ -182,6 +213,10 @@ export function rogoBridge(): Plugin {
         const isOwner = () =>
           !!owner && (req.headers.cookie ?? "").split(/;\s*/).includes("rogo_local=" + owner);
         const isConnected = () => !!session && !session.ended;
+        const ownsJob = () =>
+          !!job &&
+          !!jobOwner &&
+          (req.headers.cookie ?? "").split(/;\s*/).includes("rogo_local=" + jobOwner);
         if (req.method === "GET" && route === "/api/rogo/status")
           return send(res, 200, {
             available: enabled,
@@ -200,6 +235,19 @@ export function rogoBridge(): Plugin {
           return send(res, 503, {
             error: "Start the guide with ROGO_CONNECT=1 on a loopback address.",
           });
+        if (req.method === "GET" && route === "/api/rogo/automation") {
+          if (req.headers["x-rogo-connect"] !== "1")
+            return send(res, 403, { error: "A same-origin request is required." });
+          if (!job || !ownsJob())
+            return send(res, 200, { job: null, lines: [], next: 0, dropped: false });
+          const after = Number(
+            new URL(req.url ?? "", "http://local").searchParams.get("after") ?? 0,
+          );
+          return send(res, 200, {
+            job: job.status(),
+            ...job.lines(Number.isSafeInteger(after) && after >= 0 ? after : 0),
+          });
+        }
         if (route !== "/api/rogo/operations" || req.method !== "POST")
           return send(res, 404, { error: "Unknown operation endpoint." });
         if (
@@ -213,6 +261,47 @@ export function rogoBridge(): Plugin {
         } catch {
           return send(res, 400, { error: "Invalid or oversized JSON. Quote large integer IDs." });
         }
+        // Automation start/stop never wait on the lock the job itself holds between requests.
+        if (input.operation === "automation.start" || input.operation === "automation.stop") {
+          if (!isRecord(input.payload))
+            return send(res, 400, { error: "Expected automation options." });
+          if (input.operation === "automation.stop") {
+            if (!job || !ownsJob())
+              return send(res, 404, { error: "No automation owned by this browser." });
+            job.requestStop();
+            return send(res, 200, { job: job.status() });
+          }
+          if (!isConnected() || !isOwner())
+            return send(res, 403, { error: "Connect this browser to your character first." });
+          if (input.confirm !== "automation.start")
+            return send(res, 409, { error: "Confirm the automation options before starting." });
+          const options = parseOptions(input.payload);
+          if (!options) return send(res, 400, { error: "Invalid automation options." });
+          if (job?.active) return send(res, 409, { error: "The automation is already running." });
+          if (busy) return send(res, 409, { error: "Another operation is in progress." });
+          review.clear();
+          const worker = session!;
+          jobOwner = owner;
+          job = new ProgressionJob(options, sessionTransport(worker), {
+            // A dead worker is not "busy": its next request fails with session_closed and ends the job.
+            acquire: () => (busy ? false : (busy = true)),
+            release: () => {
+              busy = false;
+            },
+            keepAlive: () => {
+              if (session === worker && !worker.ended) keepAlive();
+            },
+          });
+          return send(res, 200, { job: job.status() });
+        }
+        if (
+          job?.active &&
+          input.operation !== "session.disconnect" &&
+          input.operation !== "gateway.prepare"
+        )
+          return send(res, 409, {
+            error: "The progression automation is running. Stop it before other operations.",
+          });
         if (busy) return send(res, 409, { error: "Another operation is in progress." });
         busy = true;
         const connected = isConnected(),
