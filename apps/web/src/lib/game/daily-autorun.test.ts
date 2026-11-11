@@ -456,3 +456,34 @@ it("uses at most the remaining invitations reviewed even if a later scan reports
   expect(api.execute).toHaveBeenCalledTimes(1);
   expect(wait).not.toHaveBeenCalled();
 });
+it("never offers skill allocation or loadout changes, which belong to the progression job", () => {
+  const skills = step("skills:21", "build", {
+    command: 4525,
+    development: { type: "skills", spec: 21, career: 221, line: 200 },
+  });
+  const loadout = step("loadout:21", "build", {
+    command: 4533,
+    development: { type: "loadout", spec: 21, career: 221, line: 200 },
+  });
+  const stats = development("stats", 21, 221);
+  const initial = buildScan([skills, loadout, stats, boss(101)]);
+  const plan = makeAutoPlan(initial, {
+    ...rewards,
+    stats: "rebuild",
+    advanceClass: true,
+    campaignStages: 1,
+  });
+  const keys = previewAuto(plan).map((s) => s.key);
+  expect(keys).toContain(stats.key);
+  expect(keys).not.toContain(skills.key);
+  expect(keys).not.toContain(loadout.key);
+});
+it("leaves session-timed idle income and Quick Idle to the progression job", () => {
+  const online = step("idle:4089", "idle", { command: 4089, idle: { type: "online", ticks: 2 } });
+  const fast = step("idle:4095", "idle", {
+    command: 4095,
+    idle: { type: "fast", freeBefore: 0, paidBefore: 0 },
+  });
+  const plan = makeAutoPlan(scan([online, fast, step("claim")]), { ...rewards, mode: "fights" });
+  expect(previewAuto(plan).map((s) => s.key)).toEqual(["claim"]);
+});

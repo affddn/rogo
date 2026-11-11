@@ -1,4 +1,4 @@
-import type { Receipt, Review, Run, Scan, Step } from "./daily-types";
+import type { Receipt, Review, Run, Scan, Step } from "./daily-types.ts";
 
 export type AutoOptions = {
   mode: "rewards" | "sweeps" | "fights";
@@ -36,10 +36,10 @@ export const MAX_AUTO_ACTIONS = 40;
 export const MAX_CAMPAIGN_STAGES = 10;
 export const MAX_AUTO_MS = 10 * 60 * 1000;
 
-function hasAutoIdentity(scan: Scan) {
+export function hasAutoIdentity(scan: Scan) {
   return !!scan.sessionId && !!scan.character.id && scan.steps.every((s) => !!s.revision);
 }
-function fightEligible(step: Step) {
+export function fightEligible(step: Step) {
   return (
     (step.kind === "fight" || step.kind === "duel") &&
     !!step.autoGroup &&
@@ -114,7 +114,7 @@ type Usage = {
   assistAccepts: number;
   campaignNext?: number | null;
 };
-function stamp(step: Step) {
+export function stamp(step: Step) {
   return `${step.key}:${step.revision}`;
 }
 function buildCandidates(scan: Scan, plan: AutoPlan, usage: Usage, unseen: Step[]) {
