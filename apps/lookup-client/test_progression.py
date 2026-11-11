@@ -262,3 +262,26 @@ class SkillProposals(unittest.TestCase):
         routine.call.assert_called_once()
 
 if __name__=='__main__':unittest.main()
+
+
+class ProofsIgnoreServerListOrder(unittest.TestCase):
+    """Live, 11 Nov 2026: the server listed attrs and skills in a different order on each read, so a
+    proof over the raw build never matched after review and the step was always skipped."""
+    def test_stat_step_revision_is_stable_when_attrs_are_reordered(self):
+        def stat_proofs(reverse):
+            data=character();active=data['jobInfo']['builds'][0]
+            attrs=allocated([4,4,0,0,0,0])
+            active.update(attrs=attrs[::-1] if reverse else attrs,usedAttrPoint=8)
+            return sorted((s.key,s.proof) for s in proposals(data) if s.development and s.development['type'] in ('stats','rebuild'))
+        self.assertTrue(stat_proofs(False))
+        self.assertEqual(stat_proofs(False),stat_proofs(True))
+
+    def test_skill_step_revisions_are_stable_when_skills_are_reordered(self):
+        def proofs(kind,total,reverse):
+            data=skilled(total,[(2012101,1),(2012102,1)],[2012101])
+            active=data['jobInfo']['builds'][0]
+            if reverse:active['skills']=active['skills'][::-1]
+            return [(s.key,s.proof) for s in skill_rows(data,kind)]
+        for kind,total in (('skills',4),('loadout',2)):
+            self.assertTrue(proofs(kind,total,False))
+            self.assertEqual(proofs(kind,total,False),proofs(kind,total,True))

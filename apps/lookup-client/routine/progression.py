@@ -275,11 +275,13 @@ def proposals(data, rules, opened, add):
         detail+=f'. {left} point(s) remain. '+('Resets this build first, then allocates; two requests, no paid reset.' if reset else 'Existing points stay allocated.')
         add('build',4529,label+' · '+state['specName'],detail,
             {'attrs':[{'attrId':a,'value':n} for a,n in zip(ATTRS,delta) if n]},
-            target={'spec':spec,'reset':reset},evidence=[evidence,total,active],
+            target={'spec':spec,'reset':reset},evidence=[evidence,total,used,before],
             development={'type':'rebuild' if reset else 'stats','line':line['kind'],'career':state['career'],'spec':spec,
                          'stats':stats,'totalPoints':total,'usedPoints':total-left})
 
 
+# Proofs use parsed values, never the raw build: the server lists attrs and skills in no fixed
+# order, so a proof over the raw reply changes between review and run.
 def skill_proposals(info, active, state, line, evidence, level, add):
     """`level` is JobLevelInfo[JobEntry].UnlockJoblevel, the gate SkillAutoAllocator compares with."""
     spec=state['spec']
@@ -300,7 +302,7 @@ def skill_proposals(info, active, state, line, evidence, level, add):
             add('build',4525,'Allocate unspent skill points · '+state['specName'],detail,
                 {'build':spec,'skills':[{'entry':r['entry'],'level':after[r['entry']]} for r in rows if after.get(r['entry'])],
                  'useSkillEntrys':sk['slots']},
-                target={'spec':spec,'skills':True},evidence=[evidence,sk['total'],active],
+                target={'spec':spec,'skills':True},evidence=[evidence,sk['total'],sorted(before.items()),sk['slots']],
                 development={'type':'skills','line':line['kind'],'career':state['career'],'spec':spec,
                              'skills':changes,'totalPoints':sk['total'],'usedPoints':sum(after.values()),'slots':sk['slots']})
             return  # equip after the points are confirmed, as the client requires
@@ -309,7 +311,7 @@ def skill_proposals(info, active, state, line, evidence, level, add):
         added=[names[e] for e,old in zip(slots,sk['slots']) if e!=old]
         add('build',4533,'Equip learned skills · '+state['specName'],
             'Fills empty skill slots with learned active skills (game Recommend order); equipped skills stay. '+', '.join(added)+'.',
-            {'build':spec,'useSkillEntrys':slots},target={'spec':spec,'loadout':True},evidence=[evidence,active],
+            {'build':spec,'useSkillEntrys':slots},target={'spec':spec,'loadout':True},evidence=[evidence,sorted(before.items()),sk['slots']],
             development={'type':'loadout','line':line['kind'],'career':state['career'],'spec':spec,
                          'before':sk['slots'],'after':slots,'names':added})
 
