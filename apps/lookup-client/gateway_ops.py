@@ -116,12 +116,25 @@ def redact(value):
     return value
 
 
+# GameWebSocketConst.PingInterval: the official client sends HeartbeatReq every 30 s while connected.
+PING_INTERVAL = 30
+# A session with no local request for this long ends (the bridge has the same idle limit).
+IDLE_EXIT = 300
+
 class Channel:
     def __init__(self, pool, ws, player_id, last_seq, current_stage=0):
         self.player_id, self.current_stage = player_id, current_stage
         self.pool, self.ws, self.refer, self.seq = pool, ws, player_id & 0xffffffff, last_seq
         self.last_sent = {}
         self.events = DungeonEvents(pool,player_id)
+        self.next_ping = time.monotonic() + PING_INTERVAL
+
+    def heartbeat(self):
+        """GameWebSocket.SendPing: one HeartbeatReq (4009), then the next regular ping is a full
+        PingInterval later, so extra keepalives never raise the client's heartbeat rate."""
+        reply = self.exchange(4009, msg(self.pool, "HeartbeatReq")(time=int(time.time())))
+        self.next_ping = time.monotonic() + PING_INTERVAL
+        return reply
 
     def exchange(self, n, m):
         # Match the official client's minimum ping interval and repeated-command spacing.
@@ -182,6 +195,16 @@ def handle(line, pool, channel=None):
         if not isinstance(op, dict) or not isinstance(op.get("id"), str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", op["id"]):
             raise Rejected("invalid_request")
         ident = op["id"]
+        if op.get("command") == -9102:
+            # Session-internal keepalive for the progression job's long waits: one heartbeat; the
+            # serve loop resets its idle exit for any handled line. Not a gateway operation, so the
+            # policy block on user-sent 4009 is unaffected.
+            if channel is None:
+                raise Rejected("session_required")
+            if op.get("mode") != "prepare" or op.get("payload") != {}:
+                raise Rejected("invalid_request")
+            emit({"id": ident, "ok": True, "result": {"serverTime": int(channel.heartbeat().time)}})
+            return
         if op.get("command") in (-9100,-9101):
             if channel is None or not getattr(channel,"routine",None):
                 raise Rejected("session_required")
@@ -236,14 +259,12 @@ def serve(pool, ws, *, player_id, last_seq, current_stage,profile,realm):
     channel = Channel(pool, ws, player_id, last_seq, current_stage)
     channel.routine=Routine(pool,channel,profile,realm,ACTIONS,Rejected,prepare)
     channel.lost=False
-    next_ping = time.monotonic() + 30
-    idle_until = time.monotonic() + 300
+    idle_until = time.monotonic() + IDLE_EXIT
     buf = bytearray()
     try:
         while time.monotonic() < idle_until:
-            if time.monotonic() >= next_ping:
-                channel.exchange(4009, msg(pool, "HeartbeatReq")(time=int(time.time())))
-                next_ping = time.monotonic() + 30
+            if time.monotonic() >= channel.next_ping:
+                channel.heartbeat()
             if select.select([sys.stdin.fileno()], [], [], 0)[0]:
                 chunk = os.read(sys.stdin.fileno(), 8192)
                 if not chunk:
@@ -256,7 +277,7 @@ def serve(pool, ws, *, player_id, last_seq, current_stage,profile,realm):
                 del buf[:end + 1]
                 handle(line, pool, channel)
                 if channel.lost: return
-                idle_until = time.monotonic() + 300
+                idle_until = time.monotonic() + IDLE_EXIT
             try:
                 raw = ws.recv(timeout=0.15)
             except TimeoutError:
