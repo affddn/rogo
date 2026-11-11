@@ -1,4 +1,5 @@
 import { CampaignAttempt } from "@/components/campaign-attempt";
+import { AutomationRunningNote } from "@/components/automation-note";
 import { localJson, type Session } from "@/lib/game/local-guide";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
@@ -566,6 +567,7 @@ function RequestEditor({
             {error}
           </p>
         )}
+        <AutomationRunningNote message={error} />
         {result && (
           <div>
             {outcome && <p role="status">{outcome}</p>}

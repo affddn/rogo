@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
+  Bot,
   Castle,
   Crown,
   GalleryVerticalEnd,
@@ -47,6 +48,12 @@ export const NAV: { group: string; items: NavEntry[] }[] = [
         label: "Daily optimizer",
         icon: Sparkles,
         blurb: "Check live rewards, sweeps and mode challenges.",
+      },
+      {
+        to: "/automation",
+        label: "Automation",
+        icon: Bot,
+        blurb: "A long-running job that pushes the campaign and shows what it does in a console.",
       },
       {
         to: "/planner",

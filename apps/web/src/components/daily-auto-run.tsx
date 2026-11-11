@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AutomationRunningNote } from "@/components/automation-note";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -280,6 +281,7 @@ export function DailyAutoRun({
               ? "Waiting for the current request's receipt. No next action will be sent."
               : progress.message}
           </p>
+          <AutomationRunningNote message={progress.message} />
           <p className="mt-1 text-sm text-muted-foreground">
             {progress.receipts.filter((r) => r.status === "confirmed").length} confirmed ·{" "}
             {progress.receipts.filter((r) => r.status === "skipped").length} skipped

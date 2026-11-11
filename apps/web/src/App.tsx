@@ -55,6 +55,7 @@ const SummonsPage = lazy(() => import("@/pages/summons"));
 const DailyPage = lazy(() => import("@/pages/daily"));
 const OperationsPage = lazy(() => import("@/pages/operations"));
 const DataPage = lazy(() => import("@/pages/data"));
+const AutomationPage = lazy(() => import("@/pages/automation"));
 
 function NavItem({ to, label, icon: Icon, end }: NavEntry) {
   const resolved = useResolvedPath(to);
@@ -160,6 +161,7 @@ function Routed() {
           <Route path="/summons" element={<SummonsPage />} />
           <Route path="/formulas" element={<FormulasPage />} />
           <Route path="/daily" element={<DailyPage />} />
+          <Route path="/automation" element={<AutomationPage />} />
           <Route path="/operations" element={<OperationsPage />} />
           <Route path="/data" element={<DataPage />} />
           <Route

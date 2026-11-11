@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { localJson, type Session } from "@/lib/game/local-guide";
 import { useItems } from "@/lib/game/extra-data";
+import { AutomationRunningNote } from "@/components/automation-note";
 import { DailyAutoRun } from "@/components/daily-auto-run";
 import { runAuto, type AutoPlan, type AutoProgress } from "@/lib/game/daily-autorun";
 import type { Receipt, Review, Run, Scan } from "@/lib/game/daily-types";
@@ -30,7 +31,7 @@ const modeLinks: [string, string][] = [
 ];
 const otherRewards: [number, string, string][] = [
   [4063, "Elite summon reward", "Schema only; ordinary gear drops arrive with the summon."],
-  [4089, "Online idle income", "Requires kills actually recorded during idle gameplay."],
+  [4089, "Online idle income", "Collected by Automation at the battery-saving rate, not here."],
   [4179, "Exchange code", "Supply your own code."],
   [
     4207,
@@ -346,6 +347,7 @@ export default function DailyPage() {
           {error}
         </p>
       )}
+      <AutomationRunningNote message={error} />
       <DailyAutoRun
         scan={scan}
         busy={!!busy}

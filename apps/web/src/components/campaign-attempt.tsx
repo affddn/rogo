@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { AutomationRunningNote } from "@/components/automation-note";
 import { Link } from "react-router";
 import { useGame } from "@/lib/game/game-data-context";
 import { localJson, type Session } from "@/lib/game/local-guide";
@@ -115,6 +116,7 @@ export function CampaignAttempt({
             {error}
           </p>
         )}
+        <AutomationRunningNote message={error} />
         {outcome && (
           <div role="status">
             <h3 className="font-semibold">
