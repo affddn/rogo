@@ -63,7 +63,7 @@ def function_open(data, now, offset, entry):
 def build(data, emails, guild, now, offset, tower=None, arena=None, world=None,opponents=None):
     steps = {}
     def add(kind, cmd, title, detail, payload=None, target=None, evidence=None, power_ratio=None, auto_group=None, available=None, development=None, stage_entry=None, next_stage=None):
-        assert cmd in {'claim':FREE,'sweep':SWEEP,'fight':FIGHTS,'duel':{5063},'offer':{4191},'build':{4521,4523,4529}}[kind]
+        assert cmd in {'claim':FREE,'sweep':SWEEP,'fight':FIGHTS,'duel':{5063},'offer':{4191},'build':{4521,4523,4525,4529,4533}}[kind]
         payload = payload or {}
         key = f'{kind}:{cmd}:' + digest(target if target is not None else payload)[:20]
         steps[key] = Step(kind,title,detail,cmd,payload,key,digest([payload,evidence]),power_ratio,auto_group,available,development,stage_entry,next_stage)

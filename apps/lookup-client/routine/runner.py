@@ -7,7 +7,7 @@ from websockets.exceptions import WebSocketException
 from wire_probe import msg
 from campaign import CampaignError, preflight, simulate, run_campaign, VERSION
 from routine.dungeon import DungeonAssist, DungeonEvents, DungeonError
-from routine.progression import build_state, allocation, career_info
+from routine.progression import build_state, allocation, career_info, SLOTS
 from routine.planner import build, modes, digest, RULES, function_open
 
 MAX_STEPS = 24
@@ -241,11 +241,30 @@ def verify_development(row,reply,receipt):
                 (target['type']=='spec' and spec!=target['spec'])):
             raise ProgressionError('The class reply did not match the reviewed change. Inspect the character; nothing was retried.')
         receipt['buildState']={'career':career,'spec':spec}
+    elif target['type']=='skills':
+        active=reply.get('buildInfo',{})
+        levels={s.get('entry'):s.get('level',0) for s in active.get('skills',[]) if s.get('level',0)}
+        # The request carries absolute levels: every skill must be exactly at its reviewed level.
+        if (reply.get('build')!=target['spec'] or active.get('build')!=target['spec'] or levels!=reviewed_levels(row) or
+                active.get('usedSkillPoint',0)!=target['usedPoints'] or reply.get('totalSkillPoint')!=target['totalPoints'] or
+                padded(active.get('useSkillEntrys',[]))!=target['slots']):
+            raise ProgressionError('The skill reply differed from the reviewed levels or loadout. Inspect your character; nothing was retried.')
+    elif target['type']=='loadout':
+        if reply.get('build')!=target['spec'] or padded(reply.get('useSkillEntrys',[]))!=target['after']:
+            raise ProgressionError('The loadout reply differed from the reviewed skills. Inspect your character; nothing was retried.')
     else:
         active=reply.get('buildInfo',{})
         if (active.get('build')!=target['spec'] or allocation(active)!=[s['after'] for s in target['stats']] or
                 active.get('usedAttrPoint',0)!=target['usedPoints'] or reply.get('totalAttrPoint')!=target['totalPoints']):
             raise ProgressionError('The allocation reply differed from the reviewed stats. Inspect the character; nothing was retried.')
+
+
+def reviewed_levels(row):
+    return {s['entry']:s['level'] for s in row.payload['skills']}
+
+
+def padded(slots):
+    return list(slots)+[0]*(SLOTS-len(slots))
 
 
 def partial_note(receipt):
