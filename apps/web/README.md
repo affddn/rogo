@@ -27,6 +27,7 @@ The local helper is opt-in; a hosted guide can still browse the operation catalo
 | Overview               | Where you stand, and an index of the guide                                                                                              |
 | Character              | Several characters; quick setup from four numbers, full stats from Attribute Details, progress, share link and file                     |
 | Card album             | Tick the cards you own and their stars; album bonus and collection rewards                                                              |
+| Automation             | Start, stop and follow a long-running progression job for a connected character in a console view (local helper only)                   |
 | Planner                | Upgrades, a game-style attribute screen (+ / − with a before → after preview), and the best card per slot from your album               |
 | Stage progression      | Power to clear all 936 stages, walls, per-chapter progress                                                                              |
 | Stage                  | Enemies, the boss's full stats and skills, your hit layer by layer, first-clear and idle rewards                                        |
