@@ -7,6 +7,7 @@ from websockets.exceptions import WebSocketException
 from wire_probe import msg
 from campaign import CampaignError, preflight, simulate, run_campaign, VERSION
 from routine.dungeon import DungeonAssist, DungeonEvents, DungeonError
+from routine.idle import IdleIncome, IdleError, ONLINE
 from routine.progression import build_state, allocation, career_info, SLOTS
 from routine.planner import build, modes, digest, RULES, function_open
 
@@ -26,7 +27,7 @@ def query_request(pool, profile):
         'appVersion':'0.0.163','bundleId':'com.ggv.rogosea.aos','platform':'Android','systemLang':'en','clientFightVersion':VERSION})
 
 class Routine:
-    def __init__(self, pool, channel, profile, realm, actions, rejected, validate=None):
+    def __init__(self, pool, channel, profile, realm, actions, rejected, validate=None, clock=time.monotonic):
         self.pool,self.channel,self.profile,self.realm=pool,channel,profile,str(realm)
         self.actions,self.rejected,self.validate=actions,rejected,validate
         self.session_id=uuid.uuid4().hex
@@ -36,6 +37,7 @@ class Routine:
         self.battle_uncertain=False
         if not isinstance(getattr(channel,'events',None),DungeonEvents):channel.events=DungeonEvents(pool,channel.player_id)
         self.dungeon=DungeonAssist(self)
+        self.idle=IdleIncome(RULES,clock)
 
     def call(self, command, payload):
         item=self.actions[command]
@@ -71,6 +73,7 @@ class Routine:
         opponents=optional(5073,'targets','Arena opponents') if arena and any(i.entry==11 and i.count>0 for i in info.items) else None
         steps=build(data,None if mail is None else mail.get('emails',[]),guild,now,offset,tower,arena,world,opponents)
         self.dungeon.plan(data,now,function_open(data,now,offset,805),steps)
+        self.idle.plan(data,lambda n:function_open(data,now,offset,n),steps)
         if self.battle_uncertain:
             steps={k:s for k,s in steps.items() if s.kind not in ('fight','duel')}
             warnings.append('A previous fight has an uncertain outcome. Reconnect and inspect it before another fight.')
@@ -127,21 +130,31 @@ class Routine:
                     if current is None or current.proof!=row.proof:
                         receipt['note']='New or changed milestones; review them after a rescan.'
                         continue
-                if self.validate:
+                if self.validate and not (row.kind=='idle' and row.command==ONLINE):
                     self.validate(self.pool,{'mode':'execute','command':row.command,'payload':row.payload,
                                              'confirm':self.actions[row.command]['request']['name']})
                 if row.kind=='assist':
                     self.dungeon.run(row,receipt)
                     continue
-                if row.kind=='fight':
+                if row.kind=='idle' and row.command==ONLINE:
+                    final=self.idle.run_online(self,receipt)
+                    if final is None:
+                        continue
+                elif row.kind=='fight':
                     final=run_campaign(self.pool,self.channel,row.payload['stage_entry']) if row.command==5001 else mode_fight(self,row)
                 elif row.development and row.development['type']=='rebuild':
                     final=rebuild_stats(self,row,receipt)
                 else:
+                    if row.kind=='idle':self.idle.reserve_fast()
                     final=self.call(row.command,row.payload)
                 reply=as_dict(final)
                 receipt.update(status='confirmed',reply=self.actions_by_reply(final.DESCRIPTOR.name),
                                rewards={k:reply[k] for k in ('rewards','reward','first_rewards','frist_rewards','total_rewards') if k in reply})
+                if row.kind=='idle':
+                    level=reply.get('level_info',{})
+                    receipt.update(idleDuration=reply.get('idle_duration',0),
+                                   level={'before':level.get('old_level'),'after':level.get('new_level')} if level else None)
+                    if row.command!=ONLINE:self.idle.verify_fast(row,reply,receipt)
                 if row.kind=='build':
                     verify_development(row,reply,receipt)
                     receipt['note']=row.detail
@@ -152,7 +165,7 @@ class Routine:
                         receipt['won']=final.fight_result
                     for k in ('score','rank','his_max_score','max_cleared_stage_entry','res_stage_entry'):
                         if k in reply:receipt[k]=reply[k]
-            except (ProgressionError,DungeonError) as exc:
+            except (ProgressionError,DungeonError,IdleError) as exc:
                 receipt.update(status='stopped',note=str(exc))
                 break
             except self.rejected as exc:

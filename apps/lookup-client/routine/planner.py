@@ -35,9 +35,10 @@ class Step:
     stage_entry: int | None = None
     next_stage: int | None = None
     assist: dict | None = None
+    idle: dict | None = None
     def view(self):
         return {'key':self.key,'kind':self.kind,'title':self.title,'detail':self.detail,'command':self.command,'powerRatio':self.power_ratio,
-                'revision':self.proof,'autoGroup':self.auto_group,'available':self.available,'development':self.development,'stageEntry':self.stage_entry,'nextStage':self.next_stage,'assist':self.assist}
+                'revision':self.proof,'autoGroup':self.auto_group,'available':self.available,'development':self.development,'stageEntry':self.stage_entry,'nextStage':self.next_stage,'assist':self.assist,'idle':self.idle}
 
 def num(v):
     return int(v or 0)

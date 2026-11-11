@@ -87,5 +87,5 @@ it("requires opt-in, a loopback listener and the exact origin; rejects foreign a
   expect(catalog.body.actions).toHaveLength(260);
   expect(
     catalog.body.actions.filter((a: { availability: string }) => a.availability === "blocked"),
-  ).toHaveLength(40);
+  ).toHaveLength(39); // 4089 (online idle income) is no longer blocked
 });
