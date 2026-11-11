@@ -261,6 +261,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.1.2
         version: 6.2.1(@voidzero-dev/vite-plus-core@0.2.4(@types/node@24.19.2)(jiti@2.7.0)(typescript@7.0.2))
+      tla-ts:
+        specifier: 0.0.9
+        version: 0.0.9
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
@@ -2284,6 +2287,9 @@ packages:
       picomatch:
         optional: true
 
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
+
   figures@6.1.0:
     resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
     engines: {node: '>=18'}
@@ -3042,6 +3048,10 @@ packages:
   tinyrainbow@3.2.0:
     resolution: {integrity: sha512-LgO3D9yZJjApUiuUfl9iFAwrtaX4+lok3wJIqttGoKCHlWUqHqbQpnxCf82L8FjgKsh4iGo78hqJwgL8F6To2A==}
     engines: {node: '>=14.0.0'}
+
+  tla-ts@0.0.9:
+    resolution: {integrity: sha512-x58wRtZt4CyOjC13Vz04efVuYZmvqhSZCakUEdA0HlR8WcTUwhQblHZXksUK8sWI5lWliTt6S6xzumOPjFDk7Q==}
+    hasBin: true
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -5061,6 +5071,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
+  fflate@0.8.3: {}
+
   figures@6.1.0:
     dependencies:
       is-unicode-supported: 2.1.0
@@ -5769,6 +5781,10 @@ snapshots:
   tinypool@2.1.0: {}
 
   tinyrainbow@3.2.0: {}
+
+  tla-ts@0.0.9:
+    dependencies:
+      fflate: 0.8.3
 
   to-regex-range@5.0.1:
     dependencies:
