@@ -39,13 +39,9 @@ def build(tables, variables):
         'firstRecharge':{r['Entry']:len(r.get('reward',[])) for r in load('first_recharge_gift_info')},
         'score':{k:thresholds(v) for k,v in [('daily','TASK_DAILY_REWARD'),('weekly','TASK_WEEKLY_REWARD'),('guild','GUILD_TASK_PROGRESS_REWARD'),('carnival','CARNIVAL_TASK_PROGRESS_REWARD'),('film','FILM_SUMMON_PROGRESS_REWARD')]},
         'mvpBonus':{r['Entry']:r.get('EfMvpSweepTimes',0) for r in load('monthly_card_info')},
-        # Battery-saving idle mode: BatterySavingRewardController credits StageInfoCfg.BatterySavingMob
-        # kills every BATTERY_SAVING_KILL_MOB_INTERVAL seconds (the client falls back to 15 if <= 0).
-        'idle':{'killInterval':int(re.search(r"\bBATTERY_SAVING_KILL_MOB_INTERVAL \{ get; set; \} = (-?\d+);",var)[1]),
-                'stageMob':{r['Entry']:r.get('BatterySavingMob',0) for r in load('stage_info')},
-                # AdveIncomeDialog: a Quick Idle is free while today's free count is below this base
-                # (plus a monthly-card bonus the job ignores, so it never assumes a free one too many).
-                'fastIdleFree':int(re.search(r"\bSTAGE_FAST_IDLE_FREE_TIME_BASE \{ get; set; \} = (-?\d+);",var)[1])},
+        # AdveIncomeDialog: a Quick Idle is free while today's free count is below this base
+        # (plus a monthly-card bonus the job ignores, so it never assumes a free one too many).
+        'idle':{'fastIdleFree':int(re.search(r"\bSTAGE_FAST_IDLE_FREE_TIME_BASE \{ get; set; \} = (-?\d+);",var)[1])},
     }
 if __name__ == '__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('tables',type=Path);p.add_argument('variables',type=Path);a=p.parse_args()

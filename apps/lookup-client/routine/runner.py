@@ -7,7 +7,7 @@ from websockets.exceptions import WebSocketException
 from wire_probe import msg
 from campaign import CampaignError, preflight, simulate, run_campaign, VERSION
 from routine.dungeon import DungeonAssist, DungeonEvents, DungeonError
-from routine.idle import IdleIncome, IdleError, ONLINE
+from routine.idle import IdleIncome, IdleError
 from routine.progression import build_state, allocation, career_info, SLOTS
 from routine.planner import build, modes, digest, RULES, function_open
 
@@ -19,6 +19,20 @@ class ProgressionError(Exception):
 class RoutineError(Exception):
     pass
 
+def offline_summary(data):
+    """Numbers only: how much idle time this read of the login data settled, if any.
+
+    Live on 11 Nov 2026, each QueryPlayerDataReq settled the idle time since the previous one as
+    offline income and reset the online pending count; a second read straight after reported none."""
+    off=data.get('offline_idle_info') or {}
+    if not off:return None
+    rewards=off.get('rewards') or {}
+    level=off.get('level_info') or {}
+    return {'duration':off.get('offline_duration',0),'max':off.get('max_offline_duration',0),
+            'items':len(rewards.get('items',[]))+len(rewards.get('equips',[])),
+            'levelBefore':level.get('old_level'),'levelAfter':level.get('new_level')}
+
+
 def as_dict(message):
     return json_format.MessageToDict(message, preserving_proto_field_name=True)
 
@@ -27,7 +41,7 @@ def query_request(pool, profile):
         'appVersion':'0.0.163','bundleId':'com.ggv.rogosea.aos','platform':'Android','systemLang':'en','clientFightVersion':VERSION})
 
 class Routine:
-    def __init__(self, pool, channel, profile, realm, actions, rejected, validate=None, clock=time.monotonic):
+    def __init__(self, pool, channel, profile, realm, actions, rejected, validate=None):
         self.pool,self.channel,self.profile,self.realm=pool,channel,profile,str(realm)
         self.actions,self.rejected,self.validate=actions,rejected,validate
         self.session_id=uuid.uuid4().hex
@@ -37,7 +51,7 @@ class Routine:
         self.battle_uncertain=False
         if not isinstance(getattr(channel,'events',None),DungeonEvents):channel.events=DungeonEvents(pool,channel.player_id)
         self.dungeon=DungeonAssist(self)
-        self.idle=IdleIncome(RULES,clock)
+        self.idle=IdleIncome(RULES)
 
     def call(self, command, payload):
         item=self.actions[command]
@@ -49,6 +63,8 @@ class Routine:
         now,offset=clock.time,clock.time_zone_offset
         if not now: raise RoutineError('routine_clock_unavailable')
         offset=max(-50400,min(50400,offset if abs(offset)>14 else offset*3600))
+        # ServerModel.GetCurrentServerDateTime: the client's day rolls over at server-local midnight.
+        self.next_day_in=86400-(now+offset)%86400
         info=self.channel.exchange(4005,query_request(self.pool,self.profile)).login_data
         player=info.player.player
         if player.id!=self.channel.player_id or (player.server_id and player.server_id!=self.realm):
@@ -78,14 +94,15 @@ class Routine:
             steps={k:s for k,s in steps.items() if s.kind not in ('fight','duel')}
             warnings.append('A previous fight has an uncertain outcome. Reconnect and inspect it before another fight.')
         profile=build_state(data,RULES,lambda n:function_open(data,now,offset,n))
-        return steps,warnings,{'build':profile,'id':str(player.id),'name':player.nickname,'realm':self.realm,'level':player.level,'power':player.ability}
+        return steps,warnings,{'offline':offline_summary(data),'build':profile,'id':str(player.id),'name':player.nickname,'realm':self.realm,'level':player.level,'power':player.ability}
 
     def scan(self):
         self.scan_id=None
         self.steps,warnings,identity=self.collect()
         self.scan_id=uuid.uuid4().hex
         self.last_scan=time.monotonic()
-        return {'scanId':self.scan_id,'sessionId':self.session_id,'checkedAt':int(time.time()),'character':identity,'steps':[s.view() for s in self.steps.values()],
+        return {'scanId':self.scan_id,'sessionId':self.session_id,'checkedAt':int(time.time()),'nextDayIn':getattr(self,'next_day_in',None),
+                'character':identity,'steps':[s.view() for s in self.steps.values()],
                 'warnings':warnings,'maxSteps':MAX_STEPS,'dungeon':self.dungeon.state}
 
     def select(self,payload):
@@ -130,17 +147,13 @@ class Routine:
                     if current is None or current.proof!=row.proof:
                         receipt['note']='New or changed milestones; review them after a rescan.'
                         continue
-                if self.validate and not (row.kind=='idle' and row.command==ONLINE):
+                if self.validate:
                     self.validate(self.pool,{'mode':'execute','command':row.command,'payload':row.payload,
                                              'confirm':self.actions[row.command]['request']['name']})
                 if row.kind=='assist':
                     self.dungeon.run(row,receipt)
                     continue
-                if row.kind=='idle' and row.command==ONLINE:
-                    final=self.idle.run_online(self,receipt)
-                    if final is None:
-                        continue
-                elif row.kind=='fight':
+                if row.kind=='fight':
                     final=run_campaign(self.pool,self.channel,row.payload['stage_entry']) if row.command==5001 else mode_fight(self,row)
                 elif row.development and row.development['type']=='rebuild':
                     final=rebuild_stats(self,row,receipt)
@@ -154,7 +167,7 @@ class Routine:
                     level=reply.get('level_info',{})
                     receipt.update(idleDuration=reply.get('idle_duration',0),
                                    level={'before':level.get('old_level'),'after':level.get('new_level')} if level else None)
-                    if row.command!=ONLINE:self.idle.verify_fast(row,reply,receipt)
+                    self.idle.verify_fast(row,reply,receipt)
                 if row.kind=='build':
                     verify_development(row,reply,receipt)
                     receipt['note']=row.detail
